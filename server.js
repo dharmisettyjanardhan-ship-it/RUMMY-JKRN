@@ -30,6 +30,7 @@ function makeDeck(){
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function code(){let s;do{s=Math.floor(100000+Math.random()*900000).toString();}while(rooms.has(s));return s;}
 function publicPlayers(room){return room.playersList.map(p=>({id:p.id,name:p.name,ready:p.ready,index:p.index,connected:!!p.connected}));}
+function roomCapacity(room){return room.maxPlayers||2;}
 function publicCard(c){return c?{rank:c.rank,suit:c.suit,color:c.color,isPrintedJoker:!!c.isPrintedJoker,id:c.id}:null;}
 
 const RANK={A:1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":10,J:11,Q:12,K:13};
@@ -109,6 +110,7 @@ function stateFor(room,socketId){
   return {
     roomId:room.id,
     players:publicPlayers(room),
+    maxPlayers:room.maxPlayers,
     myIndex:me.index,
     hands:room.playersList.map(p=>p.id===socketId ? p.hand.map(publicCard) : {count:p.hand.length}),
     deckCount:room.deck.length,
@@ -160,27 +162,28 @@ function startRealGame(room){
 
 
 io.on('connection',socket=>{
-  socket.on('createRoom',({name})=>{
+  socket.on('createRoom',({name,maxPlayers})=>{
     const id=code();
-    const room={id,players:new Map(),playersList:[],started:false,deck:[],discard:[],wildJoker:null,currentPlayer:0,playerHasDrawn:false,turnEndsAt:0,turnTimer:null,scores:{},dealerIndex:null,dealNumber:0};
+    const requested=Number(maxPlayers)||2; const capacity=[2,4,6].includes(requested)?requested:2;
+    const room={id,maxPlayers:capacity,players:new Map(),playersList:[],started:false,deck:[],discard:[],wildJoker:null,currentPlayer:0,playerHasDrawn:false,turnEndsAt:0,turnTimer:null,scores:{},dealerIndex:null,dealNumber:0};
     const p={id:socket.id,sessionToken:require('crypto').randomUUID(),name:String(name||'Player').slice(0,18),ready:false,index:0,hand:[],connected:true}; room.scores={}; room.scores[p.id]=0;
     room.players.set(socket.id,p);room.playersList.push(p);rooms.set(id,room);socket.join(id);socket.roomId=id;
-    socket.emit('roomCreated',{roomId:id,playerId:socket.id,sessionToken:p.sessionToken,maxPlayers:MAX_PLAYERS});io.to(id).emit('roomUpdate',{players:publicPlayers(room)});
+    socket.emit('roomCreated',{roomId:id,playerId:socket.id,sessionToken:p.sessionToken,maxPlayers:room.maxPlayers});io.to(id).emit('roomUpdate',{players:publicPlayers(room),maxPlayers:room.maxPlayers});
   });
   socket.on('joinRoom',({name,roomId})=>{
     const id=String(roomId||'').toUpperCase(),room=rooms.get(id);
     if(!room)return socket.emit('roomError','Room not found.');
     if(room.started)return socket.emit('roomError','Game already started.');
-    if(room.playersList.length>=MAX_PLAYERS)return socket.emit('roomError','Room is full (6 players maximum).');
+    if(room.playersList.length>=roomCapacity(room))return socket.emit('roomError',`Room is full (${roomCapacity(room)} players maximum).`);
     const p={id:socket.id,sessionToken:require('crypto').randomUUID(),name:String(name||'Player').slice(0,18),ready:false,index:room.playersList.length,hand:[],connected:true}; room.scores[p.id]=0;
     room.players.set(socket.id,p);room.playersList.push(p);socket.join(id);socket.roomId=id;
-    socket.emit('roomJoined',{roomId:id,playerId:socket.id,sessionToken:p.sessionToken,maxPlayers:MAX_PLAYERS});io.to(id).emit('roomUpdate',{players:publicPlayers(room)});
+    socket.emit('roomJoined',{roomId:id,playerId:socket.id,sessionToken:p.sessionToken,maxPlayers:room.maxPlayers});io.to(id).emit('roomUpdate',{players:publicPlayers(room),maxPlayers:room.maxPlayers});
   });
   socket.on('ready',({roomId,playerId})=>{
     const room=rooms.get(String(roomId||'').toUpperCase());if(!room)return;
     const p=room.players.get(playerId||socket.id);if(!p)return;
-    p.ready=true;io.to(room.id).emit('roomUpdate',{players:publicPlayers(room)});
-    if(room.playersList.length>=2 && room.playersList.every(x=>x.ready && x.connected))startRealGame(room);else socket.emit('readyAck');
+    p.ready=true;io.to(room.id).emit('roomUpdate',{players:publicPlayers(room),maxPlayers:room.maxPlayers});
+    if(room.playersList.length===roomCapacity(room) && room.playersList.every(x=>x.ready && x.connected))startRealGame(room);else socket.emit('readyAck');
   });
   socket.on('drawDeck',()=>{
     const room=rooms.get(socket.roomId),p=room&&room.players.get(socket.id);if(!room||!p||!room.started||p.index!==room.currentPlayer||room.playerHasDrawn)return;
@@ -235,16 +238,22 @@ io.on('connection',socket=>{
   socket.on('reconnectPlayer',({roomId,sessionToken,name})=>{
     const room=rooms.get(String(roomId||'').toUpperCase()); if(!room)return socket.emit('roomError','Room not found.');
     const p=room.playersList.find(x=>x.sessionToken===sessionToken); if(!p)return socket.emit('roomError','Reconnect session expired.');
-    room.players.delete(p.id); p.id=socket.id; p.connected=true; if(name)p.name=String(name).slice(0,18);
+    const oldSocketId=p.id;
+    if(oldSocketId && oldSocketId!==socket.id){
+      const oldSocket=io.sockets.sockets.get(oldSocketId);
+      if(oldSocket){ try{oldSocket.disconnect(true);}catch(e){} }
+      room.players.delete(oldSocketId);
+    }
+    p.id=socket.id; p.connected=true; p.lastDisconnect=0; if(name)p.name=String(name).slice(0,18);
     room.players.set(socket.id,p); socket.join(room.id); socket.roomId=room.id;
-    socket.emit('reconnected',{roomId:room.id,playerId:socket.id,sessionToken:p.sessionToken});
-    io.to(room.id).emit('roomUpdate',{players:publicPlayers(room)}); broadcastState(room);
+    socket.emit('reconnected',{roomId:room.id,playerId:socket.id,sessionToken:p.sessionToken,maxPlayers:room.maxPlayers});
+    io.to(room.id).emit('roomUpdate',{players:publicPlayers(room),maxPlayers:room.maxPlayers}); broadcastState(room);
   });
   socket.on('disconnect',()=>{
     const id=socket.roomId,room=id&&rooms.get(id);if(!room)return;
     const p=room.players.get(socket.id); if(!p)return;
     p.connected=false; p.lastDisconnect=Date.now();
-    io.to(id).emit('roomUpdate',{players:publicPlayers(room)});
+    io.to(id).emit('roomUpdate',{players:publicPlayers(room),maxPlayers:room.maxPlayers});
     if(room.started){io.to(id).emit('roomError',p.name+' disconnected. Waiting for reconnect...');}
     setTimeout(()=>{
       const still=room.playersList.find(x=>x.sessionToken===p.sessionToken);
@@ -255,7 +264,7 @@ io.on('connection',socket=>{
       room.playersList.forEach((x,i)=>x.index=i);
       room.started=false; room.playersList.forEach(x=>x.ready=false);
       if(room.dealerIndex!=null)room.dealerIndex=Math.min(room.dealerIndex,room.playersList.length-1);
-      io.to(id).emit('roomUpdate',{players:publicPlayers(room)});
+      io.to(id).emit('roomUpdate',{players:publicPlayers(room),maxPlayers:room.maxPlayers});
       io.to(id).emit('roomError',p.name+' left the room. Please READY again.');
     },RECONNECT_GRACE_MS);
   });
