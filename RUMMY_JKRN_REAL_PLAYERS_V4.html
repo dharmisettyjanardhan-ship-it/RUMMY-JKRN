@@ -1876,7 +1876,10 @@ html, body {
     <div class="modal-box">
         <h2 id="resultModalHeader" style="color: #ffd700; font-size: 22px; text-transform: uppercase;">SCORE BOARD</h2>
         <div id="resultModalContent"></div>
-        <button class="continue-btn-glow" id="nextDealBtn" onclick="closeResultModalAndStartNext()">Continue (7)</button>
+        <div id="resultModalActions" style="display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:12px">
+  <button class="continue-btn-glow" id="nextDealBtn" onclick="closeResultModalAndStartNext()">NEXT GAME (9)</button>
+  <button class="continue-btn-glow" id="closeScoreBoardBtn" style="background:linear-gradient(#444,#111);border-color:#888" onclick="closeScoreBoardOnly()">CLOSE SCORE BOARD</button>
+</div>
     </div>
 </div>
 
@@ -2194,7 +2197,7 @@ function startGamePlay() {
     const topJoker = document.getElementById("topJokerDisplay");
     if(wildJoker) {
         topJoker.className = `pile joker-pile ${wildJoker.color}`;
-        topJoker.innerHTML = `<div class="card-top"><span>${wildJoker.rank}</span><span>${wildJoker.suit}</span></div><div class="card-center">${wildJoker.suit}</div><div style="font-size: 11px; color: #ffd700; margin-top: 2px;">👑 Joker</div>`;
+        topJoker.innerHTML = `<div class="card-top"><span>${wildJoker.rank}</span><span>${wildJoker.suit}</span></div><div class="card-center">${wildJoker.suit}</div><div style="font-size:13px;color:#ffd700;font-weight:900;margin-top:2px;">👑 🃏 WILD</div>`;
     }
 
     selectedCards = [];
@@ -3227,119 +3230,193 @@ function declareGame() {
 /* JILI STYLE SCOREBOARD + 201 ELIMINATION DISPLAY */
 function showDealResultModal(titleText) {
     if (turnTimer) { clearInterval(turnTimer); turnTimer = null; }
+    if (window.__onlineTurnTimer) { clearInterval(window.__onlineTurnTimer); window.__onlineTurnTimer = null; }
     gameOver = true;
 
     const modal = document.getElementById("resultModal");
     const contentDiv = document.getElementById("resultModalContent");
     const header = document.getElementById("resultModalHeader");
     const nextBtn = document.getElementById("nextDealBtn");
+    const closeBtn = document.getElementById("closeScoreBoardBtn");
 
-    header.innerText = titleText;
+    const onlineResult = window.__onlineLastResult;
+    const isOnlineResult = !!(onlineResult && Array.isArray(onlineResult.players));
 
-    let cd = 7;
-    nextBtn.innerText = `Continue (${cd})`;
+    header.innerText = isOnlineResult
+        ? `DEAL ${onlineResult.dealNumber || ""} RESULT`
+        : titleText;
+
+    // Online result: server is the only source of names, cards, points and totals.
+    let rows = [];
+    if (isOnlineResult) {
+        rows = onlineResult.players.map((p, idx) => ({
+            name: p.name || `Player ${idx+1}`,
+            result: p.result || (idx===0 ? "WINNER" : "LOST"),
+            points: Number(p.points || 0),
+            totalScore: Number(p.totalScore || 0),
+            lives: Array.isArray(p.lives) ? p.lives : [],
+            remaining: Array.isArray(p.remaining) ? p.remaining : [],
+            eliminated: p.result === "ELIMINATED"
+        }));
+    } else {
+        for (let i = 0; i < numPlayers; i++) {
+            const statusObj = playerDealStatus[i] || {};
+            rows.push({
+                name: i===0 ? "Player 1 (YOU)" : `Player ${i+1}`,
+                result: statusObj.result || (droppedThisDeal[i] ? "DROP" : "LOST"),
+                points: Number(statusObj.points || 0),
+                totalScore: Number(gameScores[`Player ${i+1}`] || 0),
+                lives: (i===0 ? (playerGroups||[]) : []).filter(g=>g&&g.length).map(g=>({
+                    type:getGroupBadgeInfo(g).text, cards:g
+                })),
+                remaining: []
+            });
+        }
+    }
+
+    let cd = 9;
+    nextBtn.style.display = "inline-block";
+    closeBtn.style.display = "inline-block";
+    nextBtn.disabled = false;
+    nextBtn.innerText = `NEXT GAME (${cd})`;
     clearInterval(window._sbCountdown);
+
     window._sbCountdown = setInterval(() => {
         cd--;
         if (cd > 0) {
-            nextBtn.innerText = `Continue (${cd})`;
+            nextBtn.innerText = `NEXT GAME (${cd})`;
         } else {
             clearInterval(window._sbCountdown);
+            nextBtn.innerText = "NEXT GAME";
             closeResultModalAndStartNext();
         }
     }, 1000);
 
     let html = `
+    <div style="text-align:center;margin-bottom:8px;color:#fff;font-size:13px">
+      ${isOnlineResult ? `🏆 ${onlineResult.winnerName || "Winner"} • ${onlineResult.poolLimit || 201} POOL` : "GAME RESULT"}
+    </div>
     <div class="sb-table-wrap">
-        <table class="sb-table">
-            <thead>
-                <tr>
-                    <th style="text-align:left; padding-left:15px;">Players</th>
-                    <th>Card</th>
-                    <th>Result</th>
-                    <th>Points</th>
-                    <th>Scores (Max 201)</th>
-                </tr>
-            </thead>
-            <tbody>`;
+      <table class="sb-table">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding-left:15px;">PLAYER NAME</th>
+            <th>CARDS / LIVES</th>
+            <th>RESULT</th>
+            <th>POINTS</th>
+            <th>TOTAL SCORE</th>
+          </tr>
+        </thead>
+        <tbody>`;
 
-    for (let i = 0; i < numPlayers; i++) {
-        const isMe = (i === 0);
-        const name = isMe ? "Player 1 (YOU)" : `Player ${i+1}`;
-        const avatar = isMe ? "👤" : ["🧑‍🦱", "👩", "🧔", "👱‍♂️", "👨‍🦰"][i-1] || "🤖";
-        const isDropped = droppedThisDeal[i];
-        const statusObj = playerDealStatus[i] || {result: isDropped ? "Drop" : "Lost", points: 0};
-        const isWinner = statusObj.result.toLowerCase().includes("win");
-        const isElim = isEliminated(i);
-
-        let resultClass = isElim ? "sb-res-elim" : (isWinner ? "sb-res-winner" : (isDropped ? "sb-res-drop" : "sb-res-lost"));
-        let resultText = isElim ? "ELIMINATED" : (isWinner ? "Winner" : (isDropped ? "Drop" : "Lost"));
-
-        let playerCardGroups = [];
-        if (isMe) {
-            playerCardGroups = playerGroups.filter(g => g && g.length > 0);
-        } else {
-            const hand = allHands[i] || [];
-            let sortedGroups = {};
-            hand.forEach(c => {
-                sortedGroups[c.suit] = sortedGroups[c.suit] || [];
-                sortedGroups[c.suit].push(c);
-            });
-            playerCardGroups = Object.values(sortedGroups);
-        }
+    rows.forEach((p, idx) => {
+        const isWinner = String(p.result).toUpperCase().includes("WIN");
+        const isElim = p.eliminated || String(p.result).toUpperCase().includes("ELIMINATED");
+        const resultClass = isElim ? "sb-res-elim" : (isWinner ? "sb-res-winner" : "sb-res-lost");
 
         let cardsHtml = `<div class="sb-cards-cell">`;
-        if(isElim && playerCardGroups.length === 0) {
-            cardsHtml += `<span style="color:#ff5252; font-size:11px; font-weight:bold;">OUT OF GAME</span>`;
-        } else {
-            playerCardGroups.forEach(grp => {
-                let bInfo = getGroupBadgeInfo(grp);
-                let badgeClass = "sb-badge-cards";
-                if (bInfo.text === "1st Life") badgeClass = "sb-badge-pure";
-                else if (bInfo.text === "2nd Life") badgeClass = "sb-badge-second";
-                else if (bInfo.text === "Set") badgeClass = "sb-badge-set";
-                else if (bInfo.text === "Trill") badgeClass = "sb-badge-trill";
-                else if (bInfo.text === "Impure") badgeClass = "sb-badge-impure";
 
-                cardsHtml += `<div class="sb-card-group"><div class="sb-card-stack">`;
-                grp.forEach(c => {
-                    let rankText = c.isPrintedJoker ? "JK" : c.rank;
-                    let suitText = c.isPrintedJoker ? "🃏" : c.suit;
-                    cardsHtml += `<div class="sb-mini-card ${c.color}"><span>${rankText}</span><span>${suitText}</span></div>`;
+        if (isOnlineResult) {
+            (p.lives || []).forEach(life => {
+                cardsHtml += `<div class="sb-card-group">
+                    <div class="sb-card-stack">`;
+                (life.cards || []).forEach(c => {
+                    const rankText = c.isPrintedJoker ? "JK" : (c.rank || "");
+                    const suitText = c.isPrintedJoker ? "🃏" : (c.suit || "");
+                    cardsHtml += `<div class="sb-mini-card ${c.color || ""}">
+                        <span>${rankText}</span><span>${suitText}</span>
+                    </div>`;
                 });
-                cardsHtml += `</div><span class="sb-group-badge ${badgeClass}">${bInfo.text}</span></div>`;
+                cardsHtml += `</div><span class="sb-group-badge sb-badge-pure">${life.type || "GROUP"}</span></div>`;
             });
+
+            if ((p.remaining || []).length) {
+                cardsHtml += `<div class="sb-card-group sb-remaining-group">
+                    <div class="sb-card-stack">`;
+                p.remaining.forEach(c => {
+                    const rankText = c.isPrintedJoker ? "JK" : (c.rank || "");
+                    const suitText = c.isPrintedJoker ? "🃏" : (c.suit || "");
+                    cardsHtml += `<div class="sb-mini-card ${c.color || ""}">
+                        <span>${rankText}</span><span>${suitText}</span>
+                    </div>`;
+                });
+                cardsHtml += `</div><span class="sb-group-badge sb-badge-cards">REMAINING • ${p.points} POINTS</span></div>`;
+            }
         }
+
+        if (!cardsHtml.endsWith('>')) {}
         cardsHtml += `</div>`;
 
         html += `
         <tr class="sb-row ${isWinner ? 'winner-row' : ''} ${isElim ? 'elim-row' : ''}">
-            <td>
-                <div class="sb-player-cell">
-                    <div class="sb-avatar">${avatar}</div>
-                    <div class="sb-name">${name}</div>
-                </div>
-            </td>
-            <td>${cardsHtml}</td>
-            <td class="${resultClass}">${resultText}</td>
-            <td class="sb-pts">(+${statusObj.points})</td>
-            <td class="sb-score" style="${isElim ? 'color:#ff5252; font-weight:bold;' : ''}">${gameScores[`Player ${i+1}`]}</td>
+          <td>
+            <div class="sb-player-cell">
+              <div class="sb-avatar">${idx===0 ? "👤" : "👤"}</div>
+              <div class="sb-name">${String(p.name).replace(/[<>]/g,'')}</div>
+            </div>
+          </td>
+          <td>${cardsHtml}</td>
+          <td class="${resultClass}">${isElim ? "ELIMINATED" : p.result}</td>
+          <td class="sb-pts">${p.points > 0 ? '+' : ''}${p.points}</td>
+          <td class="sb-score" style="${isElim ? 'color:#ff5252;font-weight:bold;' : ''}">${p.totalScore}</td>
         </tr>`;
-    }
+    });
 
     html += `</tbody></table></div>`;
+
+    if (isOnlineResult) {
+        const eliminated = rows.filter(x => x.eliminated).map(x => x.name);
+        if (eliminated.length) {
+            html += `<div style="text-align:center;color:#ff5252;font-weight:900;margin-top:8px">
+                ❌ ELIMINATED: ${eliminated.map(x=>String(x).replace(/[<>]/g,'')).join(", ")}
+            </div>`;
+        }
+        if (onlineResult.matchFinished) {
+            html += `<div style="text-align:center;color:#ffd700;font-size:18px;font-weight:900;margin-top:10px">
+                🏆 MATCH FINISHED
+            </div>`;
+        }
+    }
+
     contentDiv.innerHTML = html;
     modal.classList.add("active");
 }
 
+
+function closeScoreBoardOnly() {
+    clearInterval(window._sbCountdown);
+    const modal = document.getElementById("resultModal");
+    if (modal) modal.classList.remove("active");
+}
+
 function closeResultModalAndStartNext() {
     clearInterval(window._sbCountdown);
-    document.getElementById("resultModal").classList.remove("active");
+    const nextBtn = document.getElementById("nextDealBtn");
 
-    dealerIndex = getNextActivePlayer(dealerIndex);
-    dealNumber++;
-    startGamePlay();
+    if (window.__realRoomStarted === false && window.__onlineLastResult) {
+        if (window.__onlineLastResult.matchFinished) {
+            closeScoreBoardOnly();
+            alert("🏆 MATCH FINISHED");
+            return;
+        }
+        if (window.onlineSocket && window.onlineRoomId) {
+            nextBtn.disabled = true;
+            nextBtn.innerText = "STARTING NEXT GAME...";
+            window.onlineSocket.emit("nextDeal");
+            // Server's gameState/realGameStarted will close the result board.
+            return;
+        }
+    }
+
+    const modal = document.getElementById("resultModal");
+    if (modal) modal.classList.remove("active");
+    if (typeof dealerIndex !== "undefined" && typeof getNextActivePlayer === "function") {
+        dealerIndex = getNextActivePlayer(dealerIndex);
+    }
+    if (typeof dealNumber !== "undefined") dealNumber++;
+    if (typeof startGamePlay === "function") startGamePlay();
 }
+
 
 function openGlobalScoreboardModal() {
     // IMPORTANT: This is a LIVE scoreboard only.
@@ -4234,7 +4311,26 @@ button[onclick*="groupSelected"] {
     onlineSocket.on('realGameStarted',d=>{window.__realRoomStarted=true; gameOver=false; gameStarted=true; if(d&&Number.isInteger(d.currentPlayer))currentPlayer=d.currentPlayer; if(typeof updateUI==='function')updateUI();});
     onlineSocket.on('onlineActionError',m=>{const st=document.getElementById('status');if(st)st.innerText='⚠️ '+((m&&m.message)||'Action not allowed');});
     onlineSocket.on('onlineActionAck',m=>{const st=document.getElementById('status');if(st&&m&&m.action==='draw')st.innerText='Card received. Select one card to discard.';});
-    onlineSocket.on('dealResult',r=>{ window.__onlineRoomStarted=false; window.__onlineLastResult=r; gameOver=true; const msg=r.valid?('🏆 '+r.winnerName+' WON! Opponent +'+((r.penalties&&r.penalties[0])||{}).points+' points'):('❌ WRONG SHOW! '+r.loserName+' +80 points'); if(typeof showDealResultModal==='function')showDealResultModal(msg); const b=document.getElementById('nextDealBtn'); if(b){b.innerText=r.matchWinner?'MATCH FINISHED':'NEXT DEAL';b.onclick=r.matchWinner?(()=>location.reload()):onlineNextDeal;} });
+    onlineSocket.on('dealResult',r=>{
+      window.__onlineRoomStarted=false;
+      window.__onlineLastResult=r;
+      gameOver=true;
+      if(typeof showDealResultModal==='function'){
+        showDealResultModal(r.valid
+          ? ('🏆 '+(r.winnerName||'Winner')+' WON!')
+          : ('❌ WRONG SHOW — '+(r.loserName||'Player')+' +80'));
+      }
+    });
+    onlineSocket.on('realGameStarted',d=>{
+      window.__realRoomStarted=true;
+      window.__onlineLastResult=null;
+      gameOver=false;
+      gameStarted=true;
+      const modal=document.getElementById('resultModal');
+      if(modal) modal.classList.remove('active');
+      if(d&&Number.isInteger(d.currentPlayer))currentPlayer=d.currentPlayer;
+      if(typeof updateUI==='function')updateUI();
+    });
     onlineSocket.on('poolFinished',r=>{alert('🏆 Match finished!');location.reload();});
   }
   const oldDraw=window.drawCard, oldDrawDiscard=window.drawFromDiscard, oldDiscard=window.discardCard, oldGroup=window.groupSelectedCards, oldDeclare=window.declareGame; window.__originalDeclareGame=oldDeclare;
@@ -4406,3 +4502,11 @@ button[onclick*="groupSelected"] {
 </script>
 </body>
 </html>
+
+<style id="FINAL_201_RESULT_9SEC_STYLE">
+#resultModalActions button{min-width:190px}
+#resultModal .sb-cards-cell{align-items:flex-start;flex-wrap:wrap}
+#resultModal .sb-remaining-group{border:1px solid #777;background:rgba(80,80,80,.18)}
+#resultModal .sb-remaining-group .sb-group-badge{color:#ffd54f}
+#resultModal .sb-mini-card{box-shadow:0 2px 5px rgba(0,0,0,.55)}
+</style>
