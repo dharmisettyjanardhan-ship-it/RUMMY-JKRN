@@ -2239,9 +2239,16 @@ function checkAndRefillDeck() {
 
 function isJoker(card) {
     if(!card) return false;
+    // Printed jokers are always wild. For online games, ONLY the
+    // server-selected wild rank is wild (e.g. Q means all Qs, not 2s).
     if(card.isPrintedJoker) return true;
-    if(!wildJoker) return false;
-    return card.rank === wildJoker.rank;
+    const wildRank = wildJoker && wildJoker.rank != null
+        ? String(wildJoker.rank).trim().toUpperCase()
+        : '';
+    const cardRank = card.rank != null
+        ? String(card.rank).trim().toUpperCase()
+        : '';
+    return !!wildRank && !!cardRank && cardRank === wildRank;
 }
 
 function isPureSequence(group) {
@@ -2390,20 +2397,6 @@ function startTurnTimer() {
 }
 
 function updateAllPlayerTimers() {
-    // ONLINE: keep every player's timer attached to the correct visual seat.
-    // The local player is always at the bottom; with 2 players the friend is
-    // always opposite at the top (opp4).
-    if (window.__realRoomStarted && window.__onlineSeatByPlayer) {
-        for (let i = 0; i < numPlayers; i++) {
-            const seat = window.__onlineSeatByPlayer[i];
-            const el = document.getElementById(`timer-p${seat || (i + 1)}`);
-            if (!el) continue;
-            const active = (i === currentPlayer);
-            el.innerText = active ? `⏳ ${timeLeft}s` : "30s";
-            el.style.opacity = active ? "1" : "0.65";
-        }
-        return;
-    }
     for (let i = 1; i <= numPlayers; i++) {
         const el = document.getElementById(`timer-p${i}`);
         if (el) {
@@ -4189,31 +4182,6 @@ button[onclick*="groupSelected"] {
     playerGroups=groups;
     allHands[0]=fresh;
   }
-  function buildOnlineSeatMap(st){
-    const players=st.players||[];
-    const n=players.length||2;
-    const me=Number.isInteger(st.myIndex)?st.myIndex:0;
-    // Visual seats around the table. Seat 1 is always the local player.
-    // 2 players: friend is directly opposite (top).
-    // 4 players: left / top / right.
-    // 6 players: left-middle / upper-left / top / upper-right / right-middle.
-    const seatSlots = n===2 ? [4] : (n===4 ? [2,4,6] : [2,3,4,5,6]);
-    const byPlayer={};
-    byPlayer[me]=1;
-    for(let step=1; step<n; step++){
-      const idx=(me+step)%n;
-      byPlayer[idx]=seatSlots[step-1];
-    }
-    window.__onlineSeatByPlayer=byPlayer;
-    window.__onlinePlayerBySeat={};
-    Object.keys(byPlayer).forEach(k=>window.__onlinePlayerBySeat[byPlayer[k]]=Number(k));
-    // Hide unused visual seats so 2/4 player games stay clean.
-    for(let seat=2; seat<=6; seat++){
-      const box=document.getElementById('opp'+seat);
-      if(box) box.style.display=seatSlots.includes(seat)?'flex':'none';
-    }
-    return byPlayer;
-  }
   function applyOnlineState(st){
     if(!st)return;
     window.__onlineMyIndex=st.myIndex;
@@ -4225,99 +4193,40 @@ button[onclick*="groupSelected"] {
     deck=Array(Math.max(0,st.deckCount)).fill(null);
     discardPile=st.discardTop?[st.discardTop]:[];
     wildJoker=st.wildJoker||null;
-    const seatMap=buildOnlineSeatMap(st);
-    window.__onlineDealerIndex=st.dealerIndex;
-    // Reset all dealer badges first, then place them on the correct visual seat.
-    for(let seat=2; seat<=6; seat++){ const tag=document.getElementById('dealer-tag-p'+seat); if(tag)tag.style.display='none'; }
-    (st.players||[]).forEach(pl=>{
-      const seat=seatMap[pl.index];
-      const tag=document.getElementById('dealer-tag-p'+seat);
-      if(tag)tag.style.display=pl.index===st.dealerIndex?'inline-block':'none';
-    });
-    if(st.scores){
-      Object.entries(st.scores).forEach(([pid,score])=>{
-        const pl=(st.players||[]).find(x=>x.id===pid);
-        if(!pl)return;
-        const seat=seatMap[pl.index];
-        const el=document.getElementById('score-p'+seat);
-        if(el)el.textContent=score;
-      });
-    }
-    const meHand=st.hands[st.myIndex];
-    if(Array.isArray(meHand)) rebuildLocalGroups(meHand);
+    window.__onlineDealerIndex=st.dealerIndex; (st.players||[]).forEach(pl=>{const tag=document.getElementById('dealer-tag-p'+(pl.index+1));if(tag)tag.style.display=pl.index===st.dealerIndex?'inline-block':'none';});
+    if(st.scores){ Object.entries(st.scores).forEach(([pid,score])=>{ const pl=(st.players||[]).find(x=>x.id===pid); if(pl&&pl.index>=0){ const el=document.getElementById('score-p'+(pl.index+1)); if(el)el.textContent=score; } }); }
+    const me=st.hands[st.myIndex];
+    if(Array.isArray(me)) rebuildLocalGroups(me);
     selectedCards=[];
     if(typeof updateUI==='function') updateUI();
     onlineRenderOpponent(st);
     onlineStartTurnTimer(st.turnEndsAt);
+    onlineUpdateTurnStatus(st);
   }
   function onlineRenderOpponent(st){
-    const meIndex=Number.isInteger(st.myIndex)?st.myIndex:0;
-    const meName=(st.players[meIndex]||{}).name||'YOU';
-    const seatMap=window.__onlineSeatByPlayer||buildOnlineSeatMap(st);
-    for(let seat=2; seat<=6; seat++){
-      const box=document.getElementById('opp'+seat);
-      if(box) box.style.display='none';
-    }
-    (st.players||[]).forEach(pl=>{
-      const seat=seatMap[pl.index];
-      if(!seat)return;
-      const h=st.hands[pl.index];
-      const count=Array.isArray(h)?h.length:(h&&h.count)||0;
-      if(pl.index===meIndex){
-        const myName=document.querySelector('#player-name-p1');
-        if(myName)myName.textContent=pl.name||'YOU';
-        const myScore=document.getElementById('score-p1');
-        if(myScore&&st.scores&&st.scores[pl.id]!=null)myScore.textContent=st.scores[pl.id];
-        return;
-      }
-      const box=document.getElementById('opp'+seat);
-      if(box)box.style.display='flex';
-      const actionEl=document.getElementById('action-p'+seat);
-      if(actionEl)actionEl.textContent=(st.currentPlayer===pl.index?'Playing • ':'Waiting • ')+count+' cards';
-      const nameEl=box?.querySelector('.opp-name');
-      if(nameEl){
-        const dealer=pl.index===st.dealerIndex?' <span class="dealer-badge">DEALER</span>':'';
-        nameEl.innerHTML=String(pl.name||'Player').replace(/[<>]/g,'')+dealer;
-      }
-      const scoreEl=document.getElementById('score-p'+seat);
-      if(scoreEl&&st.scores&&st.scores[pl.id]!=null)scoreEl.textContent=st.scores[pl.id];
-      if(box){
-        box.classList.toggle('active-turn',st.currentPlayer===pl.index);
-        box.classList.toggle('eliminated',false);
-      }
-    });
-    const pInfo=document.getElementById('playerInfoBox');
-    if(pInfo){
-      pInfo.classList.toggle('active-turn',currentPlayer===meIndex);
-      const name=document.querySelector('#player-name-p1');
-      if(name)name.textContent=(st.players[meIndex]||{}).name||'YOU';
-    }
-    const status=document.getElementById('status');
-    if(status && st.started){
-      status.innerText=currentPlayer===meIndex
-        ? (playerHasDrawn ? 'Your Turn • Select a card to discard.' : 'Your Turn • Lift a card within 30 seconds.')
-        : ((st.players[currentPlayer]||{}).name||('Player '+(currentPlayer+1)))+' is playing • '+Math.max(0,Math.ceil(((st.turnEndsAt||Date.now())-Date.now())/1000))+'s';
-    }
+    const meName=(st.players[st.myIndex]||{}).name||'YOU';
+    (st.players||[]).forEach(pl=>{ const h=st.hands[pl.index]; const count=Array.isArray(h)?h.length:(h&&h.count)||0; const el=document.getElementById('action-p'+(pl.index+1)); if(el)el.textContent=(st.currentPlayer===pl.index?'Playing':'Waiting')+' • '+count+' cards'; const nameEl=document.querySelector('#player-name-p'+(pl.index+1)); if(nameEl)nameEl.textContent=pl.index===st.myIndex?'YOU':pl.name; const scoreEl=document.getElementById('score-p'+(pl.index+1)); if(scoreEl&&st.scores&&st.scores[pl.id]!=null)scoreEl.textContent=st.scores[pl.id]; const box=document.getElementById('opp'+(pl.index+1)); if(box)box.classList.toggle('active-turn',st.currentPlayer===pl.index); });
     document.title='POOL RUMMY • '+meName+' • '+(st.players||[]).length+' PLAYERS';
   }
+  function onlineUpdateTurnStatus(st){
+    const el=document.getElementById('status');
+    if(!el || !st) return;
+    const mine = st.myIndex === st.currentPlayer;
+    const drawn = !!st.playerHasDrawn;
+    if(mine && !drawn) el.innerText='Your Turn • Pick a card (30s)';
+    else if(mine && drawn) el.innerText='Your Turn • Select a card to discard';
+    else {
+      const p=(st.players||[]).find(x=>x.index===st.currentPlayer);
+      el.innerText=(p?p.name:'Player')+' • Turn';
+    }
+  }
+
   function onlineStartTurnTimer(endAt){
     if(window.__onlineTurnTimer)clearInterval(window.__onlineTurnTimer);
-    const fixedEnd=Number(endAt||0);
     function tick(){
-      const left=Math.max(0,Math.ceil((fixedEnd-Date.now())/1000));
+      const left=Math.max(0,Math.ceil(((endAt||Date.now())-Date.now())/1000));
       timeLeft=left;
       if(typeof updateAllPlayerTimers==='function')updateAllPlayerTimers();
-      const st=window.__onlineState;
-      const me=Number.isInteger(window.__onlineMyIndex)?window.__onlineMyIndex:0;
-      const status=document.getElementById('status');
-      if(status && st && st.started){
-        if(st.currentPlayer===me){
-          status.innerText=st.playerHasDrawn ? 'Your Turn • Select a card to discard.' : `Your Turn • Lift a card within ${left}s.`;
-        } else {
-          const nm=(st.players&&st.players[st.currentPlayer]&&st.players[st.currentPlayer].name)||('Player '+(st.currentPlayer+1));
-          status.innerText=`${nm} is playing • ${left}s`;
-        }
-      }
       if(left<=0)clearInterval(window.__onlineTurnTimer);
     }
     tick(); window.__onlineTurnTimer=setInterval(tick,250);
@@ -4339,7 +4248,7 @@ button[onclick*="groupSelected"] {
     onlineSocket.on('gameState',applyOnlineState);
     onlineSocket.on('realGameStarted',d=>{window.__realRoomStarted=true; gameOver=false; gameStarted=true; if(d&&Number.isInteger(d.currentPlayer))currentPlayer=d.currentPlayer; if(typeof updateUI==='function')updateUI();});
     onlineSocket.on('onlineActionError',m=>{const st=document.getElementById('status');if(st)st.innerText='⚠️ '+((m&&m.message)||'Action not allowed');});
-    onlineSocket.on('onlineActionAck',m=>{const st=document.getElementById('status');if(st&&m&&m.action==='draw')st.innerText='Card received. Select one card to discard.';});
+    onlineSocket.on('onlineActionAck',m=>{const st=document.getElementById('status');if(st&&m&&m.action==='draw')st.innerText='Card received • 14 cards • Select 1 card to discard.';});
     onlineSocket.on('dealResult',r=>{ window.__onlineRoomStarted=false; window.__onlineLastResult=r; gameOver=true; const msg=r.valid?('🏆 '+r.winnerName+' WON! Opponent +'+((r.penalties&&r.penalties[0])||{}).points+' points'):('❌ WRONG SHOW! '+r.loserName+' +80 points'); if(typeof showDealResultModal==='function')showDealResultModal(msg); const b=document.getElementById('nextDealBtn'); if(b){b.innerText=r.matchWinner?'MATCH FINISHED':'NEXT DEAL';b.onclick=r.matchWinner?(()=>location.reload()):onlineNextDeal;} });
     onlineSocket.on('poolFinished',r=>{alert('🏆 Match finished!');location.reload();});
   }
