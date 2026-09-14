@@ -163,29 +163,15 @@ function startTurn(room){
   room.playerHasDrawn=false;
   room.turnEndsAt=Date.now()+30000;
   room.turnTimer=setTimeout(()=>{
-    if(!room.started)return;
-    const timed=room.playersList[room.currentPlayer];
-    if(!timed)return;
-    // Timeout is server-authoritative. A client cannot make another player act.
-    // If the player did not finish the turn in 30 seconds, apply a missed-turn
-    // drop and move to the next eligible seat.
-    const penalty=room.playerHasDrawn?50:25;
-    room.scores[timed.id]=(room.scores[timed.id]||0)+penalty;
-    timed.droppedThisDeal=true;
-    timed.lastTurnPenalty=penalty;
-    room.playerHasDrawn=false;
-    const limit=room.poolLimit||DEFAULT_POOL_LIMIT;
-    const active=room.playersList.filter(x=>!x.droppedThisDeal && (room.scores[x.id]||0)<limit);
-    if(active.length<=1){
-      room.started=false;
-      if(room.turnTimer)clearTimeout(room.turnTimer);
-      room.result={winnerId:active[0]?.id||null,winnerName:active[0]?.name||null,valid:true,timeout:true,penalties:room.playersList.filter(x=>x.id!==(active[0]?.id)).map(x=>({playerId:x.id,name:x.name,points:room.scores[x.id]||0}))};
-      broadcastState(room);
-      io.to(room.id).emit('dealResult',room.result);
-      return;
-    }
-    room.currentPlayer=active[0].index;
-    startTurn(room);
+    const p=room.playersList.find(x=>x.index===room.currentPlayer && !x.eliminated);
+    if(!p) return;
+    // 30-sec timeout: NO penalty. Player's turn closes and play continues.
+    // After two completed timeout rounds, this player's 3rd round/turn
+    // becomes eligible for Middle Drop = 50 points, provided no card is lifted.
+    p.timeoutTurns=(p.timeoutTurns||0)+1;
+    p.middleDropEligible = (p.timeoutTurns >= 2);
+    p.handClosedOnTimeout=true;
+    advanceTurn(room);
   },30000);
   broadcastState(room);
 }
@@ -228,7 +214,8 @@ function startRealGame(room){
   room.wildJoker=nonPrinted[Math.floor(Math.random()*nonPrinted.length)] || null;
 
   const dealerPos=activePlayers.findIndex(p=>p.index===room.dealerIndex);
-  room.currentPlayer=activePlayers[(dealerPos+1)%activePlayers.length].index;
+  // New deal starts randomly; after that, turns proceed in player order.
+  room.currentPlayer=activePlayers[Math.floor(Math.random()*activePlayers.length)].index;
   room.playerHasDrawn=false;
   startTurn(room);
   io.to(room.id).emit('realGameStarted',{
@@ -238,6 +225,39 @@ function startRealGame(room){
   });
 }
 
+
+
+function advanceTurn(room){
+  if(room.turnTimer) clearTimeout(room.turnTimer);
+  const active=room.playersList.filter(p=>!p.eliminated);
+  if(active.length<=1){
+    const w=active[0]||null;
+    room.started=false;
+    io.to(room.id).emit('poolFinished',{
+      matchFinished:true,winnerName:w?w.name:null,winnerId:w?w.id:null,
+      scores:{...room.scores},players:room.playersList.map(p=>({
+        playerId:p.id,name:p.name,totalScore:room.scores[p.id]||0,
+        result:p.eliminated?'ELIMINATED':(w&&p.id===w.id?'MATCH WINNER':'ACTIVE'),
+        cards:(p.hand||[]).map(publicCard)
+      }))
+    });
+    return;
+  }
+
+  const pos=active.findIndex(p=>p.index===room.currentPlayer);
+  // STRICT TURN ORDER: next active player, then next, then next...
+  room.currentPlayer=active[(pos<0?0:(pos+1)%active.length)].index;
+  room.playerHasDrawn=false;
+  const np=room.playersList.find(x=>x.index===room.currentPlayer);
+  if(np){
+    np.middleDropLocked=false;
+    np.handClosedOnTimeout=false;
+  }
+  room.turnStartedAt=Date.now();
+  room.turnSeconds=30;
+  broadcastState(room);
+  startTurnTimer(room);
+}
 
 io.on('connection',socket=>{
   socket.on('error',err=>console.error('Socket error:',err));
@@ -307,47 +327,71 @@ io.on('connection',socket=>{
 
   socket.on('drop',()=>{
     const room=rooms.get(socket.roomId),p=room&&room.players.get(socket.id);
-    if(!room||!p||!room.started||p.index!==room.currentPlayer){socket.emit('onlineActionError',{message:'Drop is allowed only on your turn.'});return;}
-    const penalty=room.playerHasDrawn?50:25;
-    room.scores[p.id]=(room.scores[p.id]||0)+penalty; p.droppedThisDeal=true; p.lastTurnPenalty=penalty; room.playerHasDrawn=false;
-    const active=room.playersList.filter(x=>!x.droppedThisDeal && (room.scores[x.id]||0)<(room.poolLimit||DEFAULT_POOL_LIMIT));
-    if(active.length<=1){ room.started=false; if(room.turnTimer)clearTimeout(room.turnTimer); room.result={winnerId:active[0]?.id||null,winnerName:active[0]?.name||null,valid:true,drop:true,penalties:room.playersList.filter(x=>x.id!==active[0]?.id).map(x=>({playerId:x.id,name:x.name,points:room.scores[x.id]||0}))}; broadcastState(room); io.to(room.id).emit('dealResult',room.result); return; }
-    room.currentPlayer=active[0].index; startTurn(room);
+    if(!room||!p||!room.started||p.index!==room.currentPlayer||p.playerHasDrawn)return;
+
+    if(room.turnTimer)clearTimeout(room.turnTimer);
+
+    // First drop = 25 points.
+    // Middle Drop = 50 points, but only on/after the player's 3rd round
+    // (two previous 30-sec timeouts) and only BEFORE lifting a card.
+    const isFirstDrop=(p.dropCount||0)===0 && (p.timeoutTurns||0)===0;
+    const middleEligible=(p.timeoutTurns||0)>=2 && !p.middleDropLocked;
+
+    let penalty=null;
+    if(isFirstDrop) penalty=25;
+    else if(middleEligible) penalty=50;
+    else {
+      socket.emit('onlineActionError',{
+        message:'Middle Drop = 50 points is available on the 3rd round after two 30-second timeouts, before lifting a card.'
+      });
+      startTurnTimer(room);
+      return;
+    }
+
+    room.scores[p.id]=(room.scores[p.id]||0)+penalty;
+    p.dropCount=(p.dropCount||0)+1;
+    p.hand=[];
+    if(room.scores[p.id]>=(room.poolLimit||201))p.eliminated=true;
+    advanceTurn(room);
   });
 
-  socket.on('declare',({groupIds,discardId})=>{
+  socket.on('declare',({groupIds,discardId,finishId})=>{
     const room=rooms.get(socket.roomId),p=room&&room.players.get(socket.id);
-    if(!room||!p||!room.started||p.index!==room.currentPlayer||!room.playerHasDrawn){socket.emit('onlineActionError',{message:'Declare is allowed only on your turn after drawing.'});return;}
-    const check=validateShow(room,p,groupIds,discardId);
+    if(!room||!p||!room.started||p.index!==room.currentPlayer||!room.playerHasDrawn){
+      socket.emit('onlineActionError',{message:'Declare is allowed only on your turn after drawing.'});return;
+    }
+
+    const selectedFinishId=finishId||discardId;
+    const check=validateShow(room,p,groupIds,selectedFinishId);
+    const limit=room.poolLimit||DEFAULT_POOL_LIMIT;
+
     if(check.ok){
       if(room.turnTimer)clearTimeout(room.turnTimer);
       const winner=p;
       const penalties=[];
       const resultPlayers=[];
 
-      // Winner is always 0 points for this deal.
+      // Winner always gets 0 for this deal.
       resultPlayers.push({
-        playerId:winner.id,
-        name:winner.name,
-        points:0,
-        totalScore:room.scores[winner.id]||0,
-        result:'WINNER',
+        playerId:winner.id,name:winner.name,points:0,
+        totalScore:room.scores[winner.id]||0,result:'WINNER',
         cards:winner.hand.map(publicCard),
-        lives:check.groups.map(g=>({type:
-          pureSeq(g)?'1st Life (Pure Sequence)':
-          (impureSeq(g,room)?'2nd Life (With Joker)':'Set/Trill'),
-          cards:g.map(publicCard)})),
+        lives:check.groups.map(g=>({
+          type:pureSeq(g)?'1st Life (Pure Sequence)':
+               (impureSeq(g,room)?'2nd Life (With Joker)':
+               (validSet(g,room)?'Set/Trill':'Group')),
+          cards:g.map(publicCard)
+        })),
         remaining:[]
       });
 
-      // Score EVERY other player. Valid lives are removed from scoring;
-      // only cards outside the selected valid lives contribute, capped at 80.
+      // Score every other player from cards left after their best valid lives.
       for(const opp of room.playersList){
         if(opp.id===winner.id)continue;
         const info=bestLifeScore(opp.hand,room);
-        const pts=info.points;
+        const pts=Math.min(80,Math.max(0,Number(info.points||0)));
         room.scores[opp.id]=(room.scores[opp.id]||0)+pts;
-        if(room.scores[opp.id] >= (room.poolLimit||DEFAULT_POOL_LIMIT)) opp.eliminated=true;
+        if(room.scores[opp.id]>=limit)opp.eliminated=true;
 
         const used=new Set((info.lives||[]).flat().map(c=>c.id));
         const remaining=opp.hand.filter(c=>!used.has(c.id));
@@ -358,43 +402,71 @@ io.on('connection',socket=>{
           cards:g.map(publicCard)
         }));
 
-        penalties.push({
-          playerId:opp.id,name:opp.name,points:pts,totalScore:room.scores[opp.id]||0
-        });
+        penalties.push({playerId:opp.id,name:opp.name,points:pts,totalScore:room.scores[opp.id]||0});
         resultPlayers.push({
           playerId:opp.id,name:opp.name,points:pts,
           totalScore:room.scores[opp.id]||0,
           result:opp.eliminated?'ELIMINATED':'LOST',
-          cards:opp.hand.map(publicCard),
-          lives,
+          cards:opp.hand.map(publicCard),lives,
           remaining:remaining.map(publicCard)
         });
       }
 
+      // A player reaching 201+ is eliminated. Continue until exactly one
+      // active player remains; that last active player is the match winner.
+      const active=room.playersList.filter(x=>!x.eliminated && (room.scores[x.id]||0)<limit);
+      const matchWinner=active.length===1?active[0]:null;
+
       room.result={
-        winnerId:winner.id,winnerName:winner.name,valid:true,penalties,
-        players:resultPlayers,dealNumber:room.dealNumber,
-        poolLimit:room.poolLimit||DEFAULT_POOL_LIMIT
+        winnerId:winner.id,winnerName:winner.name,valid:true,
+        penalties,players:resultPlayers,dealNumber:room.dealNumber,
+        poolLimit:limit,
+        matchWinner:matchWinner?matchWinner.name:null,
+        matchWinnerId:matchWinner?matchWinner.id:null,
+        matchFinished:active.length<=1,
+        scores:{...room.scores}
       };
       room.started=false;
-
-      const gameWinner=room.playersList.filter(x=>!x.eliminated &&
-        (room.scores[x.id]||0)<(room.poolLimit||DEFAULT_POOL_LIMIT));
-      room.result.matchWinner=gameWinner.length===1?gameWinner[0].name:null;
-      room.result.matchFinished=gameWinner.length<=1;
-
       broadcastState(room);
       io.to(room.id).emit('dealResult',room.result);
-    }else{
-      room.scores[p.id]=(room.scores[p.id]||0)+80;
-      if(room.scores[p.id] >= (room.poolLimit||DEFAULT_POOL_LIMIT)) p.eliminated=true;
-      room.result={winnerId:null,winnerName:null,valid:false,wrongShow:true,loserId:p.id,loserName:p.name,penalties:[{playerId:p.id,name:p.name,points:80,totalScore:room.scores[p.id]||0}],reason:check.reason};
-      room.started=false;
-      const gameWinner=(room.scores[p.id]||0)>=(room.poolLimit||DEFAULT_POOL_LIMIT) ? room.playersList.find(x=>x.id!==p.id)?.name : null;
-      room.result.matchWinner=gameWinner||null;
-      broadcastState(room);io.to(room.id).emit('dealResult',room.result);
+      return;
     }
+
+    // Wrong Show = +80, and if total reaches 201 the player is eliminated.
+    room.scores[p.id]=(room.scores[p.id]||0)+80;
+    if(room.scores[p.id]>=limit)p.eliminated=true;
+
+    const resultPlayers=room.playersList.map(x=>({
+      playerId:x.id,
+      name:x.name,
+      points:x.id===p.id?80:0,
+      totalScore:room.scores[x.id]||0,
+      result:x.eliminated?'ELIMINATED':(x.id===p.id?'WRONG SHOW':'ACTIVE'),
+      cards:x.hand.map(publicCard),
+      lives:[],
+      remaining:x.hand.map(publicCard)
+    }));
+
+    const active=room.playersList.filter(x=>!x.eliminated && (room.scores[x.id]||0)<limit);
+    const matchWinner=active.length===1?active[0]:null;
+
+    room.result={
+      winnerId:null,winnerName:null,valid:false,wrongShow:true,
+      loserId:p.id,loserName:p.name,penalties:[
+        {playerId:p.id,name:p.name,points:80,totalScore:room.scores[p.id]||0}
+      ],
+      players:resultPlayers,dealNumber:room.dealNumber,poolLimit:limit,
+      matchWinner:matchWinner?matchWinner.name:null,
+      matchWinnerId:matchWinner?matchWinner.id:null,
+      matchFinished:active.length<=1,
+      scores:{...room.scores},
+      reason:check.reason
+    };
+    room.started=false;
+    broadcastState(room);
+    io.to(room.id).emit('dealResult',room.result);
   });
+
   socket.on('nextDeal',()=>{
     const room=rooms.get(socket.roomId);
     if(!room||room.started||room.playersList.length<2)return;
@@ -424,6 +496,8 @@ io.on('connection',socket=>{
     active.forEach(p=>{p.ready=true;p.hand=[];p.droppedThisDeal=false;});
     room.playersList.filter(p=>!active.includes(p)).forEach(p=>{p.hand=[];p.ready=true;});
     startRealGame(room);
+
+    startTurnTimer(room);
   });
 
   socket.on('reconnectPlayer',({roomId,sessionToken,name})=>{
