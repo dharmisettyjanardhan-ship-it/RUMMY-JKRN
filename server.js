@@ -218,6 +218,7 @@ io.on('connection',socket=>{
   socket.on('drawDeck',()=>{
     const room=rooms.get(socket.roomId),p=room&&room.players.get(socket.id);
     if(!room||!p||!room.started||p.index!==room.currentPlayer||room.playerHasDrawn){socket.emit('onlineActionError',{message:'Not your turn, or you already drew.'});return;}
+    if(p.hand.length!==13){socket.emit('onlineActionError',{message:'Your hand must be 13 cards before drawing.'});return;}
     if(room.deck.length===0&&room.discard.length>1){const top=room.discard.pop();room.deck=shuffle(room.discard);room.discard=[top];}
     if(!room.deck.length){socket.emit('onlineActionError',{message:'Closed deck is empty.'});return;}
     const card=room.deck.pop();p.hand.push(card);room.playerHasDrawn=true;socket.emit('onlineActionAck',{action:'draw',card:publicCard(card)});broadcastState(room);
@@ -225,6 +226,7 @@ io.on('connection',socket=>{
   socket.on('drawDiscard',()=>{
     const room=rooms.get(socket.roomId),p=room&&room.players.get(socket.id);
     if(!room||!p||!room.started||p.index!==room.currentPlayer||room.playerHasDrawn||room.discard.length===0){socket.emit('onlineActionError',{message:'Cannot draw from OPEN DECK now.'});return;}
+    if(p.hand.length!==13){socket.emit('onlineActionError',{message:'Your hand must be 13 cards before drawing.'});return;}
     const card=room.discard.pop();p.hand.push(card);room.playerHasDrawn=true;socket.emit('onlineActionAck',{action:'draw',card:publicCard(card)});broadcastState(room);
   });
   socket.on('discardCard',({cardId})=>{
@@ -232,7 +234,9 @@ io.on('connection',socket=>{
     if(!room||!p||!room.started||p.index!==room.currentPlayer||!room.playerHasDrawn){socket.emit('onlineActionError',{message:'Draw first; it must be your turn.'});return;}
     if(p.hand.length!==14){socket.emit('onlineActionError',{message:'You must have 14 cards before discarding.'});return;}
     const idx=p.hand.findIndex(c=>c.id===cardId);if(idx<0){socket.emit('onlineActionError',{message:'Select one card to discard.'});return;}
-    room.discard.push(p.hand.splice(idx,1)[0]);room.currentPlayer=(room.currentPlayer+1)%room.playersList.length;startTurn(room);
+    room.discard.push(p.hand.splice(idx,1)[0]);
+    if(p.hand.length!==13){socket.emit('onlineActionError',{message:'Discard must leave exactly 13 cards.'});return;}
+    room.currentPlayer=(room.currentPlayer+1)%room.playersList.length;startTurn(room);
   });
 
   socket.on('declare',({groupIds,discardId})=>{
