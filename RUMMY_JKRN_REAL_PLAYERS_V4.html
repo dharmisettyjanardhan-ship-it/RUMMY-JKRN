@@ -1818,46 +1818,6 @@ html, body {
 </style>
 
 <script src="/socket.io/socket.io.js"></script>
-
-<style id="jkrn-reference-design-final">
-/* ===== JKRN REFERENCE TABLE DESIGN ===== */
-.top-bar{height:72px!important;padding:8px 18px!important;background:linear-gradient(180deg,#070707,#141414)!important;border-bottom:2px solid #6e5418!important;}
-.top-bar h1{display:flex!important;align-items:center!important;gap:10px!important;font-size:24px!important;letter-spacing:.5px!important;color:#ffd72f!important;text-shadow:0 2px 0 #392300!important;}
-.header-pool-badge{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:68px!important;padding:6px 12px!important;border:2px solid #d5a62b!important;border-radius:10px!important;background:linear-gradient(180deg,#332307,#100c05)!important;color:#ffe05a!important;font-size:20px!important;box-shadow:0 0 12px rgba(255,193,7,.25)!important;}
-.top-right-box{gap:10px!important;}
-.lobby-game-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:18px;border:2px solid #f1c84b;background:linear-gradient(180deg,#ffd84a,#b97800);color:#111;font-weight:900;font-size:14px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.5);}
-.table{width:min(97vw,1580px)!important;height:calc(100vh - 235px)!important;min-height:500px!important;margin:8px auto 205px!important;border-width:8px!important;background:radial-gradient(ellipse at 50% 46%,#0b944d 0%,#08723a 48%,#03351c 100%)!important;box-shadow:inset 0 0 0 3px rgba(255,255,255,.05),inset 0 0 65px rgba(0,0,0,.72),0 0 35px rgba(0,0,0,.8)!important;}
-/* Five visible opponents only: Player 2–6. */
-.opp-box{width:190px!important;background:rgba(0,0,0,.86)!important;border:2px solid #c49b25!important;border-radius:28px!important;padding:5px 12px 5px 5px!important;}
-.opp-box.active-turn{border-color:#00ff48!important;box-shadow:0 0 22px rgba(0,255,72,.75)!important;}
-.opp-avatar-container,.opp-avatar{width:52px!important;height:52px!important;}
-.opp-avatar{font-size:25px!important;border:2px solid #e5c34b!important;background:radial-gradient(circle,#555,#222)!important;}
-.opp-name{font-size:13px!important;font-weight:800!important;}.opp-score{font-size:13px!important;color:#ffd72f!important;}.opp-action{font-size:10px!important;}
-#opp2{top:31%!important;left:2%!important;} #opp3{top:13%!important;left:22%!important;} #opp4{top:3%!important;left:50%!important;transform:translateX(-50%)!important;} #opp5{top:13%!important;right:22%!important;} #opp6{top:31%!important;right:2%!important;}
-.center-area{top:47%!important;gap:34px!important;}
-.pile-container{min-width:95px!important;}.pile{width:105px!important;height:145px!important;border-radius:10px!important;font-size:27px!important;}.draw-pile::after{font-size:58px!important;}.pile-label{font-size:13px!important;letter-spacing:.2px!important;}.joker-pile{border:3px solid #ffd700!important;box-shadow:0 0 18px rgba(255,215,0,.75)!important;}
-/* Hand and controls */
-.player-area{bottom:-182px!important;width:min(96vw,1460px)!important;z-index:950!important;}
-.player-info{padding:6px 16px!important;font-size:14px!important;border-color:#d0a72f!important;border-radius:13px!important;}
-.groups-container{height:165px!important;gap:10px!important;max-width:100%!important;overflow-x:auto!important;overflow-y:visible!important;}
-.card-group{min-width:82px!important;background:rgba(0,0,0,.45)!important;border-radius:7px!important;}
-.card{width:82px!important;min-width:82px!important;height:122px!important;font-size:19px!important;padding:6px 6px 18px!important;border-radius:6px!important;}
-.cards-in-group .card + .card{margin-left:-40px!important;}.card-center{font-size:31px!important;}.group-status-badge{font-size:11px!important;padding:4px 2px!important;}
-.left-controls,.action-buttons{position:fixed!important;bottom:14.5%!important;z-index:9998!important;display:flex!important;gap:9px!important;}
-.left-controls{left:1.4%!important;right:auto!important;flex-direction:column!important;}
-.action-buttons{right:1.4%!important;left:auto!important;flex-direction:column!important;}
-.left-controls button,.action-buttons button{min-width:145px!important;min-height:54px!important;padding:11px 15px!important;border-radius:11px!important;font-size:16px!important;font-weight:900!important;}
-#autoSortButton{order:1!important;}.btn-drop{order:2!important;}.btn-discard{order:1!important;display:inline-flex!important;background:linear-gradient(180deg,#36a7ff,#0750a8)!important;border:2px solid #8dccff!important;}.btn-declare{order:2!important;}
-#groupButton{display:none!important;}
-/* Keep 201 Pool only in the JKRN header badge; hide duplicate pool suffix. */
-#poolTypeDisplay{display:none!important;}
-@media(max-width:900px){
- .top-bar{height:54px!important;padding:5px 8px!important}.top-bar h1{font-size:16px!important;gap:5px!important}.header-pool-badge{min-width:48px!important;padding:3px 7px!important;font-size:14px!important}.lobby-game-btn{padding:5px 8px!important;font-size:10px!important}.scoreboard-icon-btn,.sound-toggle-btn{padding:5px 8px!important;font-size:10px!important}
- .table{width:98vw!important;height:calc(100dvh - 185px)!important;min-height:390px!important;margin-bottom:160px!important;border-width:5px!important}.center-area{gap:8px!important;top:44%!important}.pile{width:62px!important;height:90px!important}.pile-label{font-size:9px!important}.draw-pile::after{font-size:36px!important}.opp-box{width:112px!important}.opp-avatar-container,.opp-avatar{width:32px!important;height:32px!important}.opp-name,.opp-score{font-size:8px!important}.opp-action{font-size:7px!important}
- #opp2{top:39%!important;left:1%!important}#opp3{top:17%!important;left:2%!important}#opp4{top:5%!important}#opp5{top:17%!important;right:2%!important}#opp6{top:39%!important;right:1%!important}
- .player-area{bottom:-145px!important;width:100%!important}.groups-container{height:128px!important;gap:4px!important}.card{width:58px!important;min-width:58px!important;height:88px!important;font-size:13px!important}.cards-in-group .card + .card{margin-left:-28px!important}.left-controls,.action-buttons{bottom:13%!important}.left-controls button,.action-buttons button{min-width:96px!important;min-height:42px!important;font-size:10px!important;padding:7px 8px!important}
-}
-</style>
 </head>
 <body onload="initAutoGame()">
 
@@ -1904,9 +1864,8 @@ html, body {
 </div>
 
 <div class="top-bar">
-    <h1>👑 RUMMY JKRN <span class="header-pool-badge">201</span></h1>
+    <h1>🃏 POOL RUMMY (<span id="poolTypeDisplay">201</span> POOL)</h1>
     <div class="top-right-box">
-        <button class="lobby-game-btn" onclick="openGameLobby()">🏠 Lobby</button>
         <button class="sound-toggle-btn" id="soundToggleBtn" onclick="toggleSound()">🔊 Sound</button>
         <button class="scoreboard-icon-btn" onclick="openGlobalScoreboardModal()">📊 Score Board</button>
         <div id="walletBox">🪙 <span id="walletBalance">50000</span></div>
@@ -1960,8 +1919,8 @@ html, body {
     </div>
 
     <div class="left-controls">
-        <button class="btn-auto-sort" id="autoSortButton" onclick="autoSortCards()">↕ AUTO SORT</button>
-        <button class="btn-drop" id="dropButton" onclick="dropGame()">DROP</button>
+        <button class="btn-drop" id="dropButton" onclick="dropGame()">Drop</button>
+        <button class="btn-auto-sort" onclick="autoSortCards()">Auto Sort</button>
     </div>
 
     <div class="player-area" id="playerArea">
@@ -1973,6 +1932,7 @@ html, body {
     </div>
 
     <div class="action-buttons">
+        <button class="btn-group" id="groupButton" onclick="groupSelectedCards()">Group</button>
         <button class="btn-discard" id="discardButton" onclick="discardCard()">Discard</button>
         <button class="btn-declare" id="declareButton" onclick="declareGame()">Declare</button>
     </div>
@@ -2092,14 +2052,6 @@ function initAutoGame() {
     initializeGameLobby();
     document.getElementById("lobbyScreen").classList.add("hidden");
     const ol=document.getElementById("onlineLobby"); if(ol) ol.classList.remove("hidden");
-}
-
-function openGameLobby(){
-    const lobby=document.getElementById("lobbyScreen");
-    if(lobby){
-        lobby.classList.remove("hidden");
-        lobby.style.zIndex="10000";
-    }
 }
 
 function openLobbyRules(){ alert("201 Pool Rummy:\n\n• 1st Life (Pure) మరియు 2nd Life తప్పనిసరి.\n• ఒకే కలర్/సింబల్ కార్డులు రిపీట్ అయితే అది SET కాదు (IMPURE).\n• వేర్వేరు సూట్లు ఉన్న కార్డులతో మాత్రమే SET ఏర్పడుతుంది."); }
