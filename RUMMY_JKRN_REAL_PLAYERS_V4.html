@@ -2345,6 +2345,8 @@ function getGroupBadgeInfo(group) {
 }
 
 function startTurnTimer() {
+    // Online room: turn/timer is controlled only by the server. Never start local computer logic.
+    if (window.__realRoomStarted) return;
     if (turnTimer) { clearInterval(turnTimer); turnTimer = null; }
     if (gameOver || !gameStarted) return;
 
@@ -2403,6 +2405,8 @@ function updateAllPlayerTimers() {
 }
 
 function runComputerTurn() {
+    // In real-player rooms there is NO system/computer discard.
+    if (window.__realRoomStarted) return;
     const compIdx = currentPlayer;
     const actionEl = document.getElementById(`action-p${compIdx+1}`);
     if (actionEl) actionEl.innerText = "Thinking...";
@@ -2410,14 +2414,14 @@ function runComputerTurn() {
     updateAllPlayerTimers();
 
     const safety = setTimeout(() => {
-        if (!gameOver && gameStarted && currentPlayer === compIdx) {
+        if (!window.__realRoomStarted && !gameOver && gameStarted && currentPlayer === compIdx) {
             if (turnTimer) { clearInterval(turnTimer); turnTimer = null; }
             nextTurn();
         }
     }, 5000);
 
     setTimeout(() => {
-        if (gameOver || !gameStarted || currentPlayer !== compIdx) {
+        if (window.__realRoomStarted || gameOver || !gameStarted || currentPlayer !== compIdx) {
             clearTimeout(safety);
             return;
         }
@@ -2435,7 +2439,7 @@ function runComputerTurn() {
         updateAllPlayerTimers();
 
         setTimeout(() => {
-            if (gameOver || !gameStarted || currentPlayer !== compIdx) {
+            if (window.__realRoomStarted || gameOver || !gameStarted || currentPlayer !== compIdx) {
                 clearTimeout(safety);
                 return;
             }
@@ -2461,7 +2465,7 @@ function runComputerTurn() {
             if (turnTimer) { clearInterval(turnTimer); turnTimer = null; }
 
             setTimeout(() => {
-                if (!gameOver && gameStarted && currentPlayer === compIdx) {
+                if (!window.__realRoomStarted && !gameOver && gameStarted && currentPlayer === compIdx) {
                     nextTurn();
                 }
             }, 500);
@@ -3098,6 +3102,7 @@ function drawFromDiscard() {
 }
 
 function discardCard() {
+    if (window.__realRoomStarted) return;
     if (currentPlayer !== 0 || !playerHasDrawn || selectedCards.length !== 1 || isEliminated(0)) return;
     const s = selectedCards[0];
     const card = playerGroups[s.gIdx].splice(s.cIdx, 1)[0];
