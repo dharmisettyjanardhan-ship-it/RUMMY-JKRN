@@ -113,6 +113,10 @@ function bestLifeScore(hand,room){
 }
 function validateShow(room,p,groupIds,discardId){
   const hand=p.hand.slice();
+  // Pool Rummy declaration rule:
+  // 13 cards are dealt; drawing makes 14. One selected 14th/finish card
+  // is excluded from validation. The other 13 cards must all be valid.
+
   if(discardId){const k=hand.findIndex(c=>c.id===discardId);if(k<0)return {ok:false,reason:'Selected discard card is not in your hand.'};hand.splice(k,1);}
   if(hand.length!==13)return {ok:false,reason:'Declare requires 13 cards after selecting the discard card.'};
   if(!Array.isArray(groupIds)||!groupIds.length)return {ok:false,reason:'No groups submitted.'};
@@ -124,9 +128,9 @@ function validateShow(room,p,groupIds,discardId){
   }
   const remaining=hand.filter(c=>!used.has(c.id));
   if(remaining.length)return {ok:false,reason:'All 13 cards must be covered by valid groups.'};
-  const pure=groups.some(pureSeq), seq=groups.filter(g=>impureSeq(g,room)).length;
+  const pure=groups.some(g=>pureSeq(g)), sequenceCount=groups.filter(g=>pureSeq(g)||impureSeq(g,room)).length;
   if(!pure)return {ok:false,reason:'1st Life (Pure Sequence) is missing.'};
-  if(seq<2)return {ok:false,reason:'2nd Life (Sequence) is missing.'};
+  if(sequenceCount<2)return {ok:false,reason:'2nd Life (Sequence) is missing.'};
   return {ok:true,groups};
 }
 
