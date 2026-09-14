@@ -76,7 +76,17 @@ function validSet(g,room){
   const r=nj[0].rank;if(nj.some(c=>c.rank!==r))return false;
   const ss=new Set();for(const c of nj){if(ss.has(c.suit))return false;ss.add(c.suit);}return true;
 }
-function validGroup(g,room){return pureSeq(g)||impureSeq(g,room)||validSet(g,room);}
+function validGroup(g,room){return pureSeq(g)||impureSeq(g,room)||aceSetWithJokerAllowed(g,room);}
+// ACE RULES (201 Pool):
+// 1) A can be low (A-2-3) or high (Q-K-A) in a same-suit sequence.
+// 2) A-A-A is a valid 3-card set when the natural A cards have different suits.
+// 3) A-A-Joker is a valid 3-card set.
+// 4) A-A-A-Joker is a valid 4-card set.
+// 5) A cards used in a set must not repeat the same suit.
+function aceSetWithJokerAllowed(g, room){
+  return validSet(g, room);
+}
+
 function cardValue(room,c){if(!c||isWild(room,c))return 0;return ['J','Q','K','A'].includes(c.rank)?10:(parseInt(c.rank,10)||0);}
 function bestLifeScore(hand,room){
   const cards=hand.filter(Boolean), n=cards.length;
@@ -110,7 +120,7 @@ function validateShow(room,p,groupIds,discardId){
   for(const ids of groupIds){
     if(!Array.isArray(ids)||ids.length<3)return {ok:false,reason:'Every group must contain at least 3 cards.'};
     const g=[];for(const id of ids){if(used.has(id))return {ok:false,reason:'A card is used in more than one group.'};const c=byId.get(id);if(!c||id===discardId)return {ok:false,reason:'Invalid card in group.'};used.add(id);g.push(c);}
-    if(!validGroup(g,room))return {ok:false,reason:'One or more groups are invalid.'};groups.push(g);
+    if(!validGroup(g,room))return {ok:false,reason:'Invalid group: '+g.map(c=>c.rank+(c.suit||'')).join(' ')+'. Use valid sequence/set rules.'};groups.push(g);
   }
   const remaining=hand.filter(c=>!used.has(c.id));
   if(remaining.length)return {ok:false,reason:'All 13 cards must be covered by valid groups.'};
@@ -131,6 +141,7 @@ function stateFor(room,socketId){
     deckCount:room.deck.length,
     discardTop:publicCard(room.discard[room.discard.length-1]),
     wildJoker:publicCard(room.wildJoker),
+    wildRank: room.wildJoker ? room.wildJoker.rank : null,
     currentPlayer:room.currentPlayer,
     playerHasDrawn:room.playerHasDrawn,
     turnEndsAt:room.turnEndsAt,
@@ -371,12 +382,47 @@ io.on('connection',socket=>{
       broadcastState(room);
       io.to(room.id).emit('dealResult',room.result);
     }else{
+      // WRONG SHOW: the declaring player gets +80, and EVERY other
+      // active player is scored from the valid lives they have.
+      if(room.turnTimer)clearTimeout(room.turnTimer);
       room.scores[p.id]=(room.scores[p.id]||0)+80;
       if(room.scores[p.id] >= (room.poolLimit||DEFAULT_POOL_LIMIT)) p.eliminated=true;
-      room.result={winnerId:null,winnerName:null,valid:false,wrongShow:true,loserId:p.id,loserName:p.name,penalties:[{playerId:p.id,name:p.name,points:80,totalScore:room.scores[p.id]||0}],reason:check.reason};
+
+      const resultPlayers=[{
+        playerId:p.id,name:p.name,points:80,totalScore:room.scores[p.id]||0,
+        result:p.eliminated?'ELIMINATED':'WRONG SHOW',
+        cards:p.hand.map(publicCard),lives:[],remaining:p.hand.map(publicCard)
+      }];
+      const penalties=[{playerId:p.id,name:p.name,points:80,totalScore:room.scores[p.id]||0}];
+
+      for(const opp of room.playersList){
+        if(opp.id===p.id || opp.eliminated) continue;
+        const info=bestLifeScore(opp.hand,room);
+        const pts=info.points;
+        room.scores[opp.id]=(room.scores[opp.id]||0)+pts;
+        if(room.scores[opp.id] >= (room.poolLimit||DEFAULT_POOL_LIMIT)) opp.eliminated=true;
+        const used=new Set((info.lives||[]).flat().map(c=>c.id));
+        const remaining=opp.hand.filter(c=>!used.has(c.id));
+        const lives=(info.lives||[]).map(g=>({
+          type:pureSeq(g)?'1st Life (Pure Sequence)':
+               (impureSeq(g,room)?'2nd Life (With Joker)':
+               (validSet(g,room)?'Set/Trill':'Group')),
+          cards:g.map(publicCard)
+        }));
+        penalties.push({playerId:opp.id,name:opp.name,points:pts,totalScore:room.scores[opp.id]||0});
+        resultPlayers.push({
+          playerId:opp.id,name:opp.name,points:pts,totalScore:room.scores[opp.id]||0,
+          result:opp.eliminated?'ELIMINATED':'LOST',cards:opp.hand.map(publicCard),lives,remaining:remaining.map(publicCard)
+        });
+      }
+
+      room.result={winnerId:null,winnerName:null,valid:false,wrongShow:true,
+        loserId:p.id,loserName:p.name,penalties,players:resultPlayers,
+        dealNumber:room.dealNumber,poolLimit:room.poolLimit||DEFAULT_POOL_LIMIT,reason:check.reason};
       room.started=false;
-      const gameWinner=(room.scores[p.id]||0)>=(room.poolLimit||DEFAULT_POOL_LIMIT) ? room.playersList.find(x=>x.id!==p.id)?.name : null;
-      room.result.matchWinner=gameWinner||null;
+      const active=room.playersList.filter(x=>!x.eliminated && (room.scores[x.id]||0)<(room.poolLimit||DEFAULT_POOL_LIMIT));
+      room.result.matchFinished=active.length<=1;
+      room.result.matchWinner=active.length===1?active[0].name:null;
       broadcastState(room);io.to(room.id).emit('dealResult',room.result);
     }
   });
