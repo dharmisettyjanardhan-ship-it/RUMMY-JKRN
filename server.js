@@ -256,7 +256,7 @@ function advanceTurn(room){
   room.turnStartedAt=Date.now();
   room.turnSeconds=30;
   broadcastState(room);
-  startTurnTimer(room);
+  startTurn(room);
 }
 
 io.on('connection',socket=>{
@@ -344,7 +344,7 @@ io.on('connection',socket=>{
       socket.emit('onlineActionError',{
         message:'Middle Drop = 50 points is available on the 3rd round after two 30-second timeouts, before lifting a card.'
       });
-      startTurnTimer(room);
+      startTurn(room);
       return;
     }
 
@@ -496,8 +496,6 @@ io.on('connection',socket=>{
     active.forEach(p=>{p.ready=true;p.hand=[];p.droppedThisDeal=false;});
     room.playersList.filter(p=>!active.includes(p)).forEach(p=>{p.hand=[];p.ready=true;});
     startRealGame(room);
-
-    startTurnTimer(room);
   });
 
   socket.on('reconnectPlayer',({roomId,sessionToken,name})=>{
