@@ -48,431 +48,6 @@ h1 { margin: 0; color: #ffd700; font-size: 18px; }
     transition: border 0.3s ease, box-shadow 0.3s ease;
 }
 .opp-box.active-turn { border: 3px solid #00ff00 !important; box-shadow: 0 0 20px #00ff00; }
-.opp-box.eliminated { opacity: 0.35 !important; filter: grayscale(100%); border: 2px solid #d32f2f !important; pointer-events: none; }
-
-.opp-avatar-container { position: relative; width: 38px; height: 38px; }
-.opp-avatar {
-    width: 38px; height: 38px; border-radius: 50%; background: #ccc; 
-    display: flex; align-items: center; justify-content: center; font-size: 20px; color: #333; border: 2px solid white;
-}
-.opp-timer {
-    position: absolute; bottom: -4px; right: -4px; background: #000; color: #00ff00; 
-    font-size: 9px; font-weight: bold; padding: 1px 4px; border-radius: 8px; border: 1px solid #00ff00; display: none;
-}
-.opp-box.active-turn .opp-timer { display: block; }
-
-.opp-details { margin-left: 8px; text-align: left; }
-.opp-name { font-size: 11px; color: #fff; margin: 0; white-space: nowrap; }
-.opp-score { font-size: 11px; color: #ffd700; font-weight: bold; margin: 0; }
-.opp-action { font-size: 9px; color: #00ff00; margin: 0; font-style: italic; }
-.dealer-badge { font-size: 9px; background: #ff9800; color: #000; padding: 1px 4px; border-radius: 4px; font-weight: bold; margin-left: 4px; }
-.elim-badge { font-size: 9px; background: #d32f2f; color: #fff; padding: 1px 4px; border-radius: 4px; font-weight: bold; margin-left: 4px; }
-
-#opp2 { top: 35%; left: 3%; }
-#opp3 { top: 15%; left: 22%; }
-#opp4 { top: 5%; left: 50%; transform: translateX(-50%); }
-#opp5 { top: 15%; right: 22%; }
-#opp6 { top: 35%; right: 3%; }
-
-/* --- CENTER AREA LAYOUT FIX (Wild Joker Left | Closed Deck Center | Open Deck Right) --- */
-.center-area {
-    position: absolute; top: 33%; left: 50%; transform: translate(-50%, -50%);
-    display: flex; gap: 20px; align-items: center; justify-content: center;
-}
-.pile-container { text-align: center; }
-.pile-label { font-size: 12px; color: rgba(255,255,255,0.9); margin-bottom: 6px; font-weight: bold; }
-
-.pile { 
-    width: 95px; height: 135px; border-radius: 8px; display: flex; align-items: flex-start; justify-content: flex-start; 
-    font-size: 24px; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.6); border: 2px solid #fff; cursor: pointer;
-    background: white; color: black; position: relative; padding: 6px;
-    transition: transform 0.2s;
-}
-.pile:hover { transform: scale(1.04); }
-.draw-pile { background: #174a9c; color: white; border-color: #aaa; align-items: center; justify-content: center; }
-.draw-pile::after { content: '🂠'; font-size: 54px; }
-.deck-count { font-size: 12px; color: #ffd700; margin-top: 5px; font-weight: bold; }
-
-.joker-pile {
-    font-size: 18px; font-weight: bold;
-    border: 2px solid #ffd700 !important;
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
-    cursor: default; flex-direction: column; align-items: flex-start; justify-content: flex-start;
-}
-
-.player-area {
-    position: absolute; left: 50%; transform: translateX(-50%); bottom: -178px;
-    width: min(96vw, 1180px); text-align: center; display: flex; flex-direction: column;
-    align-items: center; z-index: 950 !important;
-}
-.player-info { 
-    background: rgba(0,0,0,0.85); padding: 4px 14px; border-radius: 12px; margin-bottom: 4px; font-size: 12px; font-weight: bold; 
-    border: 2px solid #555; display: flex; align-items: center; gap: 10px;
-}
-.player-info.active-turn { border: 3px solid #00ff00 !important; box-shadow: 0 0 15px #00ff00; }
-.player-info.eliminated { opacity: 0.4 !important; border: 2px solid #d32f2f !important; background: #330000; }
-.player-timer { color: #00ff00; font-size: 13px; background: rgba(0,0,0,0.9); padding: 1px 6px; border-radius: 8px; border: 1px solid #00ff00; display: none; }
-.player-info.active-turn .player-timer { display: inline-block; }
-
-.groups-container {
-    display: flex; justify-content: center; align-items: flex-end; gap: 10px;
-    height: 150px; overflow-x: auto; overflow-y: visible; max-width: 96%;
-    padding: 2px 6px 0; position: relative; z-index: 951;
-}
-
-.card-group { 
-    display: flex; flex-direction: column; background: rgba(0,0,0,0.5); padding: 4px; 
-    border-radius: 6px; align-items: center; flex-shrink: 0; position: relative; min-width: 80px; 
-    transition: background 0.2s, border 0.2s; border: 2px dashed transparent;
-}
-.cards-in-group { display: flex; align-items: flex-end; min-height: 112px; }
-
-.card { 
-    width: 74px; height: 108px; min-width: 74px; background: white; color: black; border-radius: 5px; 
-    display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; 
-    font-size: 17px; font-weight: bold; padding: 5px 5px 18px 5px; 
-    box-shadow: -2px 0 5px rgba(0,0,0,0.6); cursor: grab; transition: transform 0.15s ease, opacity 0.15s; border: 1px solid #bbb;
-    position: relative; z-index: 1; user-select: none; touch-action: none;
-}
-.cards-in-group .card + .card { margin-left: -36px; }
-.card:hover { transform: translateY(-12px); z-index: 10; }
-.selected { transform: translateY(-16px) !important; border: 2px solid #ff5722 !important; box-shadow: 0 0 10px #ff5722; z-index: 10; }
-
-.card-top { display: flex; flex-direction: column; line-height: 1; font-size: 15px; }
-.card-center { font-size: 28px; align-self: center; margin: auto 0; }
-.red { color: #d32f2f; }
-.black { color: #111; }
-.joker-badge { position: absolute; bottom: 2px; right: 2px; font-size: 11px; background: #ffeb3b; border-radius: 50%; padding: 1px 3px; border: 1px solid #000; z-index: 5; }
-
-.group-status-badge { margin-top: 3px; width: 100%; font-size: 10px; font-weight: bold; padding: 2px 1px; border-radius: 3px; text-align: center; text-transform: uppercase; }
-.badge-pure { background: #2e7d32; color: #fff; }
-.badge-second { background: #388e3c; color: #fff; }
-.badge-set { background: #1976d2; color: #fff; }
-.badge-impure { background: #d32f2f; color: #fff; }
-.badge-invalid { background: #555; color: #ccc; }
-
-.left-controls { position: absolute; left: 25px; bottom: 25px; display: flex; flex-direction: column; gap: 10px; z-index: 50; }
-.left-controls button, .action-buttons button {
-    padding: 12px 18px; border: none; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.6); text-transform: uppercase;
-}
-.btn-drop { background: linear-gradient(to bottom, #e53935, #b71c1c); color: white; border: 2px solid #ff8a80 !important; }
-.btn-auto-sort { background: linear-gradient(to bottom, #2e7d32, #1b5e20); color: white; border: 2px solid #81c784 !important; }
-
-.action-buttons { position: absolute; right: 25px; bottom: 25px; display: flex; flex-direction: column; gap: 10px; z-index: 50; }
-.btn-group { background: linear-gradient(to bottom, #fdd835, #fbc02d); color: #000; display: none; }
-.btn-discard { background: linear-gradient(to bottom, #2196f3, #0d47a1); color: white; display: none; }
-.btn-declare { background: linear-gradient(to bottom, #ff9800, #e65100); color: white; }
-
-.info-overlay { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); text-align: center; z-index: 10; }
-#status { font-size: 13px; font-weight: bold; background: rgba(0,0,0,0.75); padding: 3px 10px; border-radius: 6px; }
-
-/* Modal & Scoreboard */
-.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.88); z-index: 1000; align-items: center; justify-content: center; }
-.modal.active { display: flex; }
-#resultModal .modal-box {
-    width: 98vw !important; max-width: 980px !important;
-    background: radial-gradient(circle at 50% 50%, #2a1147 0%, #150727 75%, #0d031a 100%) !important;
-    border: 3px solid #e2b047 !important; border-radius: 18px !important; padding: 16px 20px !important; color: #fff !important;
-}
-
-/* --- DYNAMIC POINTS DISPLAY BAR --- */
-.points-summary-bar {
-    position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(0, 0, 0, 0.92);
-    border-top: 2px solid #b8860b; display: flex; justify-content: space-around; align-items: center;
-    padding: 10px 15px; z-index: 2500; font-size: 14px; font-weight: bold;
-}
-.points-box { color: #ffd700; font-size: 16px; }
-.points-value { color: #00ff00; font-size: 18px; font-weight: 900; }
-</style>
-<script src="/socket.io/socket.io.js"></script>
-</head>
-<body onload="initAutoGame()">
-
-<div class="top-bar">
-    <h1>🃏 POOL RUMMY (<span id="poolTypeDisplay">201</span> POOL)</h1>
-    <div class="top-right-box">
-        <button class="sound-toggle-btn" id="soundToggleBtn" onclick="toggleSound()">🔊 Sound</button>
-        <button class="scoreboard-icon-btn" onclick="openGlobalScoreboardModal()">📊 Score Board</button>
-        <div id="walletBox">🪙 <span id="walletBalance">50000</span></div>
-    </div>
-</div>
-
-<div class="modal" id="resultModal">
-    <div class="modal-box">
-        <h2 id="resultModalHeader" style="color: #ffd700; font-size: 22px;">SCORE BOARD</h2>
-        <div id="resultModalContent"></div>
-        <button class="continue-btn-glow" id="nextDealBtn" onclick="closeResultModalAndStartNext()" style="background:linear-gradient(#ffd700,#f39c12); color:#111; padding:10px 25px; border-radius:20px; font-weight:bold; cursor:pointer; margin-top:10px;">Continue (7)</button>
-    </div>
-</div>
-
-<div class="table">
-    <div class="deal-info" id="dealInfo" style="position:absolute; top:10px; right:18px; font-size:11px; background:rgba(0,0,0,.7); padding:6px 10px; border-radius:8px; z-index:20; color:#ffd700;">Deal: 1 | Cards: 13</div>
-    <div class="info-overlay">
-        <div id="status">Determining Dealer...</div>
-    </div>
-
-    <div class="opp-box" id="opp2"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p2">30s</div></div><div class="opp-details"><p class="opp-name">Player 2</p><p class="opp-score">Score: <span id="score-p2">0</span></p><p class="opp-action" id="action-p2">Waiting...</p></div></div>
-    <div class="opp-box" id="opp3"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p3">30s</div></div><div class="opp-details"><p class="opp-name">Player 3</p><p class="opp-score">Score: <span id="score-p3">0</span></p><p class="opp-action" id="action-p3">Waiting...</p></div></div>
-    <div class="opp-box" id="opp4"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p4">30s</div></div><div class="opp-details"><p class="opp-name">Player 4</p><p class="opp-score">Score: <span id="score-p4">0</span></p><p class="opp-action" id="action-p4">Waiting...</p></div></div>
-    <div class="opp-box" id="opp5"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p5">30s</div></div><div class="opp-details"><p class="opp-name">Player 5</p><p class="opp-score">Score: <span id="score-p5">0</span></p><p class="opp-action" id="action-p5">Waiting...</p></div></div>
-    <div class="opp-box" id="opp6"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p6">30s</div></div><div class="opp-details"><p class="opp-name">Player 6</p><p class="opp-score">Score: <span id="score-p6">0</span></p><p class="opp-action" id="action-p6">Waiting...</p></div></div>
-
-    <!-- --- CORRECT CENTER AREA ORDER: Wild Joker Left | Closed Deck Center | Open Deck Right --- -->
-    <div class="center-area" id="centerArea">
-        <div class="pile-container">
-            <div class="pile-label">WILD JOKER</div>
-            <div class="pile joker-pile" id="topJokerDisplay">-</div>
-        </div>
-
-        <div class="pile-container">
-            <div class="pile-label">CLOSED DECK</div>
-            <div class="pile draw-pile" onclick="drawCard()"></div>
-            <div class="deck-count">SHUFFLED</div>
-        </div>
-
-        <div class="pile-container">
-            <div class="pile-label">OPEN DECK</div>
-            <div class="pile discard-pile" id="discardPile" onclick="drawFromDiscard()"></div>
-        </div>
-    </div>
-
-    <div class="left-controls">
-        <button class="btn-drop" id="dropButton" onclick="dropGame()">Drop</button>
-        <button class="btn-auto-sort" onclick="autoSortCards()">Auto Sort</button>
-    </div>
-
-    <div class="player-area" id="playerArea">
-        <div class="player-info" id="playerInfoBox">
-            <span>👤 YOU | Score: <span id="score-p1" style="color:#00ff00;">0</span> / <span id="poolLimitLabel">201</span></span>
-            <span class="player-timer" id="timer-p1">⏳ <span id="timeLeft">30</span>s</span>
-        </div>
-        <div class="groups-container" id="playerGroupsContainer"></div>
-    </div>
-
-    <div class="action-buttons">
-        <button class="btn-group" id="groupButton" onclick="groupSelectedCards()">Group</button>
-        <button class="btn-discard" id="discardButton" onclick="discardCard()">Discard</button>
-        <button class="btn-declare" id="declareButton" onclick="declareGame()">Declare</button>
-    </div>
-</div>
-
-<!-- --- BOTTOM POINTS SUMMARY BAR (Updates dynamically from 20 to 5 points when cards are grouped properly) --- -->
-<div class="points-summary-bar">
-    <div class="points-box">Total Points in Hand: <span id="totalPointsInHand" class="points-value">20</span></div>
-    <div class="points-box">Points Count (Deadwood): <span id="pointsCountDisplay" class="points-value" style="color:#00ff00;">5</span></div>
-    <div><button onclick="autoSortCards()" style="background:#ff9800; border:none; padding:6px 14px; border-radius:6px; font-weight:bold; cursor:pointer;">Smart Sort</button></div>
-</div>
-
-<script>
-var soundMuted = false, audioCtx = null;
-function getAudioContext() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    return audioCtx;
-}
-function playSound(type) {
-    if (soundMuted) return;
-    try {
-        const ctx = getAudioContext(); const now = ctx.currentTime;
-        const osc = ctx.createOscillator(); const gain = ctx.createGain();
-        osc.frequency.setValueAtTime(type === 'win' ? 600 : 200, now);
-        gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.start(now); osc.stop(now + 0.1);
-    } catch(e) {}
-}
-function toggleSound() { soundMuted = !soundMuted; }
-
-var suits = [{s: "♥", c: "red"}, {s: "♦", c: "red"}, {s: "♣", c: "black"}, {s: "♠", c: "black"}];
-const ranks = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
-const rankOrder = {"A":1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":10,"J":11,"Q":12,"K":13};
-
-let poolLimit = 201, numPlayers = 2;
-let deck = [], playerGroups = [[]], discardPile = [], wildJoker = null, selectedCards = [];
-let gameStarted = false, gameOver = false, currentPlayer = 0, dealerIndex = 0, playerHasDrawn = false, turnTimer = null, timeLeft = 30;
-let gameScores = {"Player 1":0, "Player 2":0};
-let playerDealStatus = [], droppedThisDeal = [false, false];
-
-function initAutoGame() {
-    numPlayers = 2;
-    poolLimit = 201;
-    startGamePlay();
-}
-
-function createDeck() {
-    let d = [];
-    for (let dCount = 0; dCount < 2; dCount++) {
-        suits.forEach(suit => ranks.forEach(rank => d.push({rank, suit: suit.s, color: suit.c, isPrintedJoker: false, id: Math.random().toString(36).slice(2)})));
-    }
-    d.push({rank: "PJ", suit: "🃏", color: "red", isPrintedJoker: true, id: Math.random().toString(36).slice(2)});
-    d.push({rank: "PJ", suit: "🃏", color: "black", isPrintedJoker: true, id: Math.random().toString(36).slice(2)});
-    return d;
-}
-
-function shuffle(arr) {
-    for(let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-    } return arr;
-}
-
-function startGamePlay() {
-    deck = shuffle(createDeck());
-    let hand = [];
-    for(let i=0; i<13; i++) hand.push(deck.pop());
-    
-    // Initial grouping setup for testing dynamic points drop (e.g. 20 down to 5)
-    playerGroups = [
-        [hand[0], hand[1], hand[2]], 
-        [hand[3], hand[4]], 
-        [hand[5], hand[6], hand[7], hand[8], hand[9], hand[10], hand[11], hand[12]]
-    ];
-
-    discardPile = [deck.pop()];
-    let nonJokerCards = deck.filter(c => !c.isPrintedJoker);
-    wildJoker = nonJokerCards[Math.floor(Math.random() * nonJokerCards.length)];
-
-    const topJoker = document.getElementById("topJokerDisplay");
-    if(wildJoker) {
-        topJoker.innerHTML = `<div style="font-size:16px;">${wildJoker.rank}</div><div style="font-size:26px; margin:auto;">${wildJoker.suit}</div><div style="font-size:9px; color:#b8860b;">Joker</div>`;
-    }
-
-    gameStarted = true;
-    updateUI();
-}
-
-function getGroupBadgeInfo(group) {
-    if (!group || group.length < 3) return {text: "Cards", cls: "badge-invalid"};
-    return {text: "Group", cls: "badge-pure"};
-}
-
-/* --- DYNAMIC POINTS CALCULATION (Drops from 20 to 5 points when properly managed) --- */
-function updateDynamicPoints() {
-    let unassignedPoints = 0;
-    playerGroups.forEach(group => {
-        let badge = getGroupBadgeInfo(group);
-        if (badge.text === "Cards") {
-            group.forEach(card => {
-                if(!card.isPrintedJoker) {
-                    let r = card.rank;
-                    unassignedPoints += (["J","Q","K","A"].includes(r) ? 10 : (parseInt(r, 10) || 5));
-                }
-            });
-        }
-    });
-
-    // If user organizes cards well, penalty points dynamically drop from 20 down to 5
-    let finalPoints = unassignedPoints > 0 ? Math.min(20, unassignedPoints) : 5;
-    document.getElementById("totalPointsInHand").innerText = finalPoints + 15;
-    document.getElementById("pointsCountDisplay").innerText = finalPoints;
-}
-
-function updateUI() {
-    const container = document.getElementById("playerGroupsContainer");
-    container.innerHTML = "";
-
-    playerGroups.forEach((group, gIdx) => {
-        const gDiv = document.createElement("div");
-        gDiv.className = "card-group";
-        const cardsDiv = document.createElement("div");
-        cardsDiv.className = "cards-in-group";
-
-        group.forEach((card, cIdx) => {
-            const cDiv = document.createElement("div");
-            cDiv.className = `card ${card.color} ${selectedCards.some(s=>s.gIdx===gIdx&&s.cIdx===cIdx)?"selected":""}`;
-            cDiv.innerHTML = `<div class="card-top"><span>${card.rank}</span><span>${card.suit}</span></div><div class="card-center">${card.suit}</div>`;
-            cDiv.onclick = () => {
-                const ex = selectedCards.findIndex(s => s.gIdx===gIdx && s.cIdx===cIdx);
-                if(ex > -1) selectedCards.splice(ex, 1);
-                else selectedCards.push({gIdx, cIdx});
-                updateUI();
-            };
-            cardsDiv.appendChild(cDiv);
-        });
-        gDiv.appendChild(cardsDiv);
-
-        let badgeInfo = getGroupBadgeInfo(group);
-        const badgeDiv = document.createElement("div");
-        badgeDiv.className = `group-status-badge ${badgeInfo.cls}`;
-        badgeDiv.innerText = badgeInfo.text;
-        gDiv.appendChild(badgeDiv);
-        container.appendChild(gDiv);
-    });
-
-    let topDiscard = discardPile[discardPile.length - 1];
-    if(topDiscard) {
-        document.getElementById("discardPile").innerHTML = `<div class="${topDiscard.color}"><span>${topDiscard.rank}</span><div style="font-size:30px; margin:auto;">${topDiscard.suit}</div></div>`;
-    }
-
-    updateDynamicPoints();
-}
-
-function autoSortCards() {
-    playSound('group');
-    updateUI();
-}
-
-function groupSelectedCards() {
-    if (selectedCards.length < 2) return;
-    playSound('group');
-    let picked = [];
-    let remaining = [];
-    let selSet = new Set(selectedCards.map(s => `${s.gIdx}_${s.cIdx}`));
-
-    playerGroups.forEach((group, gIdx) => {
-        let rest = [];
-        group.forEach((card, cIdx) => {
-            if (selSet.has(`${gIdx}_${cIdx}`)) picked.push(card);
-            else rest.push(card);<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>RUMMY JKRN V10 - POOL RUMMY - 201 POOL STRICT RULES</title>
-<style>
-* { box-sizing: border-box; }
-body { 
-    margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-    background: #111; color: white; text-align: center; overflow-x: hidden; 
-}
-
-.top-bar {
-    display: flex; justify-content: space-between; align-items: center; padding: 8px 15px; background: #000; border-bottom: 2px solid #333;
-}
-h1 { margin: 0; color: #ffd700; font-size: 18px; }
-.top-right-box { display: flex; align-items: center; gap: 8px; }
-#walletBox { font-size: 14px; font-weight: bold; color: #ffeb3b; background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 15px; border: 1px solid #b8860b; }
-
-.scoreboard-icon-btn, .sound-toggle-btn {
-    background: linear-gradient(to bottom, #ffd700, #ff8f00);
-    color: #000; border: 2px solid #fff; padding: 6px 12px; border-radius: 20px;
-    font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.5); transition: transform 0.2s;
-}
-.sound-toggle-btn { background: linear-gradient(to bottom, #4caf50, #2e7d32); color: #fff; }
-.scoreboard-icon-btn:hover, .sound-toggle-btn:hover { transform: scale(1.05); }
-
-.table { 
-    position: relative;
-    width: min(92vw, 1240px);
-    max-width: 1240px;
-    height: 58vh;
-    min-height: 430px;
-    margin: 18px auto 190px;
-    background: radial-gradient(ellipse at 50% 46%, #168a49 0%, #0b6a36 48%, #04361d 100%);
-    border: 10px solid #3b2106;
-    border-radius: 50% / 42%;
-    box-shadow: inset 0 0 0 3px rgba(255,255,255,.06), inset 0 0 60px rgba(0,0,0,.82), 0 0 28px rgba(0,0,0,.75);
-    overflow: visible;
-}
-
-.opp-box {
-    position: absolute; display: flex; align-items: center;
-    background: rgba(0,0,0,0.85); border-radius: 30px; padding: 4px 12px 4px 4px;
-    border: 2px solid #555; width: 185px; box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-    transition: border 0.3s ease, box-shadow 0.3s ease;
-}
-.opp-box.active-turn { border: 3px solid #00ff00 !important; box-shadow: 0 0 20px #00ff00; }
 .opp-box.eliminated { 
     opacity: 0.35 !important; 
     filter: grayscale(100%); 
@@ -2243,6 +1818,46 @@ html, body {
 </style>
 
 <script src="/socket.io/socket.io.js"></script>
+
+<style id="jkrn-reference-design-final">
+/* ===== JKRN REFERENCE TABLE DESIGN ===== */
+.top-bar{height:72px!important;padding:8px 18px!important;background:linear-gradient(180deg,#070707,#141414)!important;border-bottom:2px solid #6e5418!important;}
+.top-bar h1{display:flex!important;align-items:center!important;gap:10px!important;font-size:24px!important;letter-spacing:.5px!important;color:#ffd72f!important;text-shadow:0 2px 0 #392300!important;}
+.header-pool-badge{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:68px!important;padding:6px 12px!important;border:2px solid #d5a62b!important;border-radius:10px!important;background:linear-gradient(180deg,#332307,#100c05)!important;color:#ffe05a!important;font-size:20px!important;box-shadow:0 0 12px rgba(255,193,7,.25)!important;}
+.top-right-box{gap:10px!important;}
+.lobby-game-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:18px;border:2px solid #f1c84b;background:linear-gradient(180deg,#ffd84a,#b97800);color:#111;font-weight:900;font-size:14px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.5);}
+.table{width:min(97vw,1580px)!important;height:calc(100vh - 235px)!important;min-height:500px!important;margin:8px auto 205px!important;border-width:8px!important;background:radial-gradient(ellipse at 50% 46%,#0b944d 0%,#08723a 48%,#03351c 100%)!important;box-shadow:inset 0 0 0 3px rgba(255,255,255,.05),inset 0 0 65px rgba(0,0,0,.72),0 0 35px rgba(0,0,0,.8)!important;}
+/* Five visible opponents only: Player 2–6. */
+.opp-box{width:190px!important;background:rgba(0,0,0,.86)!important;border:2px solid #c49b25!important;border-radius:28px!important;padding:5px 12px 5px 5px!important;}
+.opp-box.active-turn{border-color:#00ff48!important;box-shadow:0 0 22px rgba(0,255,72,.75)!important;}
+.opp-avatar-container,.opp-avatar{width:52px!important;height:52px!important;}
+.opp-avatar{font-size:25px!important;border:2px solid #e5c34b!important;background:radial-gradient(circle,#555,#222)!important;}
+.opp-name{font-size:13px!important;font-weight:800!important;}.opp-score{font-size:13px!important;color:#ffd72f!important;}.opp-action{font-size:10px!important;}
+#opp2{top:31%!important;left:2%!important;} #opp3{top:13%!important;left:22%!important;} #opp4{top:3%!important;left:50%!important;transform:translateX(-50%)!important;} #opp5{top:13%!important;right:22%!important;} #opp6{top:31%!important;right:2%!important;}
+.center-area{top:47%!important;gap:34px!important;}
+.pile-container{min-width:95px!important;}.pile{width:105px!important;height:145px!important;border-radius:10px!important;font-size:27px!important;}.draw-pile::after{font-size:58px!important;}.pile-label{font-size:13px!important;letter-spacing:.2px!important;}.joker-pile{border:3px solid #ffd700!important;box-shadow:0 0 18px rgba(255,215,0,.75)!important;}
+/* Hand and controls */
+.player-area{bottom:-182px!important;width:min(96vw,1460px)!important;z-index:950!important;}
+.player-info{padding:6px 16px!important;font-size:14px!important;border-color:#d0a72f!important;border-radius:13px!important;}
+.groups-container{height:165px!important;gap:10px!important;max-width:100%!important;overflow-x:auto!important;overflow-y:visible!important;}
+.card-group{min-width:82px!important;background:rgba(0,0,0,.45)!important;border-radius:7px!important;}
+.card{width:82px!important;min-width:82px!important;height:122px!important;font-size:19px!important;padding:6px 6px 18px!important;border-radius:6px!important;}
+.cards-in-group .card + .card{margin-left:-40px!important;}.card-center{font-size:31px!important;}.group-status-badge{font-size:11px!important;padding:4px 2px!important;}
+.left-controls,.action-buttons{position:fixed!important;bottom:14.5%!important;z-index:9998!important;display:flex!important;gap:9px!important;}
+.left-controls{left:1.4%!important;right:auto!important;flex-direction:column!important;}
+.action-buttons{right:1.4%!important;left:auto!important;flex-direction:column!important;}
+.left-controls button,.action-buttons button{min-width:145px!important;min-height:54px!important;padding:11px 15px!important;border-radius:11px!important;font-size:16px!important;font-weight:900!important;}
+#autoSortButton{order:1!important;}.btn-drop{order:2!important;}.btn-discard{order:1!important;display:inline-flex!important;background:linear-gradient(180deg,#36a7ff,#0750a8)!important;border:2px solid #8dccff!important;}.btn-declare{order:2!important;}
+#groupButton{display:none!important;}
+/* Keep 201 Pool only in the JKRN header badge; hide duplicate pool suffix. */
+#poolTypeDisplay{display:none!important;}
+@media(max-width:900px){
+ .top-bar{height:54px!important;padding:5px 8px!important}.top-bar h1{font-size:16px!important;gap:5px!important}.header-pool-badge{min-width:48px!important;padding:3px 7px!important;font-size:14px!important}.lobby-game-btn{padding:5px 8px!important;font-size:10px!important}.scoreboard-icon-btn,.sound-toggle-btn{padding:5px 8px!important;font-size:10px!important}
+ .table{width:98vw!important;height:calc(100dvh - 185px)!important;min-height:390px!important;margin-bottom:160px!important;border-width:5px!important}.center-area{gap:8px!important;top:44%!important}.pile{width:62px!important;height:90px!important}.pile-label{font-size:9px!important}.draw-pile::after{font-size:36px!important}.opp-box{width:112px!important}.opp-avatar-container,.opp-avatar{width:32px!important;height:32px!important}.opp-name,.opp-score{font-size:8px!important}.opp-action{font-size:7px!important}
+ #opp2{top:39%!important;left:1%!important}#opp3{top:17%!important;left:2%!important}#opp4{top:5%!important}#opp5{top:17%!important;right:2%!important}#opp6{top:39%!important;right:1%!important}
+ .player-area{bottom:-145px!important;width:100%!important}.groups-container{height:128px!important;gap:4px!important}.card{width:58px!important;min-width:58px!important;height:88px!important;font-size:13px!important}.cards-in-group .card + .card{margin-left:-28px!important}.left-controls,.action-buttons{bottom:13%!important}.left-controls button,.action-buttons button{min-width:96px!important;min-height:42px!important;font-size:10px!important;padding:7px 8px!important}
+}
+</style>
 </head>
 <body onload="initAutoGame()">
 
@@ -2289,8 +1904,9 @@ html, body {
 </div>
 
 <div class="top-bar">
-    <h1>🃏 POOL RUMMY (<span id="poolTypeDisplay">201</span> POOL)</h1>
+    <h1>👑 RUMMY JKRN <span class="header-pool-badge">201</span></h1>
     <div class="top-right-box">
+        <button class="lobby-game-btn" onclick="openGameLobby()">🏠 Lobby</button>
         <button class="sound-toggle-btn" id="soundToggleBtn" onclick="toggleSound()">🔊 Sound</button>
         <button class="scoreboard-icon-btn" onclick="openGlobalScoreboardModal()">📊 Score Board</button>
         <div id="walletBox">🪙 <span id="walletBalance">50000</span></div>
@@ -2344,8 +1960,8 @@ html, body {
     </div>
 
     <div class="left-controls">
-        <button class="btn-drop" id="dropButton" onclick="dropGame()">Drop</button>
-        <button class="btn-auto-sort" onclick="autoSortCards()">Auto Sort</button>
+        <button class="btn-auto-sort" id="autoSortButton" onclick="autoSortCards()">↕ AUTO SORT</button>
+        <button class="btn-drop" id="dropButton" onclick="dropGame()">DROP</button>
     </div>
 
     <div class="player-area" id="playerArea">
@@ -2357,7 +1973,6 @@ html, body {
     </div>
 
     <div class="action-buttons">
-        <button class="btn-group" id="groupButton" onclick="groupSelectedCards()">Group</button>
         <button class="btn-discard" id="discardButton" onclick="discardCard()">Discard</button>
         <button class="btn-declare" id="declareButton" onclick="declareGame()">Declare</button>
     </div>
@@ -2477,6 +2092,14 @@ function initAutoGame() {
     initializeGameLobby();
     document.getElementById("lobbyScreen").classList.add("hidden");
     const ol=document.getElementById("onlineLobby"); if(ol) ol.classList.remove("hidden");
+}
+
+function openGameLobby(){
+    const lobby=document.getElementById("lobbyScreen");
+    if(lobby){
+        lobby.classList.remove("hidden");
+        lobby.style.zIndex="10000";
+    }
 }
 
 function openLobbyRules(){ alert("201 Pool Rummy:\n\n• 1st Life (Pure) మరియు 2nd Life తప్పనిసరి.\n• ఒకే కలర్/సింబల్ కార్డులు రిపీట్ అయితే అది SET కాదు (IMPURE).\n• వేర్వేరు సూట్లు ఉన్న కార్డులతో మాత్రమే SET ఏర్పడుతుంది."); }
@@ -4823,126 +4446,6 @@ button[onclick*="groupSelected"] {
   }
   hook(); window.addEventListener('load',hook);
 })();
-</script>
-<style id="jkrn-hand-score-style">
-#jkrnHandScore{display:inline-flex;align-items:center;gap:5px;margin-left:8px;padding:3px 9px;border:1px solid #ffd54a;border-radius:12px;background:#07140a;color:#ffd54a;font-weight:900;font-size:12px;}
-#jkrnHandScore.low{color:#45ff7a;border-color:#45ff7a;}
-</style>
-<script id="jkrn-auto-sort-score-fix">
-(function(){
-  function cardPts(c){
-    if(!c || c.isPrintedJoker || (typeof isJoker==='function' && isJoker(c))) return 0;
-    if(['A','K','Q','J'].includes(String(c.rank).toUpperCase())) return 10;
-    const n=parseInt(c.rank,10); return Number.isFinite(n)?n:0;
-  }
-  function key(c){ return c ? `${c.id||''}|${c.rank}|${c.suit}|${c.isPrintedJoker?'PJ':''}` : ''; }
-  function calcBest(hand){
-    const cards=(hand||[]).filter(Boolean), n=cards.length;
-    if(!n) return {points:0,groups:[],remaining:[]};
-    const candidates=[];
-    const maxMask=1<<n;
-    for(let mask=1;mask<maxMask;mask++){
-      let count=0; const g=[];
-      for(let i=0;i<n;i++) if(mask&(1<<i)){count++;g.push(cards[i]);}
-      if(count<3) continue;
-      if(isPureSequence(g)) candidates.push({mask,g,type:'pure'});
-      else if(isSequence(g)) candidates.push({mask,g,type:'seq'});
-      else if(isValidSet(g)) candidates.push({mask,g,type:'set'});
-    }
-    // Longest/lower-point-friendly groups first, but final choice is score based.
-    candidates.sort((a,b)=>b.g.length-a.g.length);
-    let best={points:Infinity,groups:[],remaining:cards.slice(),valid:false,covered:0};
-    function evaluate(chosen,used){
-      let pure=0,seq=0,covered=0;
-      for(const c of chosen){ if(c.type==='pure') pure++; if(c.type==='seq') seq++; covered+=c.g.length; }
-      const validShowShape=(pure>=1 && (seq + pure)>=2);
-      let points=0,remaining=[];
-      for(let i=0;i<n;i++) if(!(used&(1<<i))){remaining.push(cards[i]);points+=cardPts(cards[i]);}
-      // Auto-sort always tries to create the legal 1st+2nd life first.
-      // If that is possible, minimize the remaining card points.
-      const score={valid:validShowShape,points,covered,pure,groups:chosen,remaining};
-      if(!best.valid && score.valid) best=score;
-      else if(best.valid===score.valid && (score.points<best.points || (score.points===best.points&&score.covered>best.covered))) best=score;
-    }
-    function dfs(start,used,chosen,pure,seq){
-      evaluate(chosen,used);
-      for(let j=start;j<candidates.length;j++){
-        const c=candidates[j];
-        if(used&c.mask) continue;
-        // Do not add duplicate-equivalent group partitions.
-        dfs(j+1,used|c.mask,chosen.concat(c),pure+(c.type==='pure'),seq+(c.type==='seq'));
-      }
-    }
-    dfs(0,0,[],0,0);
-    return {points:Math.min(80,best.points),groups:best.groups.map(x=>x.g.slice()),remaining:best.remaining,valid:best.valid};
-  }
-  function updateHandScore(){
-    const box=document.getElementById('playerInfoBox'); if(!box)return;
-    let el=document.getElementById('jkrnHandScore');
-    if(!el){el=document.createElement('span');el.id='jkrnHandScore';box.appendChild(el);}
-    const hand=playerGroups.flat().filter(Boolean);
-    const r=calcBest(hand);
-    el.textContent=`🧮 Hand Points: ${r.points}`;
-    el.classList.toggle('low',r.points<=5);
-    el.title=r.valid?'Best legal 1st + 2nd life arrangement':'No complete 1st + 2nd life arrangement yet';
-  }
-  window.jkrnCalculateBestHand=calcBest;
-  // Replace Auto Sort so it optimizes remaining penalty points, not just card grouping.
-  window.autoSortCards=function(){
-    if(typeof isEliminated==='function' && isEliminated(0)) return;
-    const all=playerGroups.flat().filter(Boolean);
-    if(all.length<3)return;
-    const r=calcBest(all);
-    const used=new Set(r.groups.flat().map(key));
-    const final=[];
-    r.groups.forEach(g=>{
-      g.sort((a,b)=>(rankOrder[a.rank]||0)-(rankOrder[b.rank]||0));
-      final.push(g);
-    });
-    const rest=all.filter(c=>!used.has(key(c)));
-    const suitOrder={'♥':1,'♦':2,'♣':3,'♠':4};
-    rest.sort((a,b)=>{
-      const sa=a.isPrintedJoker?0:(suitOrder[a.suit]||9), sb=b.isPrintedJoker?0:(suitOrder[b.suit]||9);
-      return sa-sb || (rankOrder[a.rank]||0)-(rankOrder[b.rank]||0);
-    });
-    // Keep leftovers separate so their score is obvious; never label them as lives.
-    const bySuit={};
-    rest.forEach(c=>{const k=c.isPrintedJoker?'PJ':c.suit;(bySuit[k]??=[]).push(c);});
-    Object.keys(bySuit).sort((a,b)=>{if(a==='PJ')return -1;if(b==='PJ')return 1;return (suitOrder[a]||9)-(suitOrder[b]||9);}).forEach(k=>final.push(bySuit[k]));
-    playerGroups=final.length?final:[all];
-    selectedCards=[];
-    if(typeof playSound==='function')playSound('group');
-    if(typeof updateUI==='function')updateUI();
-    setTimeout(updateHandScore,0);
-  };
-  const oldUpdateUI=window.updateUI;
-  window.updateUI=function(){
-    if(typeof oldUpdateUI==='function')oldUpdateUI.apply(this,arguments);
-    setTimeout(updateHandScore,0);
-  };
-  window.addEventListener('load',()=>setTimeout(updateHandScore,100));
-})();
-</script>
-
-</body>
-</html>
-
-        });
-        if (rest.length) remaining.push(rest);
-    });
-    if (picked.length) remaining.push(picked);
-    playerGroups = remaining;
-    selectedCards = [];
-    updateUI();
-}
-
-function drawCard() { playSound('draw'); playerHasDrawn = true; }
-function drawFromDiscard() { playSound('draw'); playerHasDrawn = true; }
-function discardCard() { selectedCards = []; playerHasDrawn = false; updateUI(); }
-function dropGame() { alert("Dropped from game!"); }
-function declareGame() { alert("Declared!"); }
-function openGlobalScoreboardModal() { document.getElementById("resultModal").classList.add("active"); }
-function closeResultModalAndStartNext() { document.getElementById("resultModal").classList.remove("active"); }
 </script>
 </body>
 </html>
