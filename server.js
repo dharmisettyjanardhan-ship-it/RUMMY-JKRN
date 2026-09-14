@@ -382,47 +382,12 @@ io.on('connection',socket=>{
       broadcastState(room);
       io.to(room.id).emit('dealResult',room.result);
     }else{
-      // WRONG SHOW: the declaring player gets +80, and EVERY other
-      // active player is scored from the valid lives they have.
-      if(room.turnTimer)clearTimeout(room.turnTimer);
       room.scores[p.id]=(room.scores[p.id]||0)+80;
       if(room.scores[p.id] >= (room.poolLimit||DEFAULT_POOL_LIMIT)) p.eliminated=true;
-
-      const resultPlayers=[{
-        playerId:p.id,name:p.name,points:80,totalScore:room.scores[p.id]||0,
-        result:p.eliminated?'ELIMINATED':'WRONG SHOW',
-        cards:p.hand.map(publicCard),lives:[],remaining:p.hand.map(publicCard)
-      }];
-      const penalties=[{playerId:p.id,name:p.name,points:80,totalScore:room.scores[p.id]||0}];
-
-      for(const opp of room.playersList){
-        if(opp.id===p.id || opp.eliminated) continue;
-        const info=bestLifeScore(opp.hand,room);
-        const pts=info.points;
-        room.scores[opp.id]=(room.scores[opp.id]||0)+pts;
-        if(room.scores[opp.id] >= (room.poolLimit||DEFAULT_POOL_LIMIT)) opp.eliminated=true;
-        const used=new Set((info.lives||[]).flat().map(c=>c.id));
-        const remaining=opp.hand.filter(c=>!used.has(c.id));
-        const lives=(info.lives||[]).map(g=>({
-          type:pureSeq(g)?'1st Life (Pure Sequence)':
-               (impureSeq(g,room)?'2nd Life (With Joker)':
-               (validSet(g,room)?'Set/Trill':'Group')),
-          cards:g.map(publicCard)
-        }));
-        penalties.push({playerId:opp.id,name:opp.name,points:pts,totalScore:room.scores[opp.id]||0});
-        resultPlayers.push({
-          playerId:opp.id,name:opp.name,points:pts,totalScore:room.scores[opp.id]||0,
-          result:opp.eliminated?'ELIMINATED':'LOST',cards:opp.hand.map(publicCard),lives,remaining:remaining.map(publicCard)
-        });
-      }
-
-      room.result={winnerId:null,winnerName:null,valid:false,wrongShow:true,
-        loserId:p.id,loserName:p.name,penalties,players:resultPlayers,
-        dealNumber:room.dealNumber,poolLimit:room.poolLimit||DEFAULT_POOL_LIMIT,reason:check.reason};
+      room.result={winnerId:null,winnerName:null,valid:false,wrongShow:true,loserId:p.id,loserName:p.name,penalties:[{playerId:p.id,name:p.name,points:80,totalScore:room.scores[p.id]||0}],reason:check.reason};
       room.started=false;
-      const active=room.playersList.filter(x=>!x.eliminated && (room.scores[x.id]||0)<(room.poolLimit||DEFAULT_POOL_LIMIT));
-      room.result.matchFinished=active.length<=1;
-      room.result.matchWinner=active.length===1?active[0].name:null;
+      const gameWinner=(room.scores[p.id]||0)>=(room.poolLimit||DEFAULT_POOL_LIMIT) ? room.playersList.find(x=>x.id!==p.id)?.name : null;
+      room.result.matchWinner=gameWinner||null;
       broadcastState(room);io.to(room.id).emit('dealResult',room.result);
     }
   });
