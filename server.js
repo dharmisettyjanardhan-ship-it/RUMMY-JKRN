@@ -197,10 +197,12 @@ function startRealGame(room){
 
 
 io.on('connection',socket=>{
+  socket.on('error',err=>console.error('Socket error:',err));
   broadcastOnlineCount();
-  socket.on('createRoom',({name,maxPlayers})=>{
+  socket.on('createRoom',({name,maxPlayers,poolLimit})=>{
     const id=code();
     const requested=Number(maxPlayers)||2; const capacity=[2,4,6].includes(requested)?requested:2;
+    const selectedPool=ALLOWED_POOL_LIMITS.includes(Number(poolLimit)) ? Number(poolLimit) : DEFAULT_POOL_LIMIT;
     const room={id,maxPlayers:capacity,poolLimit:selectedPool,players:new Map(),playersList:[],started:false,deck:[],discard:[],wildJoker:null,currentPlayer:0,playerHasDrawn:false,turnEndsAt:0,turnTimer:null,scores:{},dealerIndex:null,dealNumber:0};
     rooms.set(id,room);
     const p=addPlayerToRoom(room,socket,name);
@@ -218,8 +220,9 @@ io.on('connection',socket=>{
     io.to(room.id).emit('roomUpdate',{players:publicPlayers(room),maxPlayers:room.maxPlayers,poolLimit:room.poolLimit});
     broadcastOnlineCount();
   });
-  socket.on('quickJoin',({name,maxPlayers})=>{
+  socket.on('quickJoin',({name,maxPlayers,poolLimit})=>{
     const requested=Number(maxPlayers)||6; const capacity=[2,4,6].includes(requested)?requested:6;
+    const selectedPool=ALLOWED_POOL_LIMITS.includes(Number(poolLimit)) ? Number(poolLimit) : DEFAULT_POOL_LIMIT;
     let room=[...rooms.values()].find(r=>!r.started && r.maxPlayers===capacity && r.playersList.length<capacity);
     if(!room){
       const id=code(); room={id,maxPlayers:capacity,poolLimit:selectedPool,players:new Map(),playersList:[],started:false,deck:[],discard:[],wildJoker:null,currentPlayer:0,playerHasDrawn:false,turnEndsAt:0,turnTimer:null,scores:{},dealerIndex:null,dealNumber:0}; rooms.set(id,room);
