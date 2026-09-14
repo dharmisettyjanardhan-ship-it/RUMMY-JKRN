@@ -4184,6 +4184,19 @@ button[onclick*="groupSelected"] {
     playerGroups=groups;
     allHands[0]=fresh;
   }
+  function renderAuthoritativeWildJoker(w){
+    const el=document.getElementById('topJokerDisplay');
+    if(!el) return;
+    if(!w){
+      el.className='pile joker-pile';
+      el.innerHTML='<div style="font-size:34px;">🃏</div><div style="font-size:12px;color:#ffd700;">WILD JOKER</div>';
+      return;
+    }
+    el.className='pile joker-pile '+(w.color||'');
+    el.innerHTML='<div class="card-top"><span>'+String(w.rank||'')+'</span><span>'+String(w.suit||'')+'</span></div>'+
+      '<div class="card-center">'+String(w.suit||'🃏')+'</div>'+
+      '<div style="font-size:12px;color:#ffd700;margin-top:2px;font-weight:800;">👑 WILD JOKER</div>';
+  }
   function applyOnlineState(st){
     if(!st)return;
     window.__onlineMyIndex=st.myIndex;
@@ -4195,6 +4208,7 @@ button[onclick*="groupSelected"] {
     deck=Array(Math.max(0,st.deckCount)).fill(null);
     discardPile=st.discardTop?[st.discardTop]:[];
     wildJoker=st.wildJoker||null;
+    renderAuthoritativeWildJoker(wildJoker);
     window.__onlineDealerIndex=st.dealerIndex; (st.players||[]).forEach(pl=>{const tag=document.getElementById('dealer-tag-p'+(pl.index+1));if(tag)tag.style.display=pl.index===st.dealerIndex?'inline-block':'none';});
     if(st.scores){ Object.entries(st.scores).forEach(([pid,score])=>{ const pl=(st.players||[]).find(x=>x.id===pid); if(pl&&pl.index>=0){ const el=document.getElementById('score-p'+(pl.index+1)); if(el)el.textContent=score; } }); }
     const me=st.hands[st.myIndex];
@@ -4222,10 +4236,26 @@ button[onclick*="groupSelected"] {
 
   function onlineDeclare(){
     if(!window.__realRoomStarted || currentPlayer!==onlinePlayerIndex() || !playerHasDrawn)return;
-    const groups=(playerGroups||[]).filter(g=>g&&g.length).map(g=>g.map(c=>c.id));
-    let discardId=null;
-    if(selectedCards && selectedCards.length===1){const x=selectedCards[0];const g=playerGroups[x.gIdx];if(g&&g[x.cIdx])discardId=g[x.cIdx].id;}
-    onlineSocket.emit('declare',{groupIds:groups,discardId});
+    if(!selectedCards || selectedCards.length!==1){
+      const st=document.getElementById('status');
+      if(st)st.innerText='14 CARDS — Select ONE card as 14th card and DECLARE.';
+      return;
+    }
+    const x=selectedCards[0], source=playerGroups[x.gIdx];
+    const finish=source && source[x.cIdx];
+    if(!finish){
+      const st=document.getElementById('status');
+      if(st)st.innerText='Please select the 14th card.';
+      return;
+    }
+    const discardId=finish.id;
+    // The selected 14th/finish card is NOT part of the 13-card validation.
+    // If it was inside a 4-card group, the remaining 3 cards stay as a valid group.
+    const groups=(playerGroups||[]).map(g=>{
+      const ids=(g||[]).filter(c=>c && c.id!==discardId).map(c=>c.id);
+      return ids.length>=3 ? ids : null;
+    }).filter(Boolean);
+    onlineSocket.emit('declare',{groupIds:groups,discardId,finishId:discardId});
   }
   function onlineNextDeal(){ if(onlineSocket&&onlineRoomId)onlineSocket.emit('nextDeal'); }
 
@@ -4236,7 +4266,7 @@ button[onclick*="groupSelected"] {
     onlineSocket.on('gameState',applyOnlineState);
     onlineSocket.on('realGameStarted',d=>{window.__realRoomStarted=true; gameOver=false; gameStarted=true; if(d&&Number.isInteger(d.currentPlayer))currentPlayer=d.currentPlayer; if(typeof updateUI==='function')updateUI();});
     onlineSocket.on('onlineActionError',m=>{const st=document.getElementById('status');if(st)st.innerText='⚠️ '+((m&&m.message)||'Action not allowed');});
-    onlineSocket.on('onlineActionAck',m=>{const st=document.getElementById('status');if(st&&m&&m.action==='draw')st.innerText='Card received. Select one card to discard.';});
+    onlineSocket.on('onlineActionAck',m=>{const st=document.getElementById('status');if(st&&m&&m.action==='draw')st.innerText='14 CARDS — Select ONE card as 14th card and DECLARE.';});
     onlineSocket.on('dealResult',r=>{ window.__onlineRoomStarted=false; window.__onlineLastResult=r; gameOver=true; const msg=r.valid?('🏆 '+r.winnerName+' WON! Opponent +'+((r.penalties&&r.penalties[0])||{}).points+' points'):('❌ WRONG SHOW! '+r.loserName+' +80 points'); if(typeof showDealResultModal==='function')showDealResultModal(msg); const b=document.getElementById('nextDealBtn'); if(b){b.innerText=r.matchWinner?'MATCH FINISHED':'NEXT DEAL';b.onclick=r.matchWinner?(()=>location.reload()):onlineNextDeal;} });
     onlineSocket.on('poolFinished',r=>{alert('🏆 Match finished!');location.reload();});
   }
@@ -4402,7 +4432,7 @@ button[onclick*="groupSelected"] {
       window.__realRoomStarted=true; window.__onlinePoolLimit=d.poolLimit||window.__onlinePoolLimit||201;
       enterOnlineTable();
     });
-    window.onlineSocket.on('onlineActionAck',m=>{ if(m&&m.action==='draw'){ const st=document.getElementById('status'); if(st)st.innerText='14 CARDS — Select ONE card and DISCARD.'; } });
+    window.onlineSocket.on('onlineActionAck',m=>{ if(m&&m.action==='draw'){ const st=document.getElementById('status'); if(st)st.innerText='14 CARDS — Select ONE card as 14th card and DECLARE.'; } });
   }
   hook(); window.addEventListener('load',hook);
 })();
