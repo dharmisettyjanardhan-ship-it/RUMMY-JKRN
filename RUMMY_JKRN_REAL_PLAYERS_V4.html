@@ -1832,6 +1832,7 @@ html, body {
   <input id="onlineName" class="online-input" maxlength="18" placeholder="Enter your player name">
   <input id="onlineRoom" class="online-input" maxlength="6" placeholder="Room ID (for Join)">
   <select id="onlineMaxPlayers" class="online-input"><option value="2">2 Players</option><option value="4">4 Players</option><option value="6" selected>6 Players</option></select>
+   <select id="onlinePoolLimit" class="online-input"><option value="101">101 Pool</option><option value="201" selected>201 Pool</option></select>
   <button class="online-btn" onclick="createOnlineRoom()">CREATE ROOM</button>
   <button class="online-btn alt" onclick="quickJoinOnline()">⚡ QUICK JOIN – ADD ONLINE PLAYER</button>
   <button class="online-btn alt" onclick="joinOnlineRoom()">JOIN ROOM</button>
@@ -1996,10 +1997,7 @@ var onlineSocket=null, onlineRoomId=null, onlinePlayerId=null, onlineSessionToke
 function onlineMsg(t){const e=document.getElementById('onlineStatus');if(e)e.innerHTML=t;}
 function saveOnlineSession(){try{localStorage.setItem('jkrnOnlineSession',JSON.stringify({roomId:onlineRoomId,sessionToken:onlineSessionToken,name:(document.getElementById('onlineName')||{}).value||'Player'}));}catch(e){}}
 function loadOnlineSession(){try{return JSON.parse(localStorage.getItem('jkrnOnlineSession')||'null')}catch(e){return null}}
-function renderOnlinePlayers(players,maxPlayers){const e=document.getElementById('onlinePlayers');if(!e)return;const cap=Number(maxPlayers||window.__onlineMaxPlayers||2);window.__onlineMaxPlayers=cap;e.innerHTML='<b>ROOM PLAYERS ('+players.length+'/'+cap+')</b>'+players.map(p=>`<div class="online-player">🪑 SEAT ${p.index+1}. ${String(p.name||'Player').replace(/[<>]/g,'')} ${p.connected===false?'🔴 OFFLINE':(p.ready?'✅ READY':'⏳ WAITING')} ${p.index===window.__onlineDealerIndex?'👑 DEALER':''}</div>`).join('');
-  window.__onlinePlayers=players;
-  if(typeof window.jkrnArrangeOnlineSeats==='function')window.jkrnArrangeOnlineSeats(players,cap);
-}
+function renderOnlinePlayers(players,maxPlayers){const e=document.getElementById('onlinePlayers');if(!e)return;const cap=Number(maxPlayers||window.__onlineMaxPlayers||2);window.__onlineMaxPlayers=cap;e.innerHTML='<b>ROOM PLAYERS ('+players.length+'/'+cap+')</b>'+players.map((p,i)=>`<div class="online-player">🪑 SEAT ${i+1}. ${p.name} ${p.connected===false?'🔴 OFFLINE':(p.ready?'✅ READY':'⏳ WAITING')} ${p.index===window.__onlineDealerIndex?'👑 DEALER':''}</div>`).join('');}
 function ensureOnlineSocket(){
 if(onlineSocket)return;
 if(location.protocol==='file:'){
@@ -2015,17 +2013,17 @@ if(typeof io!=='function'){
 onlineSocket=io();
 onlineSocket.on('connect_error',e=>{onlineMsg('⚠️ Server connection failed. Please refresh.');});
 onlineSocket.on('connect',()=>{const s=loadOnlineSession();if(s&&s.roomId&&s.sessionToken){onlineRoomId=s.roomId;onlineSessionToken=s.sessionToken;onlineSocket.emit('reconnectPlayer',s);}else onlineMsg('Connected. Create or join a room.');});
-onlineSocket.on('roomCreated',d=>{window.__onlineMaxPlayers=d.maxPlayers||2;onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();document.getElementById('onlineRoom').value=d.roomId;document.getElementById('onlineRoomCode').textContent='ROOM: '+d.roomId;onlineMsg('Room created. Share the Room ID. Waiting for players...<br><button class="online-btn alt" onclick="toggleOnlineReady()">I AM READY</button>');});
-onlineSocket.on('roomJoined',d=>{window.__onlineMaxPlayers=d.maxPlayers||2;onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();document.getElementById('onlineRoomCode').textContent='ROOM: '+d.roomId;onlineMsg('Joined room. Press READY when all players are present.<br><button class="online-btn alt" onclick="toggleOnlineReady()">I AM READY</button>');});
-onlineSocket.on('reconnected',d=>{window.__onlineMaxPlayers=d.maxPlayers||window.__onlineMaxPlayers||2;onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();onlineMsg('♻️ Reconnected to your seat.');});
+onlineSocket.on('roomCreated',d=>{window.__onlineMaxPlayers=d.maxPlayers||2;window.__onlinePoolLimit=d.poolLimit||201;const pl=document.getElementById('onlinePoolLimit');if(pl)pl.value=String(window.__onlinePoolLimit);onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();document.getElementById('onlineRoom').value=d.roomId;document.getElementById('onlineRoomCode').textContent='ROOM: '+d.roomId;onlineMsg('Room created. Share the Room ID. Waiting for players...<br><button class="online-btn alt" onclick="toggleOnlineReady()">I AM READY</button>');});
+onlineSocket.on('roomJoined',d=>{window.__onlineMaxPlayers=d.maxPlayers||2;window.__onlinePoolLimit=d.poolLimit||201;const pl=document.getElementById('onlinePoolLimit');if(pl)pl.value=String(window.__onlinePoolLimit);onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();document.getElementById('onlineRoomCode').textContent='ROOM: '+d.roomId;onlineMsg('Joined room. Press READY when all players are present.<br><button class="online-btn alt" onclick="toggleOnlineReady()">I AM READY</button>');});
+onlineSocket.on('reconnected',d=>{window.__onlineMaxPlayers=d.maxPlayers||window.__onlineMaxPlayers||2;window.__onlinePoolLimit=d.poolLimit||window.__onlinePoolLimit||201;const pl=document.getElementById('onlinePoolLimit');if(pl)pl.value=String(window.__onlinePoolLimit);onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();onlineMsg('♻️ Reconnected to your seat.');});
 onlineSocket.on('roomUpdate',d=>{renderOnlinePlayers(d.players,d.maxPlayers);});
 onlineSocket.on('onlineCount',d=>{const e=document.getElementById('globalOnlineCount');if(e)e.textContent='👥 Players Online: '+(d.count||0);});
 onlineSocket.on('quickMatchReady',d=>{onlineMsg('🎯 '+d.message+'<br><button class="online-btn alt" onclick="toggleOnlineReady()">I AM READY</button>');});
 onlineSocket.on('readyAck',()=>{onlineReady=true;onlineMsg('You are READY. Waiting for all players...');});
 onlineSocket.on('realGameStarted',d=>{document.getElementById('onlineLobby').classList.add('hidden');document.getElementById('lobbyScreen').classList.remove('hidden');window.__realRoomStarted=true;window.__realRoomPlayers=(d.players||[]).length;window.__onlineDealerIndex=d.dealerIndex;numPlayers=window.__realRoomPlayers;onlineMsg('');});
 onlineSocket.on('roomError',m=>onlineMsg('❌ '+m));}
-function createOnlineRoom(){ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();const maxPlayers=Number(document.getElementById('onlineMaxPlayers').value||6);onlineSocket.emit('createRoom',{name,maxPlayers});}
-function quickJoinOnline(){ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();const maxPlayers=Number(document.getElementById('onlineMaxPlayers').value||6);onlineSocket.emit('quickJoin',{name,maxPlayers});}
+function createOnlineRoom(){ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();const maxPlayers=Number(document.getElementById('onlineMaxPlayers').value||6);const poolLimit=Number(document.getElementById('onlinePoolLimit')?.value||201);onlineSocket.emit('createRoom',{name,maxPlayers,poolLimit});}
+function quickJoinOnline(){ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();const maxPlayers=Number(document.getElementById('onlineMaxPlayers').value||6);const poolLimit=Number(document.getElementById('onlinePoolLimit')?.value||201);onlineSocket.emit('quickJoin',{name,maxPlayers,poolLimit});}
 function joinOnlineRoom(){ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();const room=(document.getElementById('onlineRoom').value||'').trim().toUpperCase();if(!room)return onlineMsg('Enter Room ID first.');onlineSocket.emit('joinRoom',{name,roomId:room});}
 function toggleOnlineReady(){if(!onlineSocket||!onlineRoomId)return onlineMsg('Create or join a room first.');onlineSocket.emit('ready',{roomId:onlineRoomId,playerId:onlinePlayerId});}
 function initOnline(){ensureOnlineSocket();}
@@ -2233,7 +2231,6 @@ function updateDealerBadges() {
 }
 
 function checkAndRefillDeck() {
-    if (window.__realRoomStarted) return;
     if(deck.length === 0 && discardPile.length > 1) {
         let topCard = discardPile.pop();
         deck = shuffle(discardPile);
@@ -4161,26 +4158,6 @@ button[onclick*="groupSelected"] {
 
 
 
-<script id="jkrn-online-authority-ui">
-(function(){
- function sync(){
-   if(!window.__realRoomStarted)return;
-   const st=window.__onlineState||{};
-   const my=Number(window.__onlineMyIndex);
-   const myTurn=st.currentPlayer===my;
-   const drawn=!!st.playerHasDrawn;
-   const closed=document.querySelector('.draw-pile');
-   const open=document.getElementById('discardPile');
-   if(closed)closed.style.pointerEvents=myTurn&&!drawn?'auto':'none';
-   if(open)open.style.pointerEvents=myTurn&&!drawn?'auto':'none';
-   const discard=document.getElementById('discardButton');
-   if(discard)discard.disabled=!(myTurn&&drawn&&Array.isArray(st.hands?.[my])&&st.hands[my].length===14);
- }
- window.__jkrnOnlineSyncControls=sync;
- setInterval(sync,100);
- window.addEventListener('load',sync);
-})();
-</script>
 <script id="jkrn-real-player-v2">
 /* REAL PLAYERS V2: authoritative server deck/hand/turn/draw/discard */
 (function(){
@@ -4212,6 +4189,7 @@ button[onclick*="groupSelected"] {
     window.__realRoomStarted=!!st.started;
     window.__onlineState=st;
     numPlayers=(st.players||[]).length||2; gameStarted=!!st.started; gameOver=false;
+    poolLimit=Number(st.poolLimit||201); const poolEl=document.getElementById('poolLimitLabel'); if(poolEl)poolEl.innerText=String(poolLimit); const poolTop=document.getElementById('poolTypeDisplay'); if(poolTop)poolTop.innerText=String(poolLimit);
     currentPlayer=st.currentPlayer;
     playerHasDrawn=!!st.playerHasDrawn;
     deck=Array(Math.max(0,st.deckCount)).fill(null);
@@ -4223,43 +4201,25 @@ button[onclick*="groupSelected"] {
     if(Array.isArray(me)) rebuildLocalGroups(me);
     selectedCards=[];
     if(typeof updateUI==='function') updateUI();
+    onlineArrangeSeats(st);
     onlineRenderOpponent(st);
-    if(typeof window.__jkrnOnlineSyncControls==='function')window.__jkrnOnlineSyncControls();
     onlineStartTurnTimer(st.turnEndsAt);
     onlineUpdateTurnStatus(st);
   }
-  function onlineRenderOpponent(st){
-    const players=st.players||[];
-    const meName=(players[st.myIndex]||{}).name||'YOU';
-    // Show only real seats. With 2 players, the opponent is directly opposite YOU.
-    for(let seat=1;seat<=6;seat++){
-      const box=document.getElementById('opp'+(seat+1));
-      if(box)box.style.display='none';
+  function onlineArrangeSeats(st){
+    const count=(st.players||[]).length||2;
+    for(let i=2;i<=6;i++){const el=document.getElementById('opp'+i);if(el)el.style.display=(i<=count?'flex':'none');}
+    const p2=document.getElementById('opp2');
+    if(p2){
+      if(count===2){p2.style.top='5%';p2.style.left='50%';p2.style.right='auto';p2.style.transform='translateX(-50%)';}
+      else if(count===4){p2.style.top='25%';p2.style.left='3%';p2.style.right='auto';p2.style.transform='none';}
+      else {p2.style.top='35%';p2.style.left='3%';p2.style.right='auto';p2.style.transform='none';}
     }
-    players.forEach(pl=>{
-      if(pl.index===st.myIndex)return;
-      const seat=pl.index+1;
-      const box=document.getElementById('opp'+(seat+1));
-      if(!box)return;
-      box.style.display='flex';
-      const h=st.hands[pl.index]; const count=Array.isArray(h)?h.length:(h&&h.count)||0;
-      const actionEl=document.getElementById('action-p'+(seat+1));
-      if(actionEl)actionEl.textContent=(st.currentPlayer===pl.index?'Playing':'Waiting')+' • '+count+' cards';
-      const nameEl=box.querySelector('.opp-name');
-      if(nameEl){
-        const badges=nameEl.querySelectorAll('.dealer-badge,.elim-badge');
-        nameEl.childNodes[0].nodeValue=(pl.name||'Player')+' ';
-        badges.forEach(b=>{});
-      }
-      const scoreEl=document.getElementById('score-p'+(seat+1));
-      if(scoreEl&&st.scores&&st.scores[pl.id]!=null)scoreEl.textContent=st.scores[pl.id];
-      box.classList.toggle('active-turn',st.currentPlayer===pl.index);
-      const timer=document.getElementById('timer-p'+(seat+1));
-      if(timer)timer.textContent=st.currentPlayer===pl.index?`⏳ ${Math.max(0,Math.ceil(((st.turnEndsAt||Date.now())-Date.now())/1000))}s`:'30s';
-    });
-    // Hide all unused opponent seats even when the current player is not seat 1.
-    document.title='POOL RUMMY • '+meName+' • '+players.length+' PLAYERS';
-    if(typeof window.jkrnArrangeOnlineSeats==='function')window.jkrnArrangeOnlineSeats(players,st.maxPlayers||players.length);
+  }
+  function onlineRenderOpponent(st){
+    const meName=(st.players[st.myIndex]||{}).name||'YOU';
+    (st.players||[]).forEach(pl=>{ const h=st.hands[pl.index]; const count=Array.isArray(h)?h.length:(h&&h.count)||0; const el=document.getElementById('action-p'+(pl.index+1)); if(el)el.textContent=(st.currentPlayer===pl.index?'Playing':'Waiting')+' • '+count+' cards'; const nameEl=document.querySelector('#player-name-p'+(pl.index+1)); if(nameEl)nameEl.textContent=pl.index===st.myIndex?'YOU':pl.name; const scoreEl=document.getElementById('score-p'+(pl.index+1)); if(scoreEl&&st.scores&&st.scores[pl.id]!=null)scoreEl.textContent=st.scores[pl.id]; const box=document.getElementById('opp'+(pl.index+1)); if(box)box.classList.toggle('active-turn',st.currentPlayer===pl.index); });
+    document.title='POOL RUMMY • '+meName+' • '+(st.players||[]).length+' PLAYERS';
   }
   function onlineUpdateTurnStatus(st){
     const el=document.getElementById('status');
@@ -4302,10 +4262,11 @@ button[onclick*="groupSelected"] {
     onlineSocket.on('realGameStarted',d=>{window.__realRoomStarted=true; gameOver=false; gameStarted=true; if(d&&Number.isInteger(d.currentPlayer))currentPlayer=d.currentPlayer; if(typeof updateUI==='function')updateUI();});
     onlineSocket.on('onlineActionError',m=>{const st=document.getElementById('status');if(st)st.innerText='⚠️ '+((m&&m.message)||'Action not allowed');});
     onlineSocket.on('onlineActionAck',m=>{const st=document.getElementById('status');if(st&&m&&m.action==='draw')st.innerText='Card received • 14 cards • Select 1 card to discard.';});
+    onlineSocket.on('dropResult',m=>{const st=document.getElementById('status');if(st)st.innerText=(m.name||'Player')+' dropped • '+m.points+' points';});
     onlineSocket.on('dealResult',r=>{ window.__onlineRoomStarted=false; window.__onlineLastResult=r; gameOver=true; const msg=r.valid?('🏆 '+r.winnerName+' WON! Opponent +'+((r.penalties&&r.penalties[0])||{}).points+' points'):('❌ WRONG SHOW! '+r.loserName+' +80 points'); if(typeof showDealResultModal==='function')showDealResultModal(msg); const b=document.getElementById('nextDealBtn'); if(b){b.innerText=r.matchWinner?'MATCH FINISHED':'NEXT DEAL';b.onclick=r.matchWinner?(()=>location.reload()):onlineNextDeal;} });
     onlineSocket.on('poolFinished',r=>{alert('🏆 Match finished!');location.reload();});
   }
-  const oldDraw=window.drawCard, oldDrawDiscard=window.drawFromDiscard, oldDiscard=window.discardCard, oldGroup=window.groupSelectedCards, oldDeclare=window.declareGame; window.__originalDeclareGame=oldDeclare;
+  const oldDraw=window.drawCard, oldDrawDiscard=window.drawFromDiscard, oldDiscard=window.discardCard, oldDrop=window.dropGame, oldGroup=window.groupSelectedCards, oldDeclare=window.declareGame; window.__originalDeclareGame=oldDeclare;
   window.drawCard=function(){
     if(window.__realRoomStarted){ if(currentPlayer!==onlinePlayerIndex()||playerHasDrawn)return; onlineSocket.emit('drawDeck'); return; }
     return oldDraw.apply(this,arguments);
@@ -4317,6 +4278,10 @@ button[onclick*="groupSelected"] {
   window.discardCard=function(){
     if(window.__realRoomStarted){ if(currentPlayer!==onlinePlayerIndex()||!playerHasDrawn)return; const id=cardIdFromSelection(); if(!id)return; onlineSocket.emit('discardCard',{cardId:id}); return; }
     return oldDiscard.apply(this,arguments);
+  };
+  window.dropGame=function(){
+    if(window.__realRoomStarted){ if(currentPlayer!==onlinePlayerIndex())return; onlineSocket.emit('dropGame'); return; }
+    return oldDrop ? oldDrop.apply(this,arguments) : undefined;
   };
   window.declareGame=function(){ if(window.__realRoomStarted){ onlineDeclare(); return; } return window.__originalDeclareGame ? window.__originalDeclareGame.apply(this,arguments) : undefined; };
   window.nextOnlineDeal=onlineNextDeal;
@@ -4330,33 +4295,6 @@ button[onclick*="groupSelected"] {
 </script>
 
 
-<style id="jkrn-online-seat-fix">
-/* Online mode: seats are positioned dynamically. 2 players are opposite each other. */
-.table .opp-box.jkrn-online-hidden{display:none !important;}
-</style>
-<script id="jkrn-online-seat-layout">
-(function(){
-  const pos2={2:{top:'6%',left:'50%',right:'auto',transform:'translateX(-50%)'}};
-  const pos6={2:{top:'35%',left:'3%',right:'auto',transform:''},3:{top:'15%',left:'20%',right:'auto',transform:''},4:{top:'6%',left:'50%',right:'auto',transform:'translateX(-50%)'},5:{top:'15%',right:'20%',left:'auto',transform:''},6:{top:'35%',right:'3%',left:'auto',transform:''}};
-  function arrange(players,cap){
-    const ids=[2,3,4,5,6,7];
-    ids.forEach(id=>{const b=document.getElementById('opp'+id);if(b)b.classList.add('jkrn-online-hidden');});
-    const me=window.__onlineMyIndex;
-    (players||[]).forEach(p=>{
-      if(p.index===me)return;
-      const box=document.getElementById('opp'+(p.index+1));
-      if(!box)return;
-      box.classList.remove('jkrn-online-hidden');
-      let seatIndex;
-      if((cap||players.length)===2){ seatIndex=2; }
-      else { seatIndex=p.index+1; }
-      const pos=(cap||players.length)===2?pos2[2]:pos6[seatIndex];
-      if(pos){Object.assign(box.style,pos);}
-    });
-  }
-  window.jkrnArrangeOnlineSeats=arrange;
-})();
-</script>
 <style id="jkrn-v7-options-style">
 #jkrnOptions{position:fixed;right:18px;top:72px;z-index:100000;font-family:Arial,sans-serif}
 #jkrnOptions>button{background:linear-gradient(#ffd95a,#c89400);border:2px solid #fff0a0;border-radius:10px;padding:9px 13px;font-weight:900;cursor:pointer}
