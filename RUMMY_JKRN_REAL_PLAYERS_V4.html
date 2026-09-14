@@ -3267,8 +3267,9 @@ function showDealResultModal(titleText) {
                 document.getElementById("resultModal").classList.remove("active");
                 return;
             }
-            if (window.__realRoomStarted === false && typeof onlineNextDeal === "function") {
+            if (onlineResult && !onlineResult.matchFinished && typeof onlineNextDeal === "function") {
                 onlineNextDeal();
+                document.getElementById("resultModal").classList.remove("active");
             } else {
                 closeResultModalAndStartNext();
             }
@@ -4306,7 +4307,7 @@ function onlineDeclare(){
     onlineSocket.on('onlineActionError',m=>{const st=document.getElementById('status');if(st)st.innerText='⚠️ '+((m&&m.message)||'Action not allowed');});
     onlineSocket.on('onlineActionAck',m=>{const st=document.getElementById('status');if(st&&m&&m.action==='draw')st.innerText='14 CARDS — Select ONE card as 14th card and DECLARE.';});
     onlineSocket.on('turnTimer',t=>{updateOnlineTurnCountdown(t);});
-onlineSocket.on('dealResult',r=>{ window.__onlineRoomStarted=false; window.__onlineLastResult=r; gameOver=true; const msg=r.valid?('🏆 '+r.winnerName+' WON THIS DEAL'):('❌ WRONG SHOW! '+r.loserName+' +80 points'); if(typeof showDealResultModal==='function')showDealResultModal(msg); const b=document.getElementById('nextDealBtn'); if(b){b.innerText=r.matchWinner?'MATCH FINISHED':'NEXT DEAL';b.onclick=r.matchWinner?(()=>location.reload()):onlineNextDeal;} });
+onlineSocket.on('dealResult',r=>{ window.__onlineRoomStarted=false; window.__onlineLastResult=r; gameOver=true; const msg=r.valid?('🏆 '+r.winnerName+' WON THIS DEAL'):('❌ WRONG SHOW! '+r.loserName+' +80 points'); if(typeof showDealResultModal==='function')showDealResultModal(msg); const b=document.getElementById('nextDealBtn'); if(b){b.innerText=r.matchWinner?'MATCH FINISHED':'NEXT DEAL';b.onclick=r.matchWinner?(()=>location.reload()):(()=>{document.getElementById('resultModal').classList.remove('active');onlineNextDeal();});} });
     onlineSocket.on('poolFinished',r=>{window.__onlineLastResult=r;window.__onlineRoomStarted=false;gameOver=true;if(typeof showDealResultModal==='function')showDealResultModal('🏆 MATCH WINNER: '+(r.winnerName||''));});
   }
   const oldDraw=window.drawCard, oldDrawDiscard=window.drawFromDiscard, oldDiscard=window.discardCard, oldGroup=window.groupSelectedCards, oldDeclare=window.declareGame; window.__originalDeclareGame=oldDeclare;
