@@ -155,19 +155,14 @@ function startTurn(room){
     // Timeout is server-authoritative. A client cannot make another player act.
     // If the player did not finish the turn in 30 seconds, apply a missed-turn
     // drop and move to the next eligible seat.
-    if(room.playerHasDrawn && timed.hand.length===14){
-      // Time expired after draw: automatically discard one card so the turn closes cleanly.
-      const autoCard=timed.hand.pop();
-      if(autoCard) room.discard.push(autoCard);
-      room.playerHasDrawn=false;
-    } else {
-      // No card was lifted in 30 seconds: missed turn/drop penalty.
-      room.scores[timed.id]=(room.scores[timed.id]||0)+25;
-      room.dealPoints[timed.id]=(room.dealPoints[timed.id]||0)+25;
-      timed.droppedThisDeal=true;
-      timed.lastTurnPenalty=25;
-      room.playerHasDrawn=false;
-    }
+    // REAL-PLAYER RULE: the server must never invent a discard for another player.
+    // If a player times out without completing the turn, apply the 25-point
+    // missed-turn/drop penalty and move on. A drawn card is never auto-discarded.
+    room.scores[timed.id]=(room.scores[timed.id]||0)+25;
+    room.dealPoints[timed.id]=(room.dealPoints[timed.id]||0)+25;
+    timed.droppedThisDeal=true;
+    timed.lastTurnPenalty=25;
+    room.playerHasDrawn=false;
     const limit=room.poolLimit||DEFAULT_POOL_LIMIT;
     const active=room.playersList.filter(x=>!x.droppedThisDeal && (room.scores[x.id]||0)<limit);
     if(active.length<=1){
