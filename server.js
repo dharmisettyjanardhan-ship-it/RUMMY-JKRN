@@ -253,12 +253,24 @@ io.on('connection',socket=>{
     // The visible top card changes only when the current player explicitly draws it
     // or explicitly discards a card.
     if(!room.deck.length){socket.emit('onlineActionError',{message:'Closed deck is empty. Draw from OPEN DECK.'});return;}
-    const card=room.deck.pop();p.hand.push(card);room.playerHasDrawn=true;socket.emit('onlineActionAck',{action:'draw',card:publicCard(card)});broadcastState(room);
+    const card=room.deck.pop();
+    if(!card){socket.emit('onlineActionError',{message:'Closed deck has no card available.'});return;}
+    p.hand.push(card);
+    room.playerHasDrawn=true;
+    // Send the new hand/state immediately. The client must never draw locally.
+    broadcastState(room);
+    socket.emit('onlineActionAck',{action:'draw',card:publicCard(card)});
   });
   socket.on('drawDiscard',()=>{
     const room=rooms.get(socket.roomId),p=room&&room.players.get(socket.id);
     if(!room||!p||!room.started||p.index!==room.currentPlayer||room.playerHasDrawn||room.discard.length===0){socket.emit('onlineActionError',{message:'Cannot draw from OPEN DECK now.'});return;}
-    const card=room.discard.pop();p.hand.push(card);room.playerHasDrawn=true;socket.emit('onlineActionAck',{action:'draw',card:publicCard(card)});broadcastState(room);
+    const card=room.discard.pop();
+    if(!card){socket.emit('onlineActionError',{message:'OPEN DECK has no card available.'});return;}
+    p.hand.push(card);
+    room.playerHasDrawn=true;
+    // OPEN DECK changes only because this player explicitly drew it.
+    broadcastState(room);
+    socket.emit('onlineActionAck',{action:'draw',card:publicCard(card)});
   });
   socket.on('discardCard',({cardId})=>{
     const room=rooms.get(socket.roomId),p=room&&room.players.get(socket.id);
