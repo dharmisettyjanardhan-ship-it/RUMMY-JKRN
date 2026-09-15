@@ -155,9 +155,9 @@ function startTurn(room){
     // Timeout is server-authoritative. A client cannot make another player act.
     // If the player did not finish the turn in 30 seconds, apply a missed-turn
     // drop and move to the next eligible seat.
-    // REAL-PLAYER RULE: the server must never invent a discard for another player.
-    // If a player times out without completing the turn, apply the 25-point
-    // missed-turn/drop penalty and move on. A drawn card is never auto-discarded.
+    // IMPORTANT: timeout must NEVER change the OPEN/DISCARD DECK.
+    // The top discard changes only inside the explicit discardCard handler.
+    // If a player does not finish within 30 seconds, apply +25 and drop them.
     room.scores[timed.id]=(room.scores[timed.id]||0)+25;
     room.dealPoints[timed.id]=(room.dealPoints[timed.id]||0)+25;
     timed.droppedThisDeal=true;
@@ -227,7 +227,7 @@ io.on('connection',socket=>{
     const requested=Number(maxPlayers)||6; const capacity=[2,4,6].includes(requested)?requested:6; const selectedPool=ALLOWED_POOL_LIMITS.includes(Number(poolLimit))?Number(poolLimit):DEFAULT_POOL_LIMIT;
     let room=[...rooms.values()].find(r=>!r.started && r.maxPlayers===capacity && r.playersList.length<capacity);
     if(!room){
-      const id=code(); room={id,maxPlayers:capacity,poolLimit:selectedPool,players:new Map(),playersList:[],started:false,deck:[],discard:[],wildJoker:null,currentPlayer:0,playerHasDrawn:false,turnEndsAt:0,turnTimer:null,scores:{},dealerIndex:null,dealNumber:0}; rooms.set(id,room);
+      const id=code(); room={id,maxPlayers:capacity,poolLimit:selectedPool,players:new Map(),playersList:[],started:false,deck:[],discard:[],wildJoker:null,currentPlayer:0,playerHasDrawn:false,turnEndsAt:0,turnTimer:null,scores:{},dealPoints:{},dealerIndex:null,dealNumber:0}; rooms.set(id,room);
     }
     const p=addPlayerToRoom(room,socket,name);
     socket.emit('roomJoined',{roomId:room.id,playerId:socket.id,sessionToken:p.sessionToken,maxPlayers:room.maxPlayers,poolLimit:room.poolLimit,quickJoin:true});
