@@ -4294,11 +4294,23 @@ button[onclick*="groupSelected"] {
   }
   const oldDraw=window.drawCard, oldDrawDiscard=window.drawFromDiscard, oldDiscard=window.discardCard, oldGroup=window.groupSelectedCards, oldDeclare=window.declareGame; window.__originalDeclareGame=oldDeclare;
   window.drawCard=function(){
-    if(window.__realRoomStarted){ if(currentPlayer!==onlinePlayerIndex()||playerHasDrawn)return; onlineSocket.emit('drawDeck'); return; }
+    if(window.__realRoomStarted){
+      if(currentPlayer!==onlinePlayerIndex()||playerHasDrawn)return;
+      if(typeof ensureOnlineSocket==='function') ensureOnlineSocket();
+      if(!onlineSocket){ const st=document.getElementById('status'); if(st)st.innerText='⚠️ Server connection unavailable.'; return; }
+      onlineSocket.emit('drawDeck');
+      return;
+    }
     return oldDraw.apply(this,arguments);
   };
   window.drawFromDiscard=function(){
-    if(window.__realRoomStarted){ if(currentPlayer!==onlinePlayerIndex()||playerHasDrawn)return; onlineSocket.emit('drawDiscard'); return; }
+    if(window.__realRoomStarted){
+      if(currentPlayer!==onlinePlayerIndex()||playerHasDrawn)return;
+      if(typeof ensureOnlineSocket==='function') ensureOnlineSocket();
+      if(!onlineSocket){ const st=document.getElementById('status'); if(st)st.innerText='⚠️ Server connection unavailable.'; return; }
+      onlineSocket.emit('drawDiscard');
+      return;
+    }
     return oldDrawDiscard.apply(this,arguments);
   };
   window.discardCard=function(){
