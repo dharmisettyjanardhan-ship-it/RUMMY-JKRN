@@ -1914,7 +1914,7 @@ html, body {
 
         <div class="pile-container">
             <div class="pile-label">OPEN DECK</div>
-            <div class="pile discard-pile" id="discardPile" onclick="drawFromDiscard()"></div>
+            <div class="pile discard-pile" id="discardPile" onclick="if(window.__realRoomStarted){ if(currentPlayer===onlinePlayerIndex() && !playerHasDrawn) window.drawFromDiscard(); } else { drawFromDiscard(); }"></div>
         </div>
     </div>
 
@@ -4208,7 +4208,8 @@ button[onclick*="groupSelected"] {
     currentPlayer=st.currentPlayer;
     playerHasDrawn=!!st.playerHasDrawn;
     deck=Array(Math.max(0,st.deckCount)).fill(null);
-    discardPile=st.discardTop?[st.discardTop]:[];
+    // ONLINE: discard pile is server-authoritative. Never mutate it locally.
+    discardPile=st.discardTop?[Object.assign({},st.discardTop)]:[];
     wildJoker=st.wildJoker||null;
     window.__onlineDealerIndex=st.dealerIndex; (st.players||[]).forEach(pl=>{const tag=document.getElementById('dealer-tag-p'+(pl.index+1));if(tag)tag.style.display=pl.index===st.dealerIndex?'inline-block':'none';});
     if(st.scores){ Object.entries(st.scores).forEach(([pid,score])=>{ const pl=(st.players||[]).find(x=>x.id===pid); if(pl&&pl.index>=0){ const el=document.getElementById('score-p'+(pl.index+1)); if(el)el.textContent=score; } }); }
