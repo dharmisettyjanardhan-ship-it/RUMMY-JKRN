@@ -173,7 +173,12 @@ function startTurn(room){
       io.to(room.id).emit('dealResult',room.result);
       return;
     }
-    room.currentPlayer=active[0].index;
+    let nextIndex=room.currentPlayer;
+    for(let step=1;step<=room.playersList.length;step++){
+      const cand=room.playersList[(room.currentPlayer+step)%room.playersList.length];
+      if(!cand.droppedThisDeal && (room.scores[cand.id]||0)<limit){ nextIndex=cand.index; break; }
+    }
+    room.currentPlayer=nextIndex;
     startTurn(room);
   },30000);
   broadcastState(room);
@@ -244,8 +249,10 @@ io.on('connection',socket=>{
   socket.on('drawDeck',()=>{
     const room=rooms.get(socket.roomId),p=room&&room.players.get(socket.id);
     if(!room||!p||!room.started||p.index!==room.currentPlayer||room.playerHasDrawn){socket.emit('onlineActionError',{message:'Not your turn, or you already drew.'});return;}
-    if(room.deck.length===0&&room.discard.length>1){const top=room.discard.pop();room.deck=shuffle(room.discard);room.discard=[top];}
-    if(!room.deck.length){socket.emit('onlineActionError',{message:'Closed deck is empty.'});return;}
+    // IMPORTANT: OPEN DECK is player-controlled only. Never recycle/reshuffle it automatically.
+    // The visible top card changes only when the current player explicitly draws it
+    // or explicitly discards a card.
+    if(!room.deck.length){socket.emit('onlineActionError',{message:'Closed deck is empty. Draw from OPEN DECK.'});return;}
     const card=room.deck.pop();p.hand.push(card);room.playerHasDrawn=true;socket.emit('onlineActionAck',{action:'draw',card:publicCard(card)});broadcastState(room);
   });
   socket.on('drawDiscard',()=>{
