@@ -5316,3 +5316,169 @@ button[onclick*="groupSelected"] {
  .card, .playing-card, .hand-card, .player-card, .card-item { min-width:55px !important; width:55px !important; height:80px !important; font-size:16px !important; }
 }
 </style>
+
+
+<style id="JKRN_V9_FINAL_REQUESTED_LAYOUT">
+/* V9: requested final table arrangement */
+#centerArea{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:28px !important;
+}
+#centerArea .pile-container:nth-child(1){order:1 !important;} /* Wild Joker */
+#centerArea .pile-container:nth-child(2){order:2 !important;} /* Closed deck */
+#centerArea .pile-container:nth-child(3){order:3 !important;} /* Open deck */
+
+/* Wild Joker: card-style, directly LEFT of Closed Deck */
+#topJokerDisplay{
+  width:70px !important;
+  height:100px !important;
+  min-width:70px !important;
+  border:3px solid #ffd21a !important;
+  border-radius:10px !important;
+  background:#fff !important;
+  color:#111 !important;
+  box-shadow:0 5px 18px rgba(255,205,0,.42) !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  font-size:25px !important;
+  font-weight:900 !important;
+}
+#centerArea .joker-label{color:#ffd21a !important;font-size:12px !important;font-weight:900 !important;}
+
+/* Closed deck: visibly stacked card backs; no numeric Cards Left counter */
+#centerArea .draw-pile{
+  width:70px !important;
+  height:100px !important;
+  min-width:70px !important;
+  border-radius:10px !important;
+  border:3px solid #fff !important;
+  box-shadow:-7px 0 0 #d9d9d9,-12px 3px 0 #aaa,0 6px 18px rgba(0,0,0,.45) !important;
+  background:linear-gradient(135deg,#164ca8,#2e75d7) !important;
+  position:relative !important;
+}
+#centerArea .draw-pile::after{
+  content:"🂠" !important;
+  color:#fff !important;
+  font-size:28px !important;
+  opacity:.95 !important;
+}
+#centerArea .deck-count,#closedDeckCount,#deckCountLabel{
+  font-size:0 !important;
+  color:transparent !important;
+  height:18px !important;
+}
+#centerArea .deck-count::after,#closedDeckCount::after,#deckCountLabel::after{
+  content:"SHUFFLED" !important;
+  font-size:10px !important;
+  color:#ffd21a !important;
+  font-weight:900 !important;
+  letter-spacing:.7px !important;
+}
+
+/* Bigger hand cards + bigger rank and suit symbols */
+#playerGroupsContainer .card,
+#playerHand .card,#playerCards .card,.playing-card,.hand-card,.player-card,.card-item{
+  width:72px !important;
+  min-width:72px !important;
+  height:106px !important;
+  font-size:23px !important;
+  border-radius:7px !important;
+}
+#playerGroupsContainer .card .rank,#playerGroupsContainer .card .suit,
+.card .rank,.card .suit,.playing-card .rank,.playing-card .suit{
+  font-size:23px !important;
+  font-weight:900 !important;
+}
+.card-top{font-size:22px !important;font-weight:900 !important;}
+.card-center{font-size:34px !important;font-weight:900 !important;}
+
+/* Move player hand a little UP */
+#playerArea{bottom:17% !important;}
+
+/* Auto Sort larger but remains LEFT and lower */
+.left-controls{
+  left:14px !important;
+  bottom:18px !important;
+  gap:7px !important;
+}
+.left-controls button{
+  width:112px !important;
+  min-width:112px !important;
+  height:40px !important;
+  min-height:40px !important;
+  font-size:12px !important;
+  border-radius:9px !important;
+  font-weight:900 !important;
+}
+#dropButton{width:86px !important;min-width:86px !important;}
+
+/* Right controls: Group + Declare BELOW cards */
+.action-buttons{
+  right:18px !important;
+  bottom:18px !important;
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  gap:22px !important;
+}
+.action-buttons button{
+  width:112px !important;
+  min-width:112px !important;
+  height:40px !important;
+  min-height:40px !important;
+  font-size:12px !important;
+  border-radius:9px !important;
+  font-weight:900 !important;
+}
+#declareButton{width:126px !important;min-width:126px !important;}
+
+/* DISCARD directly ABOVE the cards, centered */
+#discardButton{
+  position:fixed !important;
+  left:50% !important;
+  right:auto !important;
+  bottom:calc(17% - 4px) !important;
+  transform:translate(-50%,-100%) !important;
+  width:112px !important;
+  min-width:112px !important;
+  height:36px !important;
+  min-height:36px !important;
+  z-index:10080 !important;
+  font-size:12px !important;
+  font-weight:900 !important;
+  border-radius:9px !important;
+}
+
+@media(max-width:900px){
+ #centerArea{gap:16px !important;}
+ #topJokerDisplay,#centerArea .draw-pile{width:60px !important;min-width:60px !important;height:88px !important;}
+ #playerArea{bottom:18% !important;}
+ #playerGroupsContainer .card,.playing-card,.hand-card,.player-card,.card-item{width:60px !important;min-width:60px !important;height:88px !important;font-size:19px !important;}
+ .card-top{font-size:18px !important}.card-center{font-size:28px !important}
+ .card .rank,.card .suit,.playing-card .rank,.playing-card .suit{font-size:19px !important}
+ .left-controls{left:7px !important;bottom:10px !important}.left-controls button{width:92px !important;min-width:92px !important;height:34px !important;min-height:34px !important;font-size:10px !important}
+ #dropButton{width:72px !important;min-width:72px !important}
+ .action-buttons{right:7px !important;bottom:10px !important;gap:10px !important}.action-buttons button{width:90px !important;min-width:90px !important;height:34px !important;min-height:34px !important;font-size:10px !important}
+ #declareButton{width:100px !important;min-width:100px !important}
+ #discardButton{bottom:calc(18% - 2px) !important;width:90px !important;min-width:90px !important;height:32px !important;font-size:10px !important}
+}
+</style>
+<script id="JKRN_V9_SHUFFLE_VISUAL">
+(function(){
+  function shufflePulse(){
+    var d=document.querySelector('#centerArea .draw-pile');
+    if(!d)return;
+    d.classList.remove('jkrn-shuffling'); void d.offsetWidth; d.classList.add('jkrn-shuffling');
+    setTimeout(function(){d.classList.remove('jkrn-shuffling')},900);
+  }
+  var s=document.createElement('style');
+  s.textContent='.jkrn-shuffling{animation:jkrnDeckShuffle .9s ease-in-out!important}@keyframes jkrnDeckShuffle{0%,100%{transform:rotate(0) scale(1)}25%{transform:rotate(-3deg) scale(1.03)}50%{transform:rotate(3deg) scale(1.05)}75%{transform:rotate(-2deg) scale(1.02)}}';
+  document.head.appendChild(s);
+  window.jkrnVisualShuffle=shufflePulse;
+  document.addEventListener('DOMContentLoaded',function(){setTimeout(shufflePulse,700);});
+})();
+</script>
+
