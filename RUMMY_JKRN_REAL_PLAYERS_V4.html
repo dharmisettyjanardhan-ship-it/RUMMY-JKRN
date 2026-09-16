@@ -5482,3 +5482,120 @@ button[onclick*="groupSelected"] {
 })();
 </script>
 
+
+<style id="JKRN_V10_HAND_ACTION_FIX">
+/* V10: hand lower, larger/bolder cards, action buttons always visible */
+.left-controls{
+  left:14px !important;
+  bottom:18px !important;
+  z-index:10050 !important;
+}
+.action-buttons{
+  right:18px !important;
+  bottom:18px !important;
+  z-index:10050 !important;
+  display:flex !important;
+  visibility:visible !important;
+  gap:28px !important;
+}
+.left-controls button,.action-buttons button{
+  height:44px !important;
+  min-height:44px !important;
+  font-size:13px !important;
+  font-weight:1000 !important;
+}
+.left-controls .btn-auto-sort{
+  width:132px !important; min-width:132px !important;
+}
+#dropButton{width:88px !important;min-width:88px !important;}
+#groupButton{width:118px !important;min-width:118px !important;}
+#discardButton{width:126px !important;min-width:126px !important;}
+#declareButton{width:132px !important;min-width:132px !important;}
+
+/* Hand row lower: its bottom sits just above the bottom action bar */
+#playerArea{
+  bottom:7% !important;
+  z-index:10020 !important;
+}
+#playerGroupsContainer{
+  transform:translateY(22px) !important;
+}
+
+/* Bigger, bolder card face */
+#playerGroupsContainer .card,
+#playerHand .card,#playerCards .card,.playing-card,.hand-card,.player-card,.card-item{
+  width:76px !important;
+  min-width:76px !important;
+  height:112px !important;
+  font-size:28px !important;
+  font-weight:1000 !important;
+}
+#playerGroupsContainer .card .rank,#playerGroupsContainer .card .suit,
+.card .rank,.card .suit,.playing-card .rank,.playing-card .suit{
+  font-size:28px !important;
+  font-weight:1000 !important;
+  line-height:1 !important;
+}
+.card-top{font-size:27px !important;font-weight:1000 !important;line-height:1 !important;}
+.card-center{font-size:40px !important;font-weight:1000 !important;line-height:1 !important;}
+
+/* Discard directly over hand; Declare stays below/right */
+#discardButton{
+  position:fixed !important;
+  left:50% !important;
+  right:auto !important;
+  bottom:calc(7% + 112px) !important;
+  transform:translateX(-50%) !important;
+  z-index:10100 !important;
+}
+#declareButton{position:relative !important;z-index:10080 !important;}
+#groupButton{position:relative !important;z-index:10080 !important;}
+
+@media(max-width:900px){
+  .left-controls{left:7px !important;bottom:10px !important;}
+  .action-buttons{right:7px !important;bottom:10px !important;gap:10px !important;}
+  .left-controls button,.action-buttons button{height:38px !important;min-height:38px !important;font-size:11px !important;}
+  .left-controls .btn-auto-sort{width:105px !important;min-width:105px !important;}
+  #dropButton{width:70px !important;min-width:70px !important;}
+  #groupButton{width:88px !important;min-width:88px !important;}
+  #discardButton{width:96px !important;min-width:96px !important;}
+  #declareButton{width:100px !important;min-width:100px !important;}
+  #playerArea{bottom:7% !important;}
+  #playerGroupsContainer{transform:translateY(16px) !important;}
+  #playerGroupsContainer .card,.playing-card,.hand-card,.player-card,.card-item{width:62px !important;min-width:62px !important;height:92px !important;font-size:22px !important;}
+  #playerGroupsContainer .card .rank,#playerGroupsContainer .card .suit,.card .rank,.card .suit,.playing-card .rank,.playing-card .suit{font-size:22px !important;}
+  .card-top{font-size:21px !important}.card-center{font-size:31px !important;}
+  #discardButton{bottom:calc(7% + 92px) !important;}
+}
+</style>
+<script id="JKRN_V10_FORCE_VISIBLE_ACTIONS">
+(function(){
+  function fixActions(){
+    var left=document.querySelector('.left-controls');
+    var right=document.querySelector('.action-buttons');
+    if(left){left.style.setProperty('bottom','18px','important');}
+    if(right){right.style.setProperty('bottom','18px','important');right.style.setProperty('display','flex','important');right.style.setProperty('visibility','visible','important');}
+    ['groupButton','discardButton','declareButton'].forEach(function(id){
+      var b=document.getElementById(id); if(!b)return;
+      b.style.setProperty('display','inline-flex','important');
+      b.style.setProperty('visibility','visible','important');
+    });
+    var d=document.getElementById('discardButton');
+    var g=document.getElementById('groupButton');
+    var dec=document.getElementById('declareButton');
+    var selected=(window.selectedCards&&Array.isArray(window.selectedCards))?window.selectedCards.length:0;
+    var drawn=!!window.playerHasDrawn;
+    var hand=(window.playerGroups&&Array.isArray(window.playerGroups))?window.playerGroups.flat().length:0;
+    var online=!!window.__realRoomStarted;
+    var me=(Number.isInteger(window.__onlineMyIndex)?Number(window.__onlineMyIndex):0);
+    var turn=Number(window.currentPlayer)===me;
+    var canDiscard=turn&&drawn&&hand===14&&!window.__onlineEliminated;
+    if(d){d.disabled=!(canDiscard&&selected===1);}
+    if(dec){dec.disabled=!canDiscard;}
+    if(g){g.disabled=selected<2;}
+  }
+  window.addEventListener('load',function(){setTimeout(fixActions,50);setTimeout(fixActions,500);});
+  window.addEventListener('resize',fixActions);
+  setInterval(fixActions,700);
+})();
+</script>
