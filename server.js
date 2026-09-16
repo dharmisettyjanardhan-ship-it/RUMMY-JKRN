@@ -21,7 +21,7 @@ function onlinePlayerCount(){
 }
 function broadcastOnlineCount(){ io.emit('onlineCount', {count: onlinePlayerCount()}); }
 function addPlayerToRoom(room, socket, name){
-  const p={id:socket.id,sessionToken:require('crypto').randomUUID(),name:String(name||'Player').slice(0,18),ready:false,index:room.playersList.length,hand:[],connected:true};
+  const p={id:socket.id,sessionToken:require('crypto').randomUUID(),name:String(name||'Player').slice(0,18),ready:true,index:room.playersList.length,hand:[],connected:true};
   room.scores[p.id]=0; room.players.set(socket.id,p); room.playersList.push(p); socket.join(room.id); socket.roomId=room.id;
   return p;
 }
@@ -260,6 +260,7 @@ io.on('connection',socket=>{
     socket.emit('roomCreated',{roomId:id,playerId:socket.id,sessionToken:p.sessionToken,maxPlayers:room.maxPlayers,poolLimit:room.poolLimit});
     io.to(id).emit('roomUpdate',{players:publicPlayers(room),maxPlayers:room.maxPlayers,poolLimit:room.poolLimit});
     broadcastOnlineCount();
+    if(room.playersList.length===capacity) startRealGame(room);
   });
   socket.on('joinRoom',({name,roomId})=>{
     const id=String(roomId||'').toUpperCase(),room=rooms.get(id);
@@ -270,6 +271,7 @@ io.on('connection',socket=>{
     socket.emit('roomJoined',{roomId:room.id,playerId:socket.id,sessionToken:p.sessionToken,maxPlayers:room.maxPlayers,poolLimit:room.poolLimit});
     io.to(room.id).emit('roomUpdate',{players:publicPlayers(room),maxPlayers:room.maxPlayers,poolLimit:room.poolLimit});
     broadcastOnlineCount();
+    if(room.playersList.length===roomCapacity(room)) startRealGame(room);
   });
   socket.on('quickJoin',({name,maxPlayers,poolLimit})=>{
     const requested=Number(maxPlayers)||6; const capacity=[2,4,6].includes(requested)?requested:6; const selectedPool=ALLOWED_POOL_LIMITS.includes(Number(poolLimit))?Number(poolLimit):DEFAULT_POOL_LIMIT;
@@ -281,13 +283,13 @@ io.on('connection',socket=>{
     socket.emit('roomJoined',{roomId:room.id,playerId:socket.id,sessionToken:p.sessionToken,maxPlayers:room.maxPlayers,poolLimit:room.poolLimit,quickJoin:true});
     io.to(room.id).emit('roomUpdate',{players:publicPlayers(room),maxPlayers:room.maxPlayers,poolLimit:room.poolLimit});
     broadcastOnlineCount();
-    if(room.playersList.length===capacity) io.to(room.id).emit('quickMatchReady',{message:`Table full: ${capacity} players. Everyone press READY.`});
+    if(room.playersList.length===capacity) startRealGame(room);
   });
   socket.on('ready',({roomId,playerId})=>{
     const room=rooms.get(String(roomId||'').toUpperCase());if(!room)return;
     const p=room.players.get(playerId||socket.id);if(!p)return;
     p.ready=true;io.to(room.id).emit('roomUpdate',{players:publicPlayers(room),maxPlayers:room.maxPlayers,poolLimit:room.poolLimit});
-    if(room.playersList.length===roomCapacity(room) && room.playersList.every(x=>x.ready && x.connected))startRealGame(room);else socket.emit('readyAck');
+    const active=room.playersList.filter(x=>x.connected); if(active.length===roomCapacity(room)) startRealGame(room); else socket.emit('readyAck');
   });
   socket.on('drawDeck',()=>{
     const room=rooms.get(socket.roomId),p=room&&room.players.get(socket.id);
