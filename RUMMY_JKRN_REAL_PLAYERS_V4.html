@@ -1258,6 +1258,19 @@ html.mobile-device .sb-table-wrap {
     }
 }
 
+
+/* SIMPLE REAL-PLAYER JOIN SCREEN */
+.simple-online-box{width:min(390px,92vw)!important;padding:24px 22px!important}
+.simple-subtitle{color:#aaa!important;margin:4px 0 18px!important;font-size:13px!important}
+.simple-online-box .online-input{margin:7px 0;height:48px;font-size:16px}
+.online-hidden-setting{display:none!important}
+.simple-main-btn{height:50px!important;font-size:18px!important;margin-top:10px!important}
+.simple-create-btn{height:46px!important;background:linear-gradient(#35a853,#19702e)!important;color:#fff!important}
+.simple-join-btn{height:44px!important;background:#202b22!important;border:1px solid #d4af37!important;color:#ffd700!important}
+.simple-confirm-btn{height:46px!important}
+.simple-online-count{font-size:13px!important;color:#ffd700!important;margin-top:14px!important}
+.simple-note{line-height:1.5;margin-top:12px}
+.simple-room-input{letter-spacing:3px;text-transform:uppercase;text-align:center}
 </style>
 
 <script>
@@ -2162,27 +2175,29 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif !important;}
 
 
 <style id="jkrn-online-style">
-#onlineLobby{position:fixed;inset:0;background:radial-gradient(circle at center,#123d25,#050805 70%);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:Arial,sans-serif;color:#fff}
-#onlineLobby.hidden{display:none!important}.online-box{width:min(430px,92vw);background:#101b13;border:2px solid #d4af37;border-radius:22px;padding:26px;box-shadow:0 0 35px rgba(212,175,55,.35);text-align:center}.online-box h1{margin:0 0 6px;color:#ffd700;font-size:27px}.online-box p{color:#bbb;margin:6px 0 18px}.online-input{width:100%;box-sizing:border-box;padding:13px 14px;margin:7px 0;border-radius:10px;border:1px solid #4b704f;background:#08100a;color:#fff;font-size:16px}.online-btn{width:100%;padding:13px;margin-top:9px;border:0;border-radius:11px;background:linear-gradient(#ffd95a,#d39b00);font-weight:800;font-size:16px;cursor:pointer}.online-btn.alt{background:linear-gradient(#35a853,#19702e);color:#fff}.room-code{font-size:28px;letter-spacing:5px;color:#ffd700;font-weight:900;margin:12px}.online-status{margin-top:15px;padding:12px;border-radius:10px;background:#071008;color:#9cff9c;min-height:22px}.online-players{text-align:left;margin-top:15px}.online-player{padding:9px 12px;background:#18251a;border-radius:8px;margin:6px 0}.online-small{font-size:12px;color:#888;margin-top:12px}
+#onlineLobby{position:fixed;inset:0;background:radial-gradient(circle at center,#123d25,#050805 70%);z-index:99999;display:flex;align-items:flex-start;justify-content:center;font-family:Arial,sans-serif;color:#fff;overflow-y:auto;overflow-x:hidden;padding:12px 0;overscroll-behavior:contain}
+#onlineLobby.hidden{display:none!important}.online-box{width:min(390px,92vw);max-height:calc(100dvh - 24px);overflow-y:auto;background:#101b13;border:2px solid #d4af37;border-radius:22px;padding:18px 18px 22px;box-shadow:0 0 35px rgba(212,175,55,.35);text-align:center;margin:auto;scrollbar-width:thin}.online-box h1{margin:0 0 5px;color:#ffd700;font-size:24px}.online-box p{color:#bbb;margin:4px 0 12px}.online-input{width:100%;box-sizing:border-box;padding:11px 12px;margin:5px 0;border-radius:10px;border:1px solid #4b704f;background:#08100a;color:#fff;font-size:16px}.online-btn{width:100%;padding:12px;margin-top:7px;border:0;border-radius:11px;background:linear-gradient(#ffd95a,#d39b00);font-weight:800;font-size:16px;cursor:pointer}.online-btn.alt{background:linear-gradient(#35a853,#19702e);color:#fff}.room-code{font-size:26px;letter-spacing:4px;color:#ffd700;font-weight:900;margin:9px 0}.online-status{margin-top:9px;padding:10px;border-radius:10px;background:#071008;color:#9cff9c;min-height:20px}.online-players{text-align:left;margin-top:10px}.online-player{padding:7px 10px;background:#18251a;border-radius:8px;margin:5px 0}.online-small{font-size:12px;color:#888;margin-top:9px}.simple-ready-btn{display:none!important;height:48px!important;margin:8px 0 4px!important;font-size:18px!important;background:linear-gradient(#45d96a,#16843a)!important;color:#fff!important;border:2px solid #b8ffbe!important;box-shadow:0 0 14px rgba(69,217,106,.35)}.simple-ready-btn.show{display:block!important}
+@media(max-height:700px){#onlineLobby{padding:6px 0}.online-box{padding:12px 14px 16px}.online-box h1{font-size:21px}.simple-online-box .online-input{height:42px!important}.simple-main-btn{height:44px!important}.simple-create-btn,.simple-join-btn{height:40px!important}.simple-ready-btn{height:42px!important}.online-status{padding:7px}.online-players{margin-top:6px}.simple-note{display:none}}
 </style>
-<div id="onlineLobby">
- <div class="online-box">
-  <h1>🃏 RUMMY JKRN</h1><p>REAL PLAYERS • 201 POOL</p>
-  <input id="onlineName" class="online-input" maxlength="18" placeholder="Enter your player name">
-  <input id="onlineRoom" class="online-input" maxlength="6" placeholder="Room ID (for Join)">
-  <select id="onlineMaxPlayers" class="online-input"><option value="2">2 Players</option><option value="4">4 Players</option><option value="6" selected>6 Players</option></select>
-  <select id="onlinePoolLimit" class="online-input"><option value="101">101 Pool</option><option value="201" selected>201 Pool</option></select>
-  <button class="online-btn" onclick="createOnlineRoom()">CREATE ROOM</button>
-  <button class="online-btn alt" onclick="quickJoinOnline()">⚡ QUICK JOIN – ADD ONLINE PLAYER</button>
-  <button class="online-btn alt" onclick="joinOnlineRoom()">JOIN ROOM</button>
-  <div id="globalOnlineCount" class="online-small" style="color:#ffd700;font-size:14px;font-weight:800;margin-top:12px">👥 Players Online: 0</div>
+<div id="onlineLobby" class="simple-online-lobby">
+ <div class="online-box simple-online-box">
+  <h1>🃏 RUMMY JKRN</h1>
+  <p class="simple-subtitle">REAL PLAYER GAME • 201 POOL</p>
+  <input id="onlineName" class="online-input" maxlength="18" placeholder="👤 Enter your name">
+  <input id="onlineRoom" class="online-input simple-room-input" maxlength="6" placeholder="🔑 Enter Room ID" style="display:none">
+  <select id="onlineMaxPlayers" class="online-hidden-setting"><option value="6" selected>6 Players</option></select>
+  <select id="onlinePoolLimit" class="online-hidden-setting"><option value="201" selected>201 Pool</option></select>
+  <button class="online-btn simple-main-btn" onclick="quickJoinOnline()">⚡ QUICK JOIN</button>
+  <button class="online-btn simple-create-btn" onclick="createOnlineRoom()">＋ CREATE NEW ROOM</button>
+  <button class="online-btn simple-join-btn" onclick="showSimpleRoomJoin()">🔑 JOIN WITH ROOM ID</button>
+  <button id="simpleJoinConfirm" class="online-btn alt simple-confirm-btn" onclick="joinOnlineRoom()" style="display:none">JOIN THIS ROOM</button>
+  <div id="globalOnlineCount" class="online-small simple-online-count">👥 Players Online: 0</div>
   <div id="onlineRoomCode" class="room-code"></div>
+  <button id="onlineReadyBtn" class="online-btn alt simple-ready-btn" onclick="toggleOnlineReady()">✅ I AM READY</button>
   <div id="onlineStatus" class="online-status">Connecting...</div>
-  <div id="onlineHelp" class="online-small" style="display:none;color:#ffd700">
-    Please start the RUMMY JKRN server and open <b>http://localhost:3000</b>.
-  </div>
+  <div id="onlineHelp" class="online-small" style="display:none;color:#ffd700">Please start the RUMMY JKRN server.</div>
   <div id="onlinePlayers" class="online-players"></div>
-  <div class="online-small">Phase 5: 2–6 real players • QUICK JOIN • live online count • reconnect support</div>
+  <div class="online-small simple-note">QUICK JOIN is the easiest way. Use Room ID when a friend shares a table code.</div>
  </div>
 </div>
 
@@ -2343,9 +2358,18 @@ function toggleSound() {
 </script>
 
 
+<script>
+function showSimpleRoomJoin(){
+  const r=document.getElementById('onlineRoom'); const b=document.getElementById('simpleJoinConfirm');
+  if(r){r.style.display='block';r.focus();}
+  if(b)b.style.display='block';
+  const st=document.getElementById('onlineStatus'); if(st)st.innerText='Enter the 6-digit Room ID shared by your friend.';
+}
+</script>
 <script id="jkrn-real-player-v1">
 var onlineSocket=null, onlineRoomId=null, onlinePlayerId=null, onlineSessionToken=null, onlineReady=false;
 function onlineMsg(t){const e=document.getElementById('onlineStatus');if(e)e.innerHTML=t;}
+function showOnlineReady(show){const b=document.getElementById('onlineReadyBtn');if(b)b.classList.toggle('show',!!show);}
 function saveOnlineSession(){try{localStorage.setItem('jkrnOnlineSession',JSON.stringify({roomId:onlineRoomId,sessionToken:onlineSessionToken,name:(document.getElementById('onlineName')||{}).value||'Player'}));}catch(e){}}
 function loadOnlineSession(){try{return JSON.parse(localStorage.getItem('jkrnOnlineSession')||'null')}catch(e){return null}}
 function renderOnlinePlayers(players,maxPlayers){const e=document.getElementById('onlinePlayers');if(!e)return;const cap=Number(maxPlayers||window.__onlineMaxPlayers||2);window.__onlineMaxPlayers=cap;e.innerHTML='<b>ROOM PLAYERS ('+players.length+'/'+cap+')</b>'+players.map((p,i)=>`<div class="online-player">🪑 SEAT ${i+1}. ${p.name} ${p.connected===false?'🔴 OFFLINE':(p.ready?'✅ READY':'⏳ WAITING')} ${p.index===window.__onlineDealerIndex?'👑 DEALER':''}</div>`).join('');}
@@ -2364,18 +2388,18 @@ if(typeof io!=='function'){
 onlineSocket=io();
 onlineSocket.on('connect_error',e=>{onlineMsg('⚠️ Server connection failed. Please refresh.');});
 onlineSocket.on('connect',()=>{const s=loadOnlineSession();if(s&&s.roomId&&s.sessionToken){onlineRoomId=s.roomId;onlineSessionToken=s.sessionToken;onlineSocket.emit('reconnectPlayer',s);}else onlineMsg('Connected. Create or join a room.');});
-onlineSocket.on('roomCreated',d=>{window.__onlineMaxPlayers=d.maxPlayers||2;window.__onlinePoolLimit=d.poolLimit||201;onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();document.getElementById('onlineRoom').value=d.roomId;document.getElementById('onlineRoomCode').textContent='ROOM: '+d.roomId;onlineMsg('Room created. Share the Room ID. Waiting for players...<br><button class="online-btn alt" onclick="toggleOnlineReady()">I AM READY</button>');});
-onlineSocket.on('roomJoined',d=>{window.__onlineMaxPlayers=d.maxPlayers||2;window.__onlinePoolLimit=d.poolLimit||201;onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();document.getElementById('onlineRoomCode').textContent='ROOM: '+d.roomId;onlineMsg('Joined room. Press READY when all players are present.<br><button class="online-btn alt" onclick="toggleOnlineReady()">I AM READY</button>');});
-onlineSocket.on('reconnected',d=>{window.__onlineMaxPlayers=d.maxPlayers||window.__onlineMaxPlayers||2;onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();onlineMsg('♻️ Reconnected to your seat.');});
+onlineSocket.on('roomCreated',d=>{window.__onlineMaxPlayers=d.maxPlayers||2;window.__onlinePoolLimit=d.poolLimit||201;onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();document.getElementById('onlineRoom').value=d.roomId;document.getElementById('onlineRoomCode').textContent='ROOM: '+d.roomId;showOnlineReady(true); onlineMsg('Room created. Share the Room ID. Waiting for players...');});
+onlineSocket.on('roomJoined',d=>{window.__onlineMaxPlayers=d.maxPlayers||2;window.__onlinePoolLimit=d.poolLimit||201;onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();document.getElementById('onlineRoomCode').textContent='ROOM: '+d.roomId;showOnlineReady(true); onlineMsg('Joined room. Press READY when all players are present.');});
+onlineSocket.on('reconnected',d=>{showOnlineReady(false);window.__onlineMaxPlayers=d.maxPlayers||window.__onlineMaxPlayers||2;onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();onlineMsg('♻️ Reconnected to your seat.');});
 onlineSocket.on('roomUpdate',d=>{renderOnlinePlayers(d.players,d.maxPlayers);});
 onlineSocket.on('onlineCount',d=>{const e=document.getElementById('globalOnlineCount');if(e)e.textContent='👥 Players Online: '+(d.count||0);});
-onlineSocket.on('quickMatchReady',d=>{onlineMsg('🎯 '+d.message+'<br><button class="online-btn alt" onclick="toggleOnlineReady()">I AM READY</button>');});
-onlineSocket.on('readyAck',()=>{onlineReady=true;onlineMsg('You are READY. Waiting for all players...');});
-onlineSocket.on('realGameStarted',d=>{window.__realRoomStarted=true;window.__realRoomPlayers=(d.players||[]).length;window.__onlineDealerIndex=d.dealerIndex;window.__onlinePoolLimit=d.poolLimit||window.__onlinePoolLimit||201;numPlayers=window.__realRoomPlayers;document.getElementById('onlineLobby')?.classList.add('hidden');document.getElementById('lobbyScreen')?.classList.add('hidden');document.getElementById('dealerTossStage')?.classList.remove('active');onlineMsg('');});
-onlineSocket.on('roomError',m=>onlineMsg('❌ '+m));}
-function createOnlineRoom(){ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();const maxPlayers=Number(document.getElementById('onlineMaxPlayers').value||6);const poolLimit=Number(document.getElementById('onlinePoolLimit')?.value||201);onlineSocket.emit('createRoom',{name,maxPlayers,poolLimit});}
-function quickJoinOnline(){ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();const maxPlayers=Number(document.getElementById('onlineMaxPlayers').value||6);const poolLimit=Number(document.getElementById('onlinePoolLimit')?.value||201);onlineSocket.emit('quickJoin',{name,maxPlayers,poolLimit});}
-function joinOnlineRoom(){ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();const room=(document.getElementById('onlineRoom').value||'').trim().toUpperCase();if(!room)return onlineMsg('Enter Room ID first.');onlineSocket.emit('joinRoom',{name,roomId:room});}
+onlineSocket.on('quickMatchReady',d=>{showOnlineReady(true); onlineMsg('🎯 '+d.message);});
+onlineSocket.on('readyAck',()=>{onlineReady=true;showOnlineReady(false);onlineMsg('✅ You are READY. Waiting for all players...');});
+onlineSocket.on('realGameStarted',d=>{showOnlineReady(false);window.__realRoomStarted=true;window.__realRoomPlayers=(d.players||[]).length;window.__onlineDealerIndex=d.dealerIndex;window.__onlinePoolLimit=d.poolLimit||window.__onlinePoolLimit||201;numPlayers=window.__realRoomPlayers;document.getElementById('onlineLobby')?.classList.add('hidden');document.getElementById('lobbyScreen')?.classList.add('hidden');document.getElementById('dealerTossStage')?.classList.remove('active');onlineMsg('');});
+onlineSocket.on('roomError',m=>{showOnlineReady(false);onlineMsg('❌ '+m);});}
+function createOnlineRoom(){showOnlineReady(false);ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();const maxPlayers=Number(document.getElementById('onlineMaxPlayers').value||6);const poolLimit=Number(document.getElementById('onlinePoolLimit')?.value||201);onlineSocket.emit('createRoom',{name,maxPlayers,poolLimit});}
+function quickJoinOnline(){showOnlineReady(false);ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();const maxPlayers=Number(document.getElementById('onlineMaxPlayers').value||6);const poolLimit=Number(document.getElementById('onlinePoolLimit')?.value||201);onlineSocket.emit('quickJoin',{name,maxPlayers,poolLimit});}
+function joinOnlineRoom(){showOnlineReady(false);ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();const room=(document.getElementById('onlineRoom').value||'').trim().toUpperCase();if(!room)return onlineMsg('Enter Room ID first.');onlineSocket.emit('joinRoom',{name,roomId:room});}
 function toggleOnlineReady(){if(!onlineSocket||!onlineRoomId)return onlineMsg('Create or join a room first.');onlineSocket.emit('ready',{roomId:onlineRoomId,playerId:onlinePlayerId});}
 function initOnline(){ensureOnlineSocket();}
 window.addEventListener('load',initOnline);
@@ -4598,7 +4622,7 @@ button[onclick*="groupSelected"] {
     ensureOnlineSocket();
     if(window.__realV2Hooked)return; window.__realV2Hooked=true;
     onlineSocket.on('gameState',applyOnlineState);
-    onlineSocket.on('realGameStarted',d=>{window.__realRoomStarted=true; gameOver=false; gameStarted=true; if(d&&Number.isInteger(d.currentPlayer))currentPlayer=d.currentPlayer; if(typeof updateUI==='function')updateUI();});
+    onlineSocket.on('realGameStarted',d=>{showOnlineReady(false);window.__realRoomStarted=true; gameOver=false; gameStarted=true; if(d&&Number.isInteger(d.currentPlayer))currentPlayer=d.currentPlayer; if(typeof updateUI==='function')updateUI();});
     onlineSocket.on('onlineActionError',m=>{const st=document.getElementById('status');if(st)st.innerText='⚠️ '+((m&&m.message)||'Action not allowed');});
     onlineSocket.on('onlineActionAck',m=>{const st=document.getElementById('status');if(st&&m&&m.action==='draw')st.innerText='Card received. Select one card to discard.';});
   onlineSocket.on('dealResult',r=>{
