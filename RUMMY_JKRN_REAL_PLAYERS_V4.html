@@ -5599,3 +5599,90 @@ button[onclick*="groupSelected"] {
   setInterval(fixActions,700);
 })();
 </script>
+
+<style id="JKRN_V11_NO_OVERLAP_FIX">
+/* V11: stop hand cards from collapsing into each other */
+#playerArea{
+  bottom: 3% !important;
+  z-index: 10020 !important;
+}
+#playerGroupsContainer{
+  transform: none !important;
+  display:flex !important;
+  align-items:flex-end !important;
+  justify-content:center !important;
+  gap:14px !important;
+  width:100% !important;
+  max-width:calc(100vw - 250px) !important;
+  overflow:visible !important;
+  height:130px !important;
+}
+#playerGroupsContainer .card-group{
+  flex:0 0 auto !important;
+  min-width:0 !important;
+  width:auto !important;
+  padding:0 !important;
+  overflow:visible !important;
+}
+#playerGroupsContainer .cards-in-group{
+  display:flex !important;
+  align-items:flex-end !important;
+  gap:5px !important;
+  overflow:visible !important;
+  min-height:112px !important;
+}
+#playerGroupsContainer .cards-in-group .card + .card{
+  margin-left:0 !important;
+}
+#playerGroupsContainer .card,
+#playerHand .card,#playerCards .card,.playing-card,.hand-card,.player-card,.card-item{
+  width:72px !important;
+  min-width:72px !important;
+  height:106px !important;
+  flex:0 0 72px !important;
+  box-sizing:border-box !important;
+}
+#playerGroupsContainer .card .rank,#playerGroupsContainer .card .suit,
+.card .rank,.card .suit,.playing-card .rank,.playing-card .suit{
+  font-size:28px !important;
+  font-weight:900 !important;
+}
+.card-top{font-size:28px !important;font-weight:900 !important;}
+.card-center{font-size:38px !important;font-weight:900 !important;}
+
+/* Keep controls below/around the hand without covering cards */
+.left-controls{bottom:10px !important; z-index:10100 !important;}
+.action-buttons{bottom:10px !important; z-index:10100 !important; gap:18px !important;}
+.left-controls button,.action-buttons button{
+  height:44px !important;
+  min-height:44px !important;
+  font-size:13px !important;
+}
+#discardButton{
+  position:fixed !important;
+  left:50% !important;
+  bottom:calc(3% + 112px) !important;
+  transform:translateX(-50%) !important;
+  z-index:10200 !important;
+}
+#groupButton,#declareButton{position:relative !important;z-index:10200 !important;}
+
+@media(max-width:1100px){
+  #playerGroupsContainer{max-width:calc(100vw - 170px) !important;gap:8px !important;height:112px !important;}
+  #playerGroupsContainer .cards-in-group{gap:3px !important;}
+  #playerGroupsContainer .card,.playing-card,.hand-card,.player-card,.card-item{width:58px !important;min-width:58px !important;height:86px !important;flex-basis:58px !important;}
+  .card-top{font-size:21px !important}.card-center{font-size:30px !important}
+  #playerGroupsContainer .card .rank,#playerGroupsContainer .card .suit,.card .rank,.card .suit{font-size:21px !important;}
+  #playerArea{bottom:5% !important;}
+  #discardButton{bottom:calc(5% + 92px) !important;}
+}
+@media(max-width:700px){
+  #playerGroupsContainer{max-width:calc(100vw - 20px) !important;gap:3px !important;height:100px !important;overflow-x:auto !important;}
+  #playerGroupsContainer .cards-in-group{gap:2px !important;}
+  #playerGroupsContainer .card,.playing-card,.hand-card,.player-card,.card-item{width:48px !important;min-width:48px !important;height:72px !important;flex-basis:48px !important;}
+  .card-top{font-size:17px !important}.card-center{font-size:24px !important}
+  #playerGroupsContainer .card .rank,#playerGroupsContainer .card .suit,.card .rank,.card .suit{font-size:17px !important;}
+  #discardButton{bottom:calc(8% + 76px) !important;}
+  .action-buttons{gap:6px !important;}
+}
+</style>
