@@ -1818,6 +1818,31 @@ html, body {
 </style>
 
 <script src="/socket.io/socket.io.js"></script>
+
+<style id="JKRN_PRO_TABLE_DESIGN">
+:root{--gold:#f6c84a;--gold2:#b77912;--green:#087c3b;--green2:#06361f;--purple:#120b24;--red:#d62d32;--blue:#1565d8;}
+html,body{background:radial-gradient(circle at 50% 25%,#2b1747 0%,#10091e 48%,#06040d 100%) !important;color:#fff;}
+body{font-family:Inter,'Segoe UI',Arial,sans-serif !important;}
+.top-bar{height:76px !important;padding:7px 22px !important;background:linear-gradient(180deg,rgba(8,5,18,.98),rgba(20,10,35,.96)) !important;border-bottom:2px solid #9d6f1d !important;box-shadow:0 5px 22px rgba(0,0,0,.55);position:relative;z-index:1100;}
+.jkrn-brand-title{display:flex;align-items:center;gap:9px;color:#ffe58b !important;font-family:Georgia,serif;font-size:27px !important;letter-spacing:.8px;text-shadow:0 2px 0 #5d3300,0 0 15px rgba(255,190,40,.35);}
+.jkrn-brand-title small{display:block;font-family:Arial,sans-serif;font-size:9px;letter-spacing:2px;color:#d6b866;line-height:1;margin-top:4px;}
+.jkrn-crown{font-size:40px;color:#ffd23f;line-height:1;}
+.jkrn-pool-badge{position:absolute;left:50%;top:8px;transform:translateX(-50%);min-width:190px;padding:7px 28px 6px;text-align:center;border:2px solid #9e6c1b;border-radius:12px;background:linear-gradient(180deg,#1a1027,#08050f);box-shadow:inset 0 0 12px rgba(255,215,0,.08),0 4px 12px #000;}
+.jkrn-pool-badge b{display:block;font-size:20px;color:#fff;letter-spacing:1px;}
+.jkrn-pool-badge span{font-size:10px;color:#ffd84a;letter-spacing:2px;font-weight:900;}
+.top-right-box{gap:7px !important;}
+.scoreboard-icon-btn,.sound-toggle-btn{border-radius:12px !important;border-color:#d4a32f !important;box-shadow:0 4px 12px #000 !important;}
+#walletBox{border-color:#9d6f1d !important;background:#110b1d !important;color:#ffd83e !important;border-radius:10px !important;}
+.table{width:min(94vw,1280px) !important;height:59vh !important;min-height:465px !important;margin:18px auto 205px !important;background:radial-gradient(ellipse at 50% 43%,#12a251 0%,#08723a 48%,#03301b 100%) !important;border:11px solid #3b2106 !important;border-radius:50% / 42% !important;box-shadow:inset 0 0 0 2px rgba(255,230,150,.18),inset 0 0 70px rgba(0,0,0,.82),0 12px 35px rgba(0,0,0,.8),0 0 0 2px rgba(212,163,47,.35) !important;}
+.table:before{content:'';position:absolute;inset:13px;border-radius:50% / 42%;border:1px solid rgba(255,255,255,.08);pointer-events:none;}
+.jkrn-table-brand{position:absolute;left:50%;top:47%;transform:translate(-50%,-50%);font-family:Georgia,serif;font-size:28px;color:rgba(255,224,115,.22);letter-spacing:2px;pointer-events:none;white-space:nowrap;z-index:1;text-shadow:0 2px 8px #002b17;}
+.jkrn-table-brand small{display:block;text-align:center;font:700 9px Arial,sans-serif;letter-spacing:4px;}
+.jkrn-table-score-panel{position:absolute;left:-218px;top:72px;width:188px;padding:14px 18px;border:2px solid #c28b25;border-radius:14px;background:linear-gradient(180deg,rgba(13,9,29,.97),rgba(5,4,13,.97));box-shadow:0 8px 22px #000,inset 0 0 18px rgba(255,210,65,.08);z-index:100;}
+.jkrn-score-title{font-size:14px;color:#fff;font-weight:800;letter-spacing:.5px}.jkrn-score-title.small{font-size:11px;color:#d9d2e4}.jkrn-score-big{font-size:38px;font-weight:900;color:#ffd83f;line-height:1.1;margin-top:4px}.jkrn-round-big{font-size:25px;font-weight:900;color:#42e878;line-height:1.1;margin-top:4px}.jkrn-score-divider{height:1px;background:linear-gradient(90deg,transparent,#9d6f1d,transparent);margin:10px 0}.jkrn-side-tools{position:absolute;left:-218px;bottom:25px;display:flex;flex-direction:column;gap:9px;z-index:100}.jkrn-side-tools button{width:188px;padding:11px 12px;border-radius:10px;border:1px solid #a87822;background:linear-gradient(180deg,#171025,#08050f);color:#ffd64a;font-weight:900;cursor:pointer;box-shadow:0 5px 14px #000;display:flex;align-items:center;gap:9px;font-size:18px}.jkrn-side-tools button span{font-size:11px;color:#fff;letter-spacing:.5px}.opp-box{background:linear-gradient(180deg,rgba(10,8,20,.94),rgba(25,17,34,.94)) !important;border:2px solid #806f63 !important;box-shadow:0 6px 14px #000 !important;width:198px !important;min-height:56px;}.opp-box.active-turn{border:3px solid #32ef67 !important;box-shadow:0 0 22px rgba(0,255,80,.75) !important;}.opp-avatar{border:2px solid #d6ad4a !important;background:radial-gradient(circle,#4d3a62,#15101f) !important;}.opp-name{font-size:12px !important;font-weight:900 !important}.opp-score{font-size:11px !important}.opp-action{font-size:9px !important}.jkrn-round-score{color:#bfb5cb;font-size:9px;font-weight:700}.player-info{background:linear-gradient(180deg,rgba(10,7,18,.97),rgba(28,18,38,.97)) !important;border:2px solid #b1842a !important;border-radius:15px !important;box-shadow:0 6px 16px #000 !important;padding:6px 15px !important;}.player-info.active-turn{border:3px solid #35f16b !important;box-shadow:0 0 20px rgba(0,255,80,.75) !important;}.player-timer{border-color:#31f16a !important;color:#47ff78 !important;font-size:14px !important;font-weight:900;}.center-area{gap:28px !important;top:43% !important;z-index:10;}.pile-label{font-size:11px !important;font-weight:900 !important;letter-spacing:1px;text-shadow:0 2px 4px #000;}.joker-label{color:#ffe34c !important;}.pile{width:102px !important;height:142px !important;border-radius:9px !important;border:2px solid #fff !important;box-shadow:0 8px 20px rgba(0,0,0,.65),0 0 0 2px rgba(0,0,0,.18) !important;}.draw-pile{background-color:#174a9c !important;background-image:radial-gradient(circle at 50% 50%,rgba(255,255,255,.13) 0 1px,transparent 2px),repeating-linear-gradient(45deg,rgba(255,255,255,.09) 0 2px,transparent 2px 8px) !important;border-color:#d9e5ff !important;}.draw-pile::after{content:'🂠' !important;font-size:57px !important;filter:drop-shadow(0 2px 2px #001b45);}.discard-pile{background:linear-gradient(145deg,#fff,#eee) !important;}.joker-pile{border-color:#ffd83f !important;box-shadow:0 0 18px rgba(255,215,0,.55),0 8px 18px #000 !important;}.deck-count{color:#ffe04d !important;}.left-controls,.action-buttons{bottom:22px !important;}.left-controls button,.action-buttons button{border-radius:10px !important;border:2px solid rgba(255,255,255,.5) !important;padding:11px 19px !important;font-size:12px !important;box-shadow:0 5px 12px #000 !important;}.btn-drop{background:linear-gradient(#ef4545,#9d1010) !important;}.btn-auto-sort{background:linear-gradient(#238d48,#075a2b) !important;}.btn-group{background:linear-gradient(#ffd941,#c88800) !important;}.btn-discard{background:linear-gradient(#258df0,#084b9e) !important;}.btn-declare{background:linear-gradient(#ffc12e,#d76800) !important;}.groups-container{height:158px !important;gap:9px !important;}.card-group{background:rgba(4,6,8,.45) !important;border:1px solid rgba(255,255,255,.13) !important;border-radius:7px !important;}.card{width:76px !important;height:112px !important;border-radius:6px !important;border:1px solid #aeb2b5 !important;box-shadow:-3px 0 7px rgba(0,0,0,.65),0 3px 8px rgba(0,0,0,.3) !important;font-family:Georgia,serif !important;}.card-top{font-weight:900 !important}.card-center{font-size:31px !important}.group-status-badge{font-size:10px !important;border-radius:3px !important;box-shadow:0 2px 4px #000;}.info-overlay{top:16px !important}.info-overlay #status{padding:5px 14px !important;border:1px solid rgba(255,215,0,.3);background:rgba(0,0,0,.68) !important;color:#fff;}.deal-info{background:rgba(0,0,0,.72) !important;border:1px solid #a57924;color:#ffe04d !important;border-radius:9px !important;}.jkrn-table-score-panel + .jkrn-side-tools{}
+@media(max-width:900px){.jkrn-table-score-panel{left:8px;top:82px;width:132px;padding:8px 10px}.jkrn-score-big{font-size:26px}.jkrn-round-big{font-size:20px}.jkrn-side-tools{left:8px;bottom:18px}.jkrn-side-tools button{width:132px;padding:7px 8px}.jkrn-side-tools button span{font-size:9px}.jkrn-table-brand{font-size:20px}.center-area{gap:10px !important}.pile{width:75px !important;height:105px !important}.draw-pile::after{font-size:42px !important}.opp-box{width:145px !important}.card{width:60px !important;height:92px !important}.cards-in-group .card + .card{margin-left:-29px !important}.groups-container{height:132px !important}.top-bar{height:62px !important;padding:5px 8px !important}.jkrn-brand-title{font-size:18px !important}.jkrn-crown{font-size:27px}.jkrn-brand-title small{font-size:6px}.jkrn-pool-badge{min-width:125px;padding:4px 12px;top:7px}.jkrn-pool-badge b{font-size:14px}.jkrn-pool-badge span{font-size:8px}.scoreboard-icon-btn,.sound-toggle-btn{padding:5px 7px !important;font-size:9px !important}.jkrn-table-score-panel{top:75px}.player-area{bottom:-160px !important}.left-controls,.action-buttons{bottom:12px !important}.left-controls button,.action-buttons button{padding:8px 9px !important;font-size:9px !important}}
+@media(max-width:600px){.jkrn-table-score-panel{left:4px;top:66px;width:112px}.jkrn-score-title{font-size:9px}.jkrn-score-big{font-size:22px}.jkrn-score-title.small{font-size:8px}.jkrn-round-big{font-size:17px}.jkrn-side-tools{left:4px;bottom:9px}.jkrn-side-tools button{width:112px;font-size:14px}.jkrn-side-tools button span{font-size:8px}.center-area{top:44% !important}.opp-box{width:112px !important;min-height:45px}.opp-avatar-container,.opp-avatar{width:30px !important;height:30px !important}.opp-details{margin-left:4px}.opp-name,.opp-score{font-size:8px !important}.opp-action{font-size:7px !important}.pile{width:58px !important;height:86px !important}.pile-label{font-size:8px !important}.draw-pile::after{font-size:33px !important}.card{width:54px !important;height:82px !important;font-size:12px !important}.card-center{font-size:21px !important}.groups-container{height:118px !important}.player-area{bottom:-142px !important}.player-info{font-size:9px !important}.jkrn-brand-title{font-size:14px !important}.jkrn-crown{font-size:21px}.jkrn-brand-title small{display:none}.jkrn-pool-badge{position:static;transform:none;min-width:80px;padding:3px 6px}.jkrn-pool-badge b{font-size:10px}.jkrn-pool-badge span{font-size:6px}.top-right-box{gap:2px !important}.walletBox{display:none}.jkrn-table-brand{font-size:14px}.jkrn-table-brand small{font-size:6px}.left-controls,.action-buttons{bottom:8px !important}.left-controls button,.action-buttons button{padding:7px 6px !important;font-size:8px !important}}
+</style>
+
 </head>
 <body onload="initAutoGame()">
 
@@ -1864,7 +1889,7 @@ html, body {
 </div>
 
 <div class="top-bar">
-    <h1>🃏 POOL RUMMY (<span id="poolTypeDisplay">201</span> POOL)</h1>
+    <h1 class="jkrn-brand-title"><span class="jkrn-crown">♛</span> RUMMY JKRN <small>PLAY SMART • WIN TOGETHER</small></h1><div class="jkrn-pool-badge"><b><span id="poolTypeDisplay">201</span> POOL</b><span id="dealRoundBadge">ROUND 1</span></div>
     <div class="top-right-box">
         <button class="sound-toggle-btn" id="soundToggleBtn" onclick="toggleSound()">🔊 Sound</button>
         <button class="scoreboard-icon-btn" onclick="openGlobalScoreboardModal()">📊 Score Board</button>
@@ -1881,6 +1906,18 @@ html, body {
 </div>
 
 <div class="table">
+    <div class="jkrn-table-score-panel" id="jkrnTableScorePanel">
+        <div class="jkrn-score-title">TOTAL SCORE</div>
+        <div class="jkrn-score-big" id="jkrnTotalScore">0</div>
+        <div class="jkrn-score-divider"></div>
+        <div class="jkrn-score-title small">CURRENT ROUND</div>
+        <div class="jkrn-round-big" id="jkrnRoundScore">0</div>
+    </div>
+    <div class="jkrn-side-tools">
+        <button onclick="openGlobalScoreboardModal()">📊<span>SCORE BOARD</span></button>
+        <button onclick="jkrnJokerHelp()">🃏<span>JOKER</span></button>
+    </div>
+    <div class="jkrn-table-brand">♛ <b>RUMMY JKRN</b><small>201 POOL</small></div>
 <div id="dealerTossStage">
     <div class="dealer-toss-title">🃏 LEAST CARD TOSS • DEALER & FIRST LIFT</div>
     <div class="dealer-toss-subtitle">Lowest = DEALER • Highest = FIRST LIFT</div>
@@ -1894,22 +1931,22 @@ html, body {
         <div id="status">Determining Dealer...</div>
     </div>
 
-    <div class="opp-box" id="opp2"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p2">30s</div></div><div class="opp-details"><p class="opp-name">Player 2 <span id="dealer-tag-p2" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p2" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p2">0</span></p><p class="opp-action" id="action-p2">Waiting...</p></div></div>
-    <div class="opp-box" id="opp3"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p3">30s</div></div><div class="opp-details"><p class="opp-name">Player 3 <span id="dealer-tag-p3" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p3" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p3">0</span></p><p class="opp-action" id="action-p3">Waiting...</p></div></div>
-    <div class="opp-box" id="opp4"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p4">30s</div></div><div class="opp-details"><p class="opp-name">Player 4 <span id="dealer-tag-p4" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p4" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p4">0</span></p><p class="opp-action" id="action-p4">Waiting...</p></div></div>
-    <div class="opp-box" id="opp5"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p5">30s</div></div><div class="opp-details"><p class="opp-name">Player 5 <span id="dealer-tag-p5" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p5" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p5">0</span></p><p class="opp-action" id="action-p5">Waiting...</p></div></div>
-    <div class="opp-box" id="opp6"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p6">30s</div></div><div class="opp-details"><p class="opp-name">Player 6 <span id="dealer-tag-p6" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p6" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p6">0</span></p><p class="opp-action" id="action-p6">Waiting...</p></div></div>
+    <div class="opp-box" id="opp2"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p2">30s</div></div><div class="opp-details"><p class="opp-name"><span id="player-name-p2">Player 2</span> <span id="dealer-tag-p2" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p2" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Total: <span id="score-p2">0</span> <span class="jkrn-round-score">• Round <span id="round-p2">0</span></span></p><p class="opp-action" id="action-p2">Waiting...</p></div></div>
+    <div class="opp-box" id="opp3"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p3">30s</div></div><div class="opp-details"><p class="opp-name"><span id="player-name-p3">Player 3</span> <span id="dealer-tag-p3" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p3" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Total: <span id="score-p3">0</span> <span class="jkrn-round-score">• Round <span id="round-p3">0</span></span></p><p class="opp-action" id="action-p3">Waiting...</p></div></div>
+    <div class="opp-box" id="opp4"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p4">30s</div></div><div class="opp-details"><p class="opp-name"><span id="player-name-p4">Player 4</span> <span id="dealer-tag-p4" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p4" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Total: <span id="score-p4">0</span> <span class="jkrn-round-score">• Round <span id="round-p4">0</span></span></p><p class="opp-action" id="action-p4">Waiting...</p></div></div>
+    <div class="opp-box" id="opp5"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p5">30s</div></div><div class="opp-details"><p class="opp-name"><span id="player-name-p5">Player 5</span> <span id="dealer-tag-p5" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p5" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Total: <span id="score-p5">0</span> <span class="jkrn-round-score">• Round <span id="round-p5">0</span></span></p><p class="opp-action" id="action-p5">Waiting...</p></div></div>
+    <div class="opp-box" id="opp6"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p6">30s</div></div><div class="opp-details"><p class="opp-name"><span id="player-name-p6">Player 6</span> <span id="dealer-tag-p6" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p6" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Total: <span id="score-p6">0</span> <span class="jkrn-round-score">• Round <span id="round-p6">0</span></span></p><p class="opp-action" id="action-p6">Waiting...</p></div></div>
 
     <div class="center-area" id="centerArea">
         <div class="pile-container">
-            <div class="pile-label">WILD JOKER</div>
+            <div class="pile-label joker-label">⭐ WILD JOKER</div>
             <div class="pile joker-pile" id="topJokerDisplay">-</div>
         </div>
 
         <div class="pile-container">
             <div class="pile-label">CLOSED DECK</div>
             <div class="pile draw-pile" onclick="drawCard()"></div>
-            <div class="deck-count">SHUFFLED</span></div>
+            <div class="deck-count" id="deckCountLabel">SHUFFLED</div>
         </div>
 
         <div class="pile-container">
@@ -1925,7 +1962,7 @@ html, body {
 
     <div class="player-area" id="playerArea">
         <div class="player-info" id="playerInfoBox">
-            <span>👤 YOU <span id="dealer-tag-p1" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p1" class="elim-badge" style="display:none;">OUT</span> | Score: <span id="score-p1" style="color:#00ff00;">0</span> / <span id="poolLimitLabel">201</span></span>
+            <span>👤 YOU <span id="dealer-tag-p1" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p1" class="elim-badge" style="display:none;">OUT</span> | Total: <span id="score-p1" style="color:#00ff00;">0</span> / <span id="poolLimitLabel">201</span> <span class="jkrn-round-score">• Round <span id="round-p1">0</span></span></span>
             <span class="player-timer" id="timer-p1">⏳ <span id="timeLeft">30</span>s</span>
         </div>
         <div class="groups-container" id="playerGroupsContainer"></div>
@@ -4685,6 +4722,36 @@ button[onclick*="groupSelected"] {
 #topJokerDisplay{min-width:95px;min-height:135px;}
 @media(max-width:700px){#topJokerDisplay{min-width:62px;min-height:90px;}}
 </style>
+
+
+<script id="JKRN_PRO_SCORE_SYNC">
+(function(){
+  function num(v){return Number(v||0)}
+  function sync(){
+    const st=window.__onlineState||null;
+    const online=!!window.__realRoomStarted;
+    const scores=st&&st.scores?st.scores:null;
+    const deals=st&&st.dealPoints?st.dealPoints:null;
+    const players=st&&Array.isArray(st.players)?st.players:[];
+    const myIdx=Number.isInteger(window.__onlineMyIndex)?window.__onlineMyIndex:0;
+    let total=0,round=0;
+    if(online&&players[myIdx]){ total=num(scores&&scores[players[myIdx].id]); round=num(deals&&deals[players[myIdx].id]); }
+    else { total=num(window.gameScores?.['Player 1']); round=num(window.playerDealStatus?.[0]?.points); }
+    const t=document.getElementById('jkrnTotalScore'); if(t)t.textContent=total;
+    const r=document.getElementById('jkrnRoundScore'); if(r)r.textContent=round;
+    const rb=document.getElementById('dealRoundBadge'); if(rb)rb.textContent='ROUND '+(st?.dealNumber || window.dealNumber || 1);
+    for(let i=1;i<=6;i++){
+      const rs=document.getElementById('round-p'+i); if(!rs)continue;
+      let val=0;
+      if(online){ const pl=players.find(p=>p.index===i-1); if(pl)val=num(deals&&deals[pl.id]); }
+      else val=num(window.playerDealStatus?.[i-1]?.points);
+      rs.textContent=val;
+    }
+    const dl=document.getElementById('deckCountLabel'); if(dl&&st)dl.textContent='CARDS LEFT: '+num(st.deckCount);
+  }
+  setInterval(sync,500); window.addEventListener('load',sync);
+})();
+</script>
 
 </body>
 </html>
