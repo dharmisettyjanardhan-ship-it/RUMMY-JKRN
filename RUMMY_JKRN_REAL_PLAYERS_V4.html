@@ -5100,3 +5100,138 @@ button[onclick*="groupSelected"] {
 
 </body>
 </html>
+
+<style id="JKRN_FINAL_UI_CLEAN_V13">
+/* FINAL BUTTON POSITION: keep Drop + Auto Sort on LEFT, compact and lower. */
+.left-controls {
+  position: fixed !important;
+  left: 10px !important;
+  bottom: 10px !important;
+  width: auto !important;
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  z-index: 10060 !important;
+}
+.action-buttons {
+  position: fixed !important;
+  left: auto !important;
+  right: 10px !important;
+  bottom: 10px !important;
+  transform: none !important;
+  width: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex-wrap: nowrap !important;
+  justify-content: flex-end !important;
+  align-items: flex-end !important;
+  gap: 5px !important;
+  z-index: 10060 !important;
+}
+.left-controls button,
+.action-buttons button,
+#groupBtn, #finalGroupAnytimeBtn {
+  min-width: 66px !important;
+  width: 66px !important;
+  height: 29px !important;
+  min-height: 29px !important;
+  padding: 3px 5px !important;
+  margin: 0 !important;
+  font-size: 8px !important;
+  line-height: 1 !important;
+  font-weight: 800 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,.55) !important;
+}
+#finalGroupAnytimeBtn {
+  position: fixed !important;
+  right: 10px !important;
+  left: auto !important;
+  bottom: 78px !important;
+  transform: none !important;
+  width: 66px !important;
+  min-width: 66px !important;
+  height: 29px !important;
+  min-height: 29px !important;
+  z-index: 10070 !important;
+}
+/* Compact but readable player cards. */
+.card {
+  transform: none !important;
+  width: 58px !important;
+  min-width: 58px !important;
+  height: 84px !important;
+  padding: 3px 3px 10px 3px !important;
+  font-size: 13px !important;
+  border-radius: 5px !important;
+}
+.card:hover { transform: translateY(-4px) !important; }
+.selected { transform: translateY(-7px) !important; }
+.card-top { font-size: 12px !important; line-height: 1 !important; }
+.card-center { font-size: 22px !important; }
+.cards-in-group .card + .card { margin-left: -27px !important; }
+.groups-container { gap: 5px !important; height: 120px !important; max-width: 98% !important; }
+.card-group { min-width: 64px !important; padding: 2px !important; }
+.new-group-zone { width: 52px !important; height: 88px !important; font-size: 9px !important; }
+.group-status-badge { font-size: 7px !important; padding: 1px !important; }
+
+@media (max-width: 900px) {
+  .left-controls { left: 6px !important; bottom: 6px !important; gap: 4px !important; }
+  .action-buttons { right: 6px !important; bottom: 6px !important; gap: 4px !important; }
+  .left-controls button, .action-buttons button, #groupBtn, #finalGroupAnytimeBtn {
+    width: 58px !important; min-width: 58px !important; height: 26px !important; min-height: 26px !important;
+    padding: 2px 3px !important; font-size: 7px !important; border-radius: 5px !important;
+  }
+  #finalGroupAnytimeBtn { right: 6px !important; bottom: 66px !important; }
+  .card { width: 50px !important; min-width: 50px !important; height: 74px !important; padding: 2px 2px 8px 2px !important; font-size: 12px !important; }
+  .card-top { font-size: 10px !important; }
+  .card-center { font-size: 19px !important; }
+  .cards-in-group .card + .card { margin-left: -23px !important; }
+  .groups-container { height: 106px !important; gap: 3px !important; }
+  .card-group { min-width: 54px !important; }
+}
+
+@media (max-width: 380px) {
+  .left-controls { left: 4px !important; bottom: 4px !important; }
+  .action-buttons { right: 4px !important; bottom: 4px !important; }
+  .left-controls button, .action-buttons button, #groupBtn, #finalGroupAnytimeBtn { width: 53px !important; min-width: 53px !important; height: 24px !important; min-height: 24px !important; font-size: 6.5px !important; }
+  #finalGroupAnytimeBtn { right: 4px !important; bottom: 61px !important; }
+  .card { width: 45px !important; min-width: 45px !important; height: 68px !important; }
+  .card-center { font-size: 17px !important; }
+  .cards-in-group .card + .card { margin-left: -20px !important; }
+}
+</style>
+
+<script id="JKRN_FINAL_ACTION_BAR_V13">
+(function(){
+  /* Keep the original left-side controls in place: Drop + Auto Sort.
+     Do not move them into the right action button group. */
+  function restoreLeftControls(){
+    const left=document.querySelector('.left-controls');
+    if(!left)return;
+    const drop=document.getElementById('dropButton');
+    if(drop && drop.parentElement!==left) left.appendChild(drop);
+    const auto=left.querySelector('button[onclick*="autoSortCards"]') || document.querySelector('button[onclick*="autoSortCards"]');
+    if(auto && auto.parentElement!==left) left.appendChild(auto);
+    left.style.display='flex';
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',restoreLeftControls);
+  else restoreLeftControls();
+  window.addEventListener('load',restoreLeftControls);
+  setTimeout(restoreLeftControls,300);
+  setTimeout(restoreLeftControls,1000);
+})();
+</script>
+<style id="JKRN_CARDS_LARGER_V7">
+/* Larger player cards */
+.card, .playing-card, .hand-card, .player-card, .card-item { min-width: 70px !important; width:70px !important; height:100px !important; font-size:20px !important; }
+.card .rank, .card .suit, .playing-card .rank, .playing-card .suit { font-size:20px !important; }
+.cards-container, .hand, .player-hand, .cards { gap:6px !important; }
+@media (max-width:900px){
+ .card, .playing-card, .hand-card, .player-card, .card-item { min-width:62px !important; width:62px !important; height:90px !important; font-size:18px !important; }
+}
+@media (max-width:500px){
+ .card, .playing-card, .hand-card, .player-card, .card-item { min-width:55px !important; width:55px !important; height:80px !important; font-size:16px !important; }
+}
+</style>
