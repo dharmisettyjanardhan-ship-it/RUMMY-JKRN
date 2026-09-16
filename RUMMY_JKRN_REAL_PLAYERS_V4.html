@@ -2185,12 +2185,16 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif !important;}
   <p class="simple-subtitle">REAL PLAYER GAME • 201 POOL</p>
   <input id="onlineName" class="online-input" maxlength="18" placeholder="👤 Enter your name">
   <input id="onlineRoom" class="online-input simple-room-input" maxlength="6" placeholder="🔑 Enter Room ID" style="display:none">
-  <select id="onlineMaxPlayers" class="online-hidden-setting"><option value="6" selected>6 Players</option></select>
+  <label style="display:block;text-align:left;font-weight:800;color:#ffd700;margin:8px 0 4px">PLAYERS</label>
+  <select id="onlineMaxPlayers" class="online-input" aria-label="Number of players">
+    <option value="2" selected>2 Players</option>
+    <option value="4">4 Players</option>
+    <option value="6">6 Players</option>
+  </select>
   <select id="onlinePoolLimit" class="online-hidden-setting"><option value="201" selected>201 Pool</option></select>
-  <button class="online-btn simple-main-btn" onclick="quickJoinOnline()">⚡ QUICK JOIN</button>
-  <button class="online-btn simple-create-btn" onclick="createOnlineRoom()">＋ CREATE NEW ROOM</button>
+  <button class="online-btn simple-main-btn" onclick="createOnlineRoom()">▶ START GAME</button>
   <button class="online-btn simple-join-btn" onclick="showSimpleRoomJoin()">🔑 JOIN WITH ROOM ID</button>
-  <button id="simpleJoinConfirm" class="online-btn alt simple-confirm-btn" onclick="joinOnlineRoom()" style="display:none">JOIN THIS ROOM</button>
+  <button id="simpleJoinConfirm" class="online-btn alt simple-confirm-btn" onclick="joinOnlineRoom()" style="display:none">▶ START / JOIN ROOM</button>
   <div id="globalOnlineCount" class="online-small simple-online-count">👥 Players Online: 0</div>
   <div id="onlineRoomCode" class="room-code"></div>
   <button id="onlineReadyBtn" class="online-btn alt simple-ready-btn" onclick="toggleOnlineReady()">✅ I AM READY</button>
@@ -2388,8 +2392,8 @@ if(typeof io!=='function'){
 onlineSocket=io();
 onlineSocket.on('connect_error',e=>{onlineMsg('⚠️ Server connection failed. Please refresh.');});
 onlineSocket.on('connect',()=>{const s=loadOnlineSession();if(s&&s.roomId&&s.sessionToken){onlineRoomId=s.roomId;onlineSessionToken=s.sessionToken;onlineSocket.emit('reconnectPlayer',s);}else onlineMsg('Connected. Create or join a room.');});
-onlineSocket.on('roomCreated',d=>{window.__onlineMaxPlayers=d.maxPlayers||2;window.__onlinePoolLimit=d.poolLimit||201;onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();document.getElementById('onlineRoom').value=d.roomId;document.getElementById('onlineRoomCode').textContent='ROOM: '+d.roomId;showOnlineReady(true); onlineMsg('Room created. Share the Room ID. Waiting for players...');});
-onlineSocket.on('roomJoined',d=>{window.__onlineMaxPlayers=d.maxPlayers||2;window.__onlinePoolLimit=d.poolLimit||201;onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();document.getElementById('onlineRoomCode').textContent='ROOM: '+d.roomId;showOnlineReady(true); onlineMsg('Joined room. Press READY when all players are present.');});
+onlineSocket.on('roomCreated',d=>{window.__onlineMaxPlayers=d.maxPlayers||2;window.__onlinePoolLimit=d.poolLimit||201;onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();document.getElementById('onlineRoom').value=d.roomId;document.getElementById('onlineRoomCode').textContent='ROOM: '+d.roomId;showOnlineReady(true); onlineMsg('Room created. Waiting for '+(window.__onlineMaxPlayers||2)+' players. Game will START automatically when the selected number joins.');});
+onlineSocket.on('roomJoined',d=>{window.__onlineMaxPlayers=d.maxPlayers||2;window.__onlinePoolLimit=d.poolLimit||201;onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();document.getElementById('onlineRoomCode').textContent='ROOM: '+d.roomId;showOnlineReady(true); onlineMsg('Joined room. Game will START automatically when the room reaches the selected player count.');});
 onlineSocket.on('reconnected',d=>{showOnlineReady(false);window.__onlineMaxPlayers=d.maxPlayers||window.__onlineMaxPlayers||2;onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();onlineMsg('♻️ Reconnected to your seat.');});
 onlineSocket.on('roomUpdate',d=>{renderOnlinePlayers(d.players,d.maxPlayers);});
 onlineSocket.on('onlineCount',d=>{const e=document.getElementById('globalOnlineCount');if(e)e.textContent='👥 Players Online: '+(d.count||0);});
