@@ -46,6 +46,11 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 function code(){let s;do{s=Math.floor(100000+Math.random()*900000).toString();}while(rooms.has(s));return s;}
 function publicPlayers(room){return room.playersList.map(p=>({id:p.id,name:p.name,ready:p.ready,index:p.index,connected:!!p.connected}));}
 function roomCapacity(room){return room.maxPlayers||2;}
+function autoStartWhenFull(room){
+  if(!room || room.started) return;
+  const connected=room.playersList.filter(x=>x.connected);
+  if(connected.length===roomCapacity(room)) startRealGame(room);
+}
 function publicCard(c){return c?{rank:c.rank,suit:c.suit,color:c.color,isPrintedJoker:!!c.isPrintedJoker,id:c.id}:null;}
 
 const RANK={A:1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":10,J:11,Q:12,K:13};
@@ -282,6 +287,7 @@ io.on('connection',socket=>{
     const p=addPlayerToRoom(room,socket,name);
     socket.emit('roomJoined',{roomId:room.id,playerId:socket.id,sessionToken:p.sessionToken,maxPlayers:room.maxPlayers,poolLimit:room.poolLimit,quickJoin:true});
     io.to(room.id).emit('roomUpdate',{players:publicPlayers(room),maxPlayers:room.maxPlayers,poolLimit:room.poolLimit});
+    autoStartWhenFull(room);
     broadcastOnlineCount();
     if(room.playersList.length===capacity) startRealGame(room);
   });
