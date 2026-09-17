@@ -2170,6 +2170,155 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif !important;}
 }
 </style>
 
+
+<style id="JKRN_CARD_LAYOUT_FIX_2026">
+/* Final card readability + lower hand position */
+#playerArea { bottom: 5% !important; }
+#playerGroupsContainer .card, #playerHand .card, #playerCards .card, .card {
+  font-weight: 900 !important;
+  text-shadow: 0 0 0.2px currentColor !important;
+}
+.card-top, .card .rank, .card .suit {
+  font-size: 25px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+}
+.card-center {
+  font-size: 36px !important;
+  font-weight: 900 !important;
+}
+.cards-in-group .card + .card { margin-left: -30px !important; }
+@media (max-width:900px) {
+  #playerArea { bottom: 1% !important; }
+  .card-top, .card .rank, .card .suit { font-size: 20px !important; font-weight: 900 !important; }
+  .card-center { font-size: 29px !important; font-weight: 900 !important; }
+}
+@media (max-width:600px) {
+  #playerArea { bottom: -2% !important; }
+  .card-top, .card .rank, .card .suit { font-size: 17px !important; font-weight: 900 !important; }
+  .card-center { font-size: 25px !important; font-weight: 900 !important; }
+}
+</style>
+
+
+<style id="jkrn-final-hand-layout-v12">
+/* FINAL HAND LAYOUT:
+   - Player cards move DOWN toward the bottom of the table.
+   - Card rank/suit are bold and highly readable.
+   - Auto-sort groups stay visually separated instead of becoming one pile.
+*/
+#playerArea{
+    bottom: 5% !important;
+    z-index: 3000 !important;
+}
+
+#playerGroupsContainer{
+    display:flex !important;
+    flex-direction:row !important;
+    flex-wrap:nowrap !important;
+    align-items:flex-end !important;
+    justify-content:center !important;
+    gap:18px !important;
+    height:auto !important;
+    min-height:140px !important;
+    max-width:98vw !important;
+    overflow-x:auto !important;
+    overflow-y:visible !important;
+    padding:8px 10px 2px !important;
+}
+
+#playerGroupsContainer .card-group{
+    flex:0 0 auto !important;
+    min-width:auto !important;
+    padding:6px 5px 5px !important;
+    background:rgba(0,0,0,.52) !important;
+    border:2px solid rgba(255,215,0,.28) !important;
+    border-radius:9px !important;
+    box-shadow:0 3px 10px rgba(0,0,0,.45) !important;
+}
+
+#playerGroupsContainer .cards-in-group{
+    display:flex !important;
+    align-items:flex-end !important;
+    min-height:112px !important;
+}
+
+/* Slight overlap inside a group, but a clear gap between groups. */
+#playerGroupsContainer .cards-in-group .card + .card{
+    margin-left:-26px !important;
+}
+
+/* Strong, bold card face. */
+#playerGroupsContainer .card{
+    width:clamp(58px,5.5vw,86px) !important;
+    min-width:clamp(58px,5.5vw,86px) !important;
+    height:clamp(88px,8.8vw,126px) !important;
+    padding:7px 6px 14px !important;
+    font-weight:1000 !important;
+    font-family:Arial,Helvetica,sans-serif !important;
+    border:2px solid #777 !important;
+    box-shadow:-3px 0 7px rgba(0,0,0,.72),0 4px 9px rgba(0,0,0,.35) !important;
+}
+
+#playerGroupsContainer .card .card-top{
+    font-size:clamp(21px,2.1vw,31px) !important;
+    font-weight:1000 !important;
+    line-height:.98 !important;
+    letter-spacing:-.4px !important;
+    text-shadow:none !important;
+}
+
+#playerGroupsContainer .card .card-center{
+    font-size:clamp(36px,3.4vw,50px) !important;
+    font-weight:1000 !important;
+    line-height:1 !important;
+}
+
+#playerGroupsContainer .group-status-badge{
+    font-weight:1000 !important;
+    font-size:10px !important;
+}
+
+/* Mobile: keep the hand lower and readable. */
+@media (max-width:900px){
+    #playerArea{bottom:3% !important;}
+    #playerGroupsContainer{
+        gap:10px !important;
+        min-height:112px !important;
+        padding:5px 5px 1px !important;
+    }
+    #playerGroupsContainer .card-group{padding:4px 3px !important;}
+    #playerGroupsContainer .cards-in-group .card + .card{
+        margin-left:-22px !important;
+    }
+    #playerGroupsContainer .card{
+        width:clamp(48px,7.2vw,68px) !important;
+        min-width:clamp(48px,7.2vw,68px) !important;
+        height:clamp(72px,10.5vw,98px) !important;
+        padding:5px 4px 10px !important;
+    }
+    #playerGroupsContainer .card .card-top{
+        font-size:clamp(16px,2.7vw,23px) !important;
+    }
+    #playerGroupsContainer .card .card-center{
+        font-size:clamp(27px,4vw,38px) !important;
+    }
+}
+
+@media (orientation:landscape) and (max-height:520px){
+    #playerArea{bottom:2% !important;}
+    #playerGroupsContainer{gap:7px !important;min-height:90px !important;}
+    #playerGroupsContainer .card{
+        width:clamp(40px,5.4vw,58px) !important;
+        min-width:clamp(40px,5.4vw,58px) !important;
+        height:clamp(60px,8vw,80px) !important;
+        padding:4px 3px 7px !important;
+    }
+    #playerGroupsContainer .card .card-top{font-size:clamp(13px,2vw,19px) !important;}
+    #playerGroupsContainer .card .card-center{font-size:clamp(22px,3vw,30px) !important;}
+}
+</style>
+
 </head>
 <body onload="initAutoGame()">
 
@@ -4891,73 +5040,31 @@ button[onclick*="groupSelected"] {
     if(typeof isEliminated==='function' && isEliminated(0)) return;
     const all=playerGroups.flat().filter(Boolean);
     if(all.length<3)return;
-
-    // Always build groups in the requested order:
-    // 1) LIFE = pure sequence, 2) SECOND LIFE = impure sequence,
-    // 3) TRILL = set/trill, then every remaining card in its own suit group.
-    const n=all.length, candidates=[];
-    for(let mask=1;mask<(1<<n);mask++){
-      let count=0,g=[];
-      for(let i=0;i<n;i++) if(mask&(1<<i)){count++;g.push(all[i]);}
-      if(count<3)continue;
-      if(isPureSequence(g))candidates.push({mask,g,type:'life'});
-      else if(isSequence(g))candidates.push({mask,g,type:'second'});
-      else if(isValidSet(g))candidates.push({mask,g,type:'trill'});
-    }
-    const order={life:3,second:2,trill:1};
-    candidates.sort((a,b)=>{
-      if(order[b.type]!==order[a.type])return order[b.type]-order[a.type];
-      return b.g.length-a.g.length;
-    });
-
-    function pick(type,used){
-      const list=candidates.filter(c=>c.type===type && !(c.mask&used));
-      if(!list.length)return null;
-      list.sort((a,b)=>b.g.length-a.g.length);
-      return list[0];
-    }
-
-    let used=0, final=[];
-    // Prefer a complete first life + second life when available.
-    const lifeCandidates=candidates.filter(c=>c.type==='life').sort((a,b)=>b.g.length-a.g.length);
-    let life=lifeCandidates[0]||null;
-    if(life){
-      used|=life.mask;
-      final.push(life.g.slice());
-      const second=pick('second',used);
-      if(second){used|=second.mask;final.push(second.g.slice());}
-    }
-
-    // Add the best available trill/set without touching the life groups.
-    const trill=pick('trill',used);
-    if(trill){used|=trill.mask;final.push(trill.g.slice());}
-
-    // If no pure life was possible, still show the best legal second/trill groups.
-    if(!life){
-      const second=pick('second',used);
-      if(second){used|=second.mask;final.push(second.g.slice());}
-      const trill2=pick('trill',used);
-      if(trill2){used|=trill2.mask;final.push(trill2.g.slice());}
-    }
-
-    const rank=(c)=>(rankOrder[c.rank]||0);
-    final.forEach(g=>g.sort((a,b)=>rank(a)-rank(b)));
-
-    // Remaining cards are never mixed into a life/trill. Keep them as separate
-    // suit groups so every unrelated card is visibly separate after Auto Sort.
-    const rest=all.filter((c,i)=>!(used&(1<<i)));
+    const r=calcBest(all);
     const suitOrder={'♥':1,'♦':2,'♣':3,'♠':4};
-    const bySuit={};
-    rest.forEach(c=>{const k=c.isPrintedJoker?'PJ':c.suit;(bySuit[k]??=[]).push(c);});
-    Object.keys(bySuit).sort((a,b)=>{
-      if(a==='PJ')return -1;if(b==='PJ')return 1;
-      return (suitOrder[a]||9)-(suitOrder[b]||9);
-    }).forEach(k=>{
-      bySuit[k].sort((a,b)=>rank(a)-rank(b));
-      final.push(bySuit[k]);
+    const rankValue={A:1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,J:11,Q:12,K:13};
+    const key=c=>c.id || `${c.rank}_${c.suit}_${c.isPrintedJoker?'PJ':''}`;
+    const used=new Set(r.groups.flat().map(key));
+    const ordered=[];
+    r.groups.forEach(g=>{
+      const arr=g.slice();
+      const isSet=arr.length>=3 && arr.filter(c=>!isJoker(c)).every(c=>c.rank===arr.find(x=>!isJoker(x))?.rank);
+      arr.sort((a,b)=>{
+        if(isSet) return (suitOrder[a.suit]||9)-(suitOrder[b.suit]||9) || (rankValue[a.rank]||0)-(rankValue[b.rank]||0);
+        return (suitOrder[a.suit]||9)-(suitOrder[b.suit]||9) || (rankValue[a.rank]||0)-(rankValue[b.rank]||0);
+      });
+      ordered.push(arr);
     });
-
-    playerGroups=final.length?final:[all];
+    const rest=all.filter(c=>!used.has(key(c))).sort((a,b)=>
+      (a.isPrintedJoker?0:(suitOrder[a.suit]||9))-(b.isPrintedJoker?0:(suitOrder[b.suit]||9)) ||
+      (rankValue[a.rank]||0)-(rankValue[b.rank]||0)
+    );
+    if(rest.length) {
+      const bySuit={};
+      rest.forEach(c=>{const k=c.isPrintedJoker?'PJ':c.suit;(bySuit[k]??=[]).push(c);});
+      Object.keys(bySuit).sort((a,b)=>(a==='PJ'?-1:b==='PJ'?1:(suitOrder[a]||9)-(suitOrder[b]||9))).forEach(k=>ordered.push(bySuit[k]));
+    }
+    playerGroups=ordered.length?ordered:[all];
     selectedCards=[];
     if(typeof playSound==='function')playSound('group');
     if(typeof updateUI==='function')updateUI();
@@ -5148,84 +5255,19 @@ button[onclick*="groupSelected"] {
 </script>
 
 
-<style id="JKRN_COMPLETE_FINAL_LAYOUT">
-/* PLAYER POSITIONS — TABLE EDGE */
-.table.online-2p #opp2{
-  display:flex !important; top:4% !important; left:50% !important;
-  right:auto !important; transform:translateX(-50%) !important;
-}
-.table.online-2p #opp3,.table.online-2p #opp4,
-.table.online-2p #opp5,.table.online-2p #opp6{display:none !important;}
-
-.table.online-4p #opp2{
-  display:flex !important; top:38% !important; left:2% !important;
-  right:auto !important; transform:none !important;
-}
-.table.online-4p #opp3{
-  display:flex !important; top:4% !important; left:50% !important;
-  right:auto !important; transform:translateX(-50%) !important;
-}
-.table.online-4p #opp4{
-  display:flex !important; top:38% !important; right:2% !important;
-  left:auto !important; transform:none !important;
-}
-.table.online-4p #opp5,.table.online-4p #opp6{display:none !important;}
-
-.table.online-6p #opp2{
-  display:flex !important; top:38% !important; left:2% !important;
-  right:auto !important; transform:none !important;
-}
-.table.online-6p #opp3{
-  display:flex !important; top:10% !important; left:19% !important;
-  right:auto !important; transform:none !important;
-}
-.table.online-6p #opp4{
-  display:flex !important; top:3% !important; left:50% !important;
-  right:auto !important; transform:translateX(-50%) !important;
-}
-.table.online-6p #opp5{
-  display:flex !important; top:10% !important; right:19% !important;
-  left:auto !important; transform:none !important;
-}
-.table.online-6p #opp6{
-  display:flex !important; top:38% !important; right:2% !important;
-  left:auto !important; transform:none !important;
-}
-
-/* HAND — VERY LOW */
-#playerArea{
-  bottom:0 !important;
-  z-index:10020 !important;
-}
-#playerGroupsContainer{
-  transform:translateY(12px) !important;
-  align-items:flex-end !important;
-  justify-content:center !important;
-  gap:14px !important;
-  padding-bottom:0 !important;
-}
-#playerGroupsContainer .card-group{
-  flex:0 0 auto !important;
-  margin-right:10px !important;
-}
-#playerGroupsContainer .cards-in-group{
-  display:flex !important;
-  align-items:flex-end !important;
-  gap:5px !important;
-}
-#playerGroupsContainer .cards-in-group .card + .card{
-  margin-left:0 !important;
-}
-
-/* EXTRA BOLD CARD TEXT */
-#playerGroupsContainer .card,
-#playerGroupsContainer .card .rank,
-#playerGroupsContainer .card .suit,
-#playerGroupsContainer .card-top,
-#playerGroupsContainer .card-center{
-  font-weight:1000 !important;
-}
-</style>
+<script id="jkrn-final-auto-sort-layout-v12">
+(function(){
+  const run = window.autoSortCards;
+  window.autoSortCards = function(){
+    if (typeof run === 'function') run.apply(this, arguments);
+    requestAnimationFrame(function(){
+      if (typeof updateUI === 'function') updateUI();
+      const box=document.getElementById('playerGroupsContainer');
+      if(box) box.scrollLeft=0;
+    });
+  };
+})();
+</script>
 
 </body>
 
@@ -5732,11 +5774,11 @@ button[onclick*="groupSelected"] {
 <style id="JKRN_V11_NO_OVERLAP_FIX">
 /* V11: stop hand cards from collapsing into each other */
 #playerArea{
-  bottom: 0 !important;
+  bottom: 3% !important;
   z-index: 10020 !important;
 }
 #playerGroupsContainer{
-  transform: translateY(8px) !important;
+  transform: none !important;
   display:flex !important;
   align-items:flex-end !important;
   justify-content:center !important;
@@ -5773,11 +5815,11 @@ button[onclick*="groupSelected"] {
 }
 #playerGroupsContainer .card .rank,#playerGroupsContainer .card .suit,
 .card .rank,.card .suit,.playing-card .rank,.playing-card .suit{
-  font-size:30px !important;
-  font-weight:1000 !important;
+  font-size:28px !important;
+  font-weight:900 !important;
 }
-.card-top{font-size:30px !important;font-weight:1000 !important;}
-.card-center{font-size:40px !important;font-weight:1000 !important;}
+.card-top{font-size:28px !important;font-weight:900 !important;}
+.card-center{font-size:38px !important;font-weight:900 !important;}
 
 /* Keep controls below/around the hand without covering cards */
 .left-controls{bottom:10px !important; z-index:10100 !important;}
@@ -5802,8 +5844,8 @@ button[onclick*="groupSelected"] {
   #playerGroupsContainer .card,.playing-card,.hand-card,.player-card,.card-item{width:58px !important;min-width:58px !important;height:86px !important;flex-basis:58px !important;}
   .card-top{font-size:21px !important}.card-center{font-size:30px !important}
   #playerGroupsContainer .card .rank,#playerGroupsContainer .card .suit,.card .rank,.card .suit{font-size:21px !important;}
-  #playerArea{bottom:0 !important;}
-  #discardButton{bottom:calc(0% + 92px) !important;}
+  #playerArea{bottom:5% !important;}
+  #discardButton{bottom:calc(5% + 92px) !important;}
 }
 @media(max-width:700px){
   #playerGroupsContainer{max-width:calc(100vw - 20px) !important;gap:3px !important;height:100px !important;overflow-x:auto !important;}
