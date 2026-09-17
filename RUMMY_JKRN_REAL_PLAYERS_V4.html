@@ -2200,6 +2200,216 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif !important;}
 }
 </style>
 
+
+<style id="JKRN_FINAL_HAND_POSITION_V12">
+/* ===== FINAL HAND DESIGN =====
+   1) Cards sit low on the screen.
+   2) Action buttons stay at the bottom and never cover the cards.
+   3) Cards are bold/large.
+   4) Auto-sort groups have a clear gap between groups.
+*/
+#playerArea{
+  position:fixed !important;
+  left:50% !important;
+  right:auto !important;
+  top:auto !important;
+  bottom:122px !important;
+  transform:translateX(-50%) !important;
+  width:min(96vw,1380px) !important;
+  max-width:96vw !important;
+  height:auto !important;
+  z-index:12000 !important;
+  pointer-events:none;
+}
+#playerInfoBox{
+  position:relative !important;
+  z-index:12020 !important;
+  margin:0 auto 5px !important;
+  pointer-events:auto !important;
+}
+#playerGroupsContainer{
+  display:flex !important;
+  flex-direction:row !important;
+  flex-wrap:nowrap !important;
+  justify-content:center !important;
+  align-items:flex-end !important;
+  gap:22px !important;
+  width:100% !important;
+  max-width:100% !important;
+  height:118px !important;
+  min-height:118px !important;
+  padding:3px 8px 0 !important;
+  overflow-x:auto !important;
+  overflow-y:visible !important;
+  scrollbar-width:none !important;
+  pointer-events:auto !important;
+}
+#playerGroupsContainer::-webkit-scrollbar{display:none !important;}
+
+#playerGroupsContainer .card-group{
+  display:flex !important;
+  flex-direction:column !important;
+  flex:0 0 auto !important;
+  align-items:center !important;
+  justify-content:flex-end !important;
+  min-width:0 !important;
+  width:auto !important;
+  padding:3px 5px 3px !important;
+  background:rgba(0,0,0,.38) !important;
+  border:2px solid rgba(255,215,0,.25) !important;
+  border-radius:8px !important;
+  box-shadow:0 3px 10px rgba(0,0,0,.35) !important;
+}
+#playerGroupsContainer .cards-in-group{
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:flex-end !important;
+  gap:0 !important;
+  min-height:106px !important;
+  overflow:visible !important;
+}
+#playerGroupsContainer .cards-in-group .card + .card{
+  margin-left:-30px !important;
+}
+
+/* Strong card face */
+#playerGroupsContainer .card{
+  width:72px !important;
+  min-width:72px !important;
+  height:106px !important;
+  flex:0 0 72px !important;
+  box-sizing:border-box !important;
+  padding:6px 6px 13px !important;
+  border:2px solid #a8abad !important;
+  border-radius:7px !important;
+  font-family:Arial,Helvetica,sans-serif !important;
+  font-weight:1000 !important;
+  box-shadow:-3px 0 8px rgba(0,0,0,.72),0 4px 9px rgba(0,0,0,.32) !important;
+}
+#playerGroupsContainer .card .card-top{
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  font-size:27px !important;
+  line-height:1 !important;
+  font-weight:1000 !important;
+}
+#playerGroupsContainer .card .card-top span{
+  font-weight:1000 !important;
+}
+#playerGroupsContainer .card .card-center{
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  align-items:center !important;
+  justify-content:center !important;
+  font-size:39px !important;
+  line-height:1 !important;
+  font-weight:1000 !important;
+  margin:auto 0 !important;
+}
+#playerGroupsContainer .group-status-badge{
+  font-weight:1000 !important;
+  font-size:9px !important;
+}
+
+/* Bottom controls: fixed to the bottom edge, away from the hand */
+.left-controls{
+  position:fixed !important;
+  left:16px !important;
+  right:auto !important;
+  bottom:14px !important;
+  z-index:13000 !important;
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  gap:8px !important;
+}
+.action-buttons{
+  position:fixed !important;
+  right:16px !important;
+  left:auto !important;
+  bottom:14px !important;
+  z-index:13000 !important;
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  gap:10px !important;
+}
+.left-controls button,.action-buttons button{
+  height:42px !important;
+  min-height:42px !important;
+  font-size:12px !important;
+  font-weight:1000 !important;
+  border-radius:9px !important;
+}
+#discardButton{
+  position:fixed !important;
+  left:50% !important;
+  right:auto !important;
+  top:auto !important;
+  bottom:14px !important;
+  transform:translateX(-50%) !important;
+  z-index:13100 !important;
+  width:120px !important;
+  min-width:120px !important;
+}
+
+/* Desktop: keep the hand low, but inside the screen */
+@media (min-width:1101px){
+  #playerArea{bottom:122px !important;}
+  #playerGroupsContainer{gap:24px !important;}
+}
+
+/* Smaller screens: fit all 13 cards while preserving group gaps */
+@media (max-width:1100px){
+  #playerArea{bottom:92px !important;width:98vw !important;}
+  #playerInfoBox{margin-bottom:3px !important;}
+  #playerGroupsContainer{
+    gap:12px !important;
+    height:98px !important;
+    min-height:98px !important;
+    padding-left:3px !important;
+    padding-right:3px !important;
+    justify-content:flex-start !important;
+  }
+  #playerGroupsContainer .cards-in-group{min-height:84px !important;}
+  #playerGroupsContainer .cards-in-group .card + .card{margin-left:-23px !important;}
+  #playerGroupsContainer .card{
+    width:58px !important;
+    min-width:58px !important;
+    height:86px !important;
+    flex-basis:58px !important;
+    padding:5px 4px 9px !important;
+  }
+  #playerGroupsContainer .card .card-top{font-size:21px !important;}
+  #playerGroupsContainer .card .card-center{font-size:31px !important;}
+  .left-controls{left:7px !important;bottom:8px !important;}
+  .action-buttons{right:7px !important;bottom:8px !important;}
+  .left-controls button,.action-buttons button{height:36px !important;min-height:36px !important;font-size:10px !important;}
+  #discardButton{bottom:8px !important;width:92px !important;min-width:92px !important;}
+}
+@media (max-width:700px){
+  #playerArea{bottom:78px !important;}
+  #playerGroupsContainer{gap:7px !important;height:84px !important;min-height:84px !important;}
+  #playerGroupsContainer .cards-in-group{min-height:72px !important;}
+  #playerGroupsContainer .cards-in-group .card + .card{margin-left:-18px !important;}
+  #playerGroupsContainer .card{
+    width:48px !important;
+    min-width:48px !important;
+    height:72px !important;
+    flex-basis:48px !important;
+    padding:4px 3px 7px !important;
+  }
+  #playerGroupsContainer .card .card-top{font-size:17px !important;}
+  #playerGroupsContainer .card .card-center{font-size:25px !important;}
+  .left-controls{left:4px !important;bottom:5px !important;gap:4px !important;}
+  .action-buttons{right:4px !important;bottom:5px !important;gap:4px !important;}
+  .left-controls button,.action-buttons button{height:32px !important;min-height:32px !important;font-size:9px !important;padding:6px 8px !important;}
+  #discardButton{bottom:5px !important;width:78px !important;min-width:78px !important;}
+}
+</style>
+
 </head>
 <body onload="initAutoGame()">
 
