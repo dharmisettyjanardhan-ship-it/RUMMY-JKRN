@@ -5142,6 +5142,33 @@ button[onclick*="groupSelected"] {
 })();
 </script>
 
+
+<style id="JKRN_TABLE_EDGE_FINAL">
+/* Final requested layout: players stay on table edge for 2/4/6 seats */
+.table.online-2p #opp2{top:4% !important;left:50% !important;right:auto !important;transform:translateX(-50%) !important;}
+.table.online-2p #opp3,.table.online-2p #opp4,.table.online-2p #opp5,.table.online-2p #opp6{display:none !important;}
+
+.table.online-4p #opp2{left:2% !important;right:auto !important;top:38% !important;transform:none !important;}
+.table.online-4p #opp3{left:50% !important;right:auto !important;top:4% !important;transform:translateX(-50%) !important;}
+.table.online-4p #opp4{right:2% !important;left:auto !important;top:38% !important;transform:none !important;}
+.table.online-4p #opp5,.table.online-4p #opp6{display:none !important;}
+
+.table.online-6p #opp2{left:2% !important;right:auto !important;top:38% !important;transform:none !important;}
+.table.online-6p #opp3{left:19% !important;right:auto !important;top:10% !important;transform:none !important;}
+.table.online-6p #opp4{left:50% !important;right:auto !important;top:3% !important;transform:translateX(-50%) !important;}
+.table.online-6p #opp5{right:19% !important;left:auto !important;top:10% !important;transform:none !important;}
+.table.online-6p #opp6{right:2% !important;left:auto !important;top:38% !important;transform:none !important;}
+
+#playerArea{bottom:1.2% !important;z-index:10020 !important;}
+#playerGroupsContainer{transform:translateY(10px) !important;align-items:flex-end !important;justify-content:center !important;}
+#playerGroupsContainer .card{font-weight:1000 !important;}
+#playerGroupsContainer .card .rank,#playerGroupsContainer .card .suit,.card-top,.card-center{font-weight:1000 !important;}
+
+#playerGroupsContainer .card-group{margin-right:10px !important;}
+#playerGroupsContainer .cards-in-group{gap:5px !important;}
+#playerGroupsContainer .cards-in-group .card + .card{margin-left:0 !important;}
+</style>
+
 </body>
 
 <style id="JKRN_V8_USER_REQUEST_FINAL">
