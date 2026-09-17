@@ -11,11 +11,11 @@ const POOL_LIMIT = 201;
 const MAX_PLAYERS = 6;
 const RECONNECT_GRACE_MS = 120000;
 
-const ROOT_DIR = path.join(__dirname, '..');
-const INDEX_FILE = path.join(ROOT_DIR, 'index.html');
+app.use(express.static(__dirname));
 
-app.use(express.static(ROOT_DIR));
-app.get('/', (req,res)=>res.sendFile(INDEX_FILE));
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 const suits = [
   {s:'♥',c:'red'}, {s:'♦',c:'red'}, {s:'♣',c:'black'}, {s:'♠',c:'black'}
