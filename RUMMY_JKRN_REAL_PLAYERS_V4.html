@@ -2170,6 +2170,36 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif !important;}
 }
 </style>
 
+
+<style id="JKRN_CARD_LAYOUT_FIX_2026">
+/* Final card readability + lower hand position */
+#playerArea { bottom: 5% !important; }
+#playerGroupsContainer .card, #playerHand .card, #playerCards .card, .card {
+  font-weight: 900 !important;
+  text-shadow: 0 0 0.2px currentColor !important;
+}
+.card-top, .card .rank, .card .suit {
+  font-size: 25px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+}
+.card-center {
+  font-size: 36px !important;
+  font-weight: 900 !important;
+}
+.cards-in-group .card + .card { margin-left: -30px !important; }
+@media (max-width:900px) {
+  #playerArea { bottom: 1% !important; }
+  .card-top, .card .rank, .card .suit { font-size: 20px !important; font-weight: 900 !important; }
+  .card-center { font-size: 29px !important; font-weight: 900 !important; }
+}
+@media (max-width:600px) {
+  #playerArea { bottom: -2% !important; }
+  .card-top, .card .rank, .card .suit { font-size: 17px !important; font-weight: 900 !important; }
+  .card-center { font-size: 25px !important; font-weight: 900 !important; }
+}
+</style>
+
 </head>
 <body onload="initAutoGame()">
 
@@ -4892,23 +4922,30 @@ button[onclick*="groupSelected"] {
     const all=playerGroups.flat().filter(Boolean);
     if(all.length<3)return;
     const r=calcBest(all);
-    const used=new Set(r.groups.flat().map(key));
-    const final=[];
-    r.groups.forEach(g=>{
-      g.sort((a,b)=>(rankOrder[a.rank]||0)-(rankOrder[b.rank]||0));
-      final.push(g);
-    });
-    const rest=all.filter(c=>!used.has(key(c)));
     const suitOrder={'♥':1,'♦':2,'♣':3,'♠':4};
-    rest.sort((a,b)=>{
-      const sa=a.isPrintedJoker?0:(suitOrder[a.suit]||9), sb=b.isPrintedJoker?0:(suitOrder[b.suit]||9);
-      return sa-sb || (rankOrder[a.rank]||0)-(rankOrder[b.rank]||0);
+    const rankValue={A:1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,J:11,Q:12,K:13};
+    const key=c=>c.id || `${c.rank}_${c.suit}_${c.isPrintedJoker?'PJ':''}`;
+    const used=new Set(r.groups.flat().map(key));
+    const ordered=[];
+    r.groups.forEach(g=>{
+      const arr=g.slice();
+      const isSet=arr.length>=3 && arr.filter(c=>!isJoker(c)).every(c=>c.rank===arr.find(x=>!isJoker(x))?.rank);
+      arr.sort((a,b)=>{
+        if(isSet) return (suitOrder[a.suit]||9)-(suitOrder[b.suit]||9) || (rankValue[a.rank]||0)-(rankValue[b.rank]||0);
+        return (suitOrder[a.suit]||9)-(suitOrder[b.suit]||9) || (rankValue[a.rank]||0)-(rankValue[b.rank]||0);
+      });
+      ordered.push(arr);
     });
-    // Keep leftovers separate so their score is obvious; never label them as lives.
-    const bySuit={};
-    rest.forEach(c=>{const k=c.isPrintedJoker?'PJ':c.suit;(bySuit[k]??=[]).push(c);});
-    Object.keys(bySuit).sort((a,b)=>{if(a==='PJ')return -1;if(b==='PJ')return 1;return (suitOrder[a]||9)-(suitOrder[b]||9);}).forEach(k=>final.push(bySuit[k]));
-    playerGroups=final.length?final:[all];
+    const rest=all.filter(c=>!used.has(key(c))).sort((a,b)=>
+      (a.isPrintedJoker?0:(suitOrder[a.suit]||9))-(b.isPrintedJoker?0:(suitOrder[b.suit]||9)) ||
+      (rankValue[a.rank]||0)-(rankValue[b.rank]||0)
+    );
+    if(rest.length) {
+      const bySuit={};
+      rest.forEach(c=>{const k=c.isPrintedJoker?'PJ':c.suit;(bySuit[k]??=[]).push(c);});
+      Object.keys(bySuit).sort((a,b)=>(a==='PJ'?-1:b==='PJ'?1:(suitOrder[a]||9)-(suitOrder[b]||9))).forEach(k=>ordered.push(bySuit[k]));
+    }
+    playerGroups=ordered.length?ordered:[all];
     selectedCards=[];
     if(typeof playSound==='function')playSound('group');
     if(typeof updateUI==='function')updateUI();
