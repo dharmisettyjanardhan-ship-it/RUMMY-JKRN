@@ -4921,30 +4921,37 @@ button[onclick*="groupSelected"] {
     if(typeof isEliminated==='function' && isEliminated(0)) return;
     const all=playerGroups.flat().filter(Boolean);
     if(all.length<3)return;
-    const r=calcBest(all);
-    const suitOrder={'♥':1,'♦':2,'♣':3,'♠':4};
-    const rankValue={A:1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,J:11,Q:12,K:13};
-    const key=c=>c.id || `${c.rank}_${c.suit}_${c.isPrintedJoker?'PJ':''}`;
-    const used=new Set(r.groups.flat().map(key));
-    const ordered=[];
-    r.groups.forEach(g=>{
-      const arr=g.slice();
-      const isSet=arr.length>=3 && arr.filter(c=>!isJoker(c)).every(c=>c.rank===arr.find(x=>!isJoker(x))?.rank);
-      arr.sort((a,b)=>{
-        if(isSet) return (suitOrder[a.suit]||9)-(suitOrder[b.suit]||9) || (rankValue[a.rank]||0)-(rankValue[b.rank]||0);
-        return (suitOrder[a.suit]||9)-(suitOrder[b.suit]||9) || (rankValue[a.rank]||0)-(rankValue[b.rank]||0);
-      });
-      ordered.push(arr);
-    });
-    const rest=all.filter(c=>!used.has(key(c))).sort((a,b)=>
-      (a.isPrintedJoker?0:(suitOrder[a.suit]||9))-(b.isPrintedJoker?0:(suitOrder[b.suit]||9)) ||
-      (rankValue[a.rank]||0)-(rankValue[b.rank]||0)
-    );
-    if(rest.length) {
-      const bySuit={};
-      rest.forEach(c=>{const k=c.isPrintedJoker?'PJ':c.suit;(bySuit[k]??=[]).push(c);});
-      Object.keys(bySuit).sort((a,b)=>(a==='PJ'?-1:b==='PJ'?1:(suitOrder[a]||9)-(suitOrder[b]||9))).forEach(k=>ordered.push(bySuit[k]));
+    // LIFE -> SECOND LIFE -> TRILL, then remaining cards by suit.
+    const n=all.length, candidates=[];
+    for(let mask=1;mask<(1<<n);mask++){
+      let count=0,g=[];
+      for(let i=0;i<n;i++) if(mask&(1<<i)){count++;g.push(all[i]);}
+      if(count<3)continue;
+      if(isPureSequence(g))candidates.push({mask,g,type:'life'});
+      else if(isSequence(g))candidates.push({mask,g,type:'second'});
+      else if(isValidSet(g))candidates.push({mask,g,type:'trill'});
     }
+    function pick(type,used){
+      const list=candidates.filter(c=>c.type===type && !(c.mask&used));
+      list.sort((a,b)=>b.g.length-a.g.length);
+      return list[0]||null;
+    }
+    let used=0, ordered=[];
+    const life=pick('life',used);
+    if(life){used|=life.mask;ordered.push(life.g.slice());}
+    const second=pick('second',used);
+    if(second){used|=second.mask;ordered.push(second.g.slice());}
+    const trill=pick('trill',used);
+    if(trill){used|=trill.mask;ordered.push(trill.g.slice());}
+    const rankValue={A:1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,J:11,Q:12,K:13};
+    const suitOrder={'♥':1,'♦':2,'♣':3,'♠':4};
+    ordered.forEach(g=>g.sort((a,b)=>(rankValue[a.rank]||0)-(rankValue[b.rank]||0)));
+    // Every ungrouped card stays separate from LIFE/SECOND LIFE/TRILL.
+    const rest=[]; for(let i=0;i<n;i++) if(!(used&(1<<i)))rest.push(all[i]);
+    const bySuit={};
+    rest.sort((a,b)=>(a.isPrintedJoker?0:(suitOrder[a.suit]||9))-(b.isPrintedJoker?0:(suitOrder[b.suit]||9)) || (rankValue[a.rank]||0)-(rankValue[b.rank]||0));
+    rest.forEach(c=>{const k=c.isPrintedJoker?'PJ':c.suit;(bySuit[k]??=[]).push(c);});
+    Object.keys(bySuit).sort((a,b)=>a==='PJ'?-1:b==='PJ'?1:(suitOrder[a]||9)-(suitOrder[b]||9)).forEach(k=>ordered.push(bySuit[k]));
     playerGroups=ordered.length?ordered:[all];
     selectedCards=[];
     if(typeof playSound==='function')playSound('group');
@@ -5640,11 +5647,11 @@ button[onclick*="groupSelected"] {
 <style id="JKRN_V11_NO_OVERLAP_FIX">
 /* V11: stop hand cards from collapsing into each other */
 #playerArea{
-  bottom: 3% !important;
+  bottom: 0 !important;
   z-index: 10020 !important;
 }
 #playerGroupsContainer{
-  transform: none !important;
+  transform: translateY(8px) !important;
   display:flex !important;
   align-items:flex-end !important;
   justify-content:center !important;
@@ -5681,11 +5688,11 @@ button[onclick*="groupSelected"] {
 }
 #playerGroupsContainer .card .rank,#playerGroupsContainer .card .suit,
 .card .rank,.card .suit,.playing-card .rank,.playing-card .suit{
-  font-size:28px !important;
-  font-weight:900 !important;
+  font-size:30px !important;
+  font-weight:1000 !important;
 }
-.card-top{font-size:28px !important;font-weight:900 !important;}
-.card-center{font-size:38px !important;font-weight:900 !important;}
+.card-top{font-size:30px !important;font-weight:1000 !important;}
+.card-center{font-size:40px !important;font-weight:1000 !important;}
 
 /* Keep controls below/around the hand without covering cards */
 .left-controls{bottom:10px !important; z-index:10100 !important;}
@@ -5710,8 +5717,8 @@ button[onclick*="groupSelected"] {
   #playerGroupsContainer .card,.playing-card,.hand-card,.player-card,.card-item{width:58px !important;min-width:58px !important;height:86px !important;flex-basis:58px !important;}
   .card-top{font-size:21px !important}.card-center{font-size:30px !important}
   #playerGroupsContainer .card .rank,#playerGroupsContainer .card .suit,.card .rank,.card .suit{font-size:21px !important;}
-  #playerArea{bottom:5% !important;}
-  #discardButton{bottom:calc(5% + 92px) !important;}
+  #playerArea{bottom:0 !important;}
+  #discardButton{bottom:92px !important;}
 }
 @media(max-width:700px){
   #playerGroupsContainer{max-width:calc(100vw - 20px) !important;gap:3px !important;height:100px !important;overflow-x:auto !important;}
