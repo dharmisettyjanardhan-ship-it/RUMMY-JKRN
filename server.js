@@ -27,7 +27,12 @@ function addPlayerToRoom(room, socket, name){
 }
 
 app.use(express.static(__dirname));
-app.get('/', (req,res)=>res.sendFile(path.join(__dirname,'index.html')));
+app.get('/', (req,res)=>{
+  const candidates = ['index.html','RUMMY_JKRN_REAL_PLAYERS_V4.html','RUMMY_JKRN_REAL_PLAYERS_V4A.html'];
+  const file = candidates.find(name => require('fs').existsSync(path.join(__dirname,name)));
+  if (!file) return res.status(500).send('Game HTML file not found on server.');
+  res.sendFile(path.join(__dirname,file));
+});
 
 const suits = [
   {s:'♥',c:'red'}, {s:'♦',c:'red'}, {s:'♣',c:'black'}, {s:'♠',c:'black'}
