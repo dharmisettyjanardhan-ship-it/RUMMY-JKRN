@@ -105,7 +105,8 @@ function bestLifeScore(hand,room){
 }
 function validateShow(room,p,groupIds,discardId){
   const hand=p.hand.slice();
-  if(discardId){const k=hand.findIndex(c=>c.id===discardId);if(k<0)return {ok:false,reason:'Selected discard card is not in your hand.'};hand.splice(k,1);}
+  if(!discardId)return {ok:false,reason:'After lifting the 14th card, select exactly one card to discard. The 14th card can be used in a valid Life/Set.'};
+  {const k=hand.findIndex(c=>c.id===discardId);if(k<0)return {ok:false,reason:'Selected discard card is not in your hand.'};hand.splice(k,1);}
   if(hand.length!==13)return {ok:false,reason:'Declare requires 13 cards after selecting the discard card.'};
   if(!Array.isArray(groupIds)||!groupIds.length)return {ok:false,reason:'No groups submitted.'};
   const byId=new Map(p.hand.map(c=>[c.id,c])), used=new Set(), groups=[];
