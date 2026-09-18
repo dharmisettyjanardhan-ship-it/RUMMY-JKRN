@@ -3464,14 +3464,15 @@ function declareGame() {
     // explicitly select exactly one card to discard; DECLARE must never
     // automatically discard a singleton, because that could incorrectly
     // remove the newly lifted 14th card from a valid group.
-    let testGroups = playerGroups.filter(g => g && g.length > 0);
-    let discardGroupIndex = -1;
+    let testGroups = playerGroups.map(g => (g || []).slice()).filter(g => g.length > 0);
+    let discardCardId = null;
     if (selectedCards.length === 1) {
         const s = selectedCards[0];
-        if (playerGroups[s.gIdx] && playerGroups[s.gIdx][s.cIdx]) discardGroupIndex = s.gIdx;
+        if (playerGroups[s.gIdx] && playerGroups[s.gIdx][s.cIdx]) discardCardId = playerGroups[s.gIdx][s.cIdx].id;
     }
-    if (discardGroupIndex >= 0) {
-        testGroups = playerGroups.map(g=>g.slice()).filter((g,i)=>i!==discardGroupIndex && g.length>0);
+    if (discardCardId) {
+        // Remove ONLY the selected discard card. Keep the rest of its group.
+        testGroups = testGroups.map(g => g.filter(c => c.id !== discardCardId)).filter(g => g.length > 0);
     }
 
     let pureSeqs = 0, otherSeqs = 0, validSets = 0, invalidGroups = 0;
@@ -4521,25 +4522,20 @@ button[onclick*="groupSelected"] {
 
   function onlineDeclare(){
     if(!window.__realRoomStarted || currentPlayer!==onlinePlayerIndex() || !playerHasDrawn)return;
-    let source=(playerGroups||[]).filter(g=>g&&g.length);
-    let discardGroupIndex=-1, discardId=null;
+    let source=(playerGroups||[]).map(g=>(g||[]).slice()).filter(g=>g.length);
+    let discardId=null;
     if(selectedCards && selectedCards.length===1){
       const x=selectedCards[0], g=playerGroups[x.gIdx];
-      if(g&&g[x.cIdx]){ discardId=g[x.cIdx].id; discardGroupIndex=x.gIdx; }
+      if(g&&g[x.cIdx]) discardId=g[x.cIdx].id;
     }
-    // If there is one singleton group among 14 cards, treat that card as the
-    // discard automatically. This fixes DECLARE when the last card is shown
-    // separately but was not explicitly selected.
-    if(!discardId && (playerGroups||[]).flat().length===14){
-      const singles=playerGroups.map((g,i)=>({g,i})).filter(x=>x.g&&x.g.length===1);
-      if(singles.length===1){ discardGroupIndex=singles[0].i; discardId=singles[0].g[0].id; }
-    }
+    // The 14th card may be used in a Life/Set. Remove only the one selected
+    // discard card; never remove the entire group containing it.
     if(!discardId){
       const st=document.getElementById('status');
       if(st)st.innerText='⚠️ 14 cards ఉన్నాయి. DECLARE ముందు discard చేయాల్సిన 1 card ని select చేయండి. 14th card ని Life/Set లో ఉపయోగించవచ్చు.';
       return;
     }
-    const groups=source.filter((g,i)=>i!==discardGroupIndex).map(g=>g.map(c=>c.id));
+    const groups=source.map(g=>g.filter(c=>c.id!==discardId)).filter(g=>g.length).map(g=>g.map(c=>c.id));
     onlineSocket.emit('declare',{groupIds:groups,discardId});
   }
   function onlineNextDeal(){ if(onlineSocket&&onlineRoomId)onlineSocket.emit('nextDeal'); }
@@ -4731,6 +4727,126 @@ button[onclick*="groupSelected"] {
   if(typeof auto==='function') window.autoSortCards=function(){return auto.apply(this,arguments);};
   const group=window.groupSelectedCards;
   if(typeof group==='function') window.groupSelectedCards=function(){return group.apply(this,arguments);};
+})();
+</script>
+
+
+
+<!-- V26: completely remove central player/game overlays for 6-player table -->
+<style id="jkrn-v26-no-center-overlays">
+/* Central HUD/status overlays must never cover the table or cards. */
+#jkrnLiveStatusBar,
+#playerInfoBox,
+.info-overlay,
+#centerStatus,
+#middleStatusBar,
+#statusBar,
+#gameStatus,
+#turnStatus,
+#currentTurnBox,
+#currentPlayerInfo,
+#centerPlayerInfo,
+#center-player-info,
+#middlePlayerInfo,
+#middle-player-info {
+  display:none !important;
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+
+/* Keep the actual player hand area, but without the old YOU/Dealer/Score HUD. */
+#playerArea { padding-top:0 !important; }
+
+/* No accidental central overlay created by absolute/fixed status elements. */
+.center-overlay,
+.center-status,
+.middle-overlay,
+.middle-status,
+.player-center-info,
+.player-center-status {
+  display:none !important;
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+</style>
+<script id="jkrn-v26-remove-center-overlays">
+(function(){
+  const ids=['jkrnLiveStatusBar','playerInfoBox','centerStatus','middleStatusBar','statusBar','gameStatus','turnStatus','currentTurnBox','currentPlayerInfo','centerPlayerInfo','center-player-info','middlePlayerInfo','middle-player-info'];
+  function removeCenterOverlays(){
+    ids.forEach(id=>{const el=document.getElementById(id);if(el){el.style.display='none';el.style.visibility='hidden';el.style.pointerEvents='none';}});
+    document.querySelectorAll('.info-overlay,.center-overlay,.center-status,.middle-overlay,.middle-status,.player-center-info,.player-center-status').forEach(el=>{el.style.display='none';el.style.visibility='hidden';el.style.pointerEvents='none';});
+  }
+  window.jkrnRemoveCenterOverlays=removeCenterOverlays;
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',removeCenterOverlays);else removeCenterOverlays();
+  window.addEventListener('load',removeCenterOverlays);
+  if(typeof window.updateUI==='function'){
+    const oldUpdateUI=window.updateUI;
+    window.updateUI=function(){const r=oldUpdateUI.apply(this,arguments);removeCenterOverlays();return r;};
+  }
+})();
+</script>
+
+
+<style id="jkrn-v27-hand-tools-visible">
+/* V27: Hand tools must always be visible for the local player. */
+.left-controls, .action-buttons {
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+  z-index:10020 !important;
+}
+.left-controls .btn-auto-sort,
+button.btn-auto-sort,
+button[onclick*="autoSortCards"] {
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+  min-width:150px !important;
+  min-height:58px !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+#groupButton,
+button.btn-group,
+button[onclick*="groupSelectedCards"] {
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+  min-width:150px !important;
+  min-height:58px !important;
+  align-items:center !important;
+  justify-content:center !important;
+  z-index:10030 !important;
+}
+/* Keep GROUP available regardless of whose turn it is; it becomes disabled only
+   when fewer than two cards are selected. */
+@media (max-width:900px){
+  .left-controls .btn-auto-sort,
+  button.btn-auto-sort,
+  button[onclick*="autoSortCards"],
+  #groupButton,
+  button.btn-group,
+  button[onclick*="groupSelectedCards"]{
+    min-width:125px !important;
+    min-height:50px !important;
+    font-size:16px !important;
+  }
+}
+</style>
+<script id="jkrn-v27-hand-tools-visible-js">
+(function(){
+  function fixHandTools(){
+    const auto=document.querySelector('.left-controls .btn-auto-sort, button.btn-auto-sort, button[onclick*="autoSortCards"]');
+    if(auto){auto.style.setProperty('display','flex','important');auto.style.setProperty('visibility','visible','important');auto.style.setProperty('opacity','1','important');auto.style.setProperty('pointer-events','auto','important');}
+    let group=document.getElementById('groupButton') || document.querySelector('button.btn-group, button[onclick*="groupSelectedCards"]');
+    if(group){group.style.setProperty('display','flex','important');group.style.setProperty('visibility','visible','important');group.style.setProperty('opacity','1','important');group.style.setProperty('pointer-events','auto','important');}
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',fixHandTools);else fixHandTools();
+  window.addEventListener('load',fixHandTools);
+  setInterval(fixHandTools,500);
 })();
 </script>
 
@@ -5809,5 +5925,100 @@ window.jkrnV15JokerRules={
 
   window.addEventListener('load',function(){applySeatLayout();applyTurnControls();if(typeof highlightActiveTurn==='function')highlightActiveTurn();});
   window.jkrnV23={applySeatLayout,applyTurnControls};
+})();
+</script>
+
+<!-- V25: final clean center + card hit-area fix -->
+<style id="jkrn-v25-clean-center-card-hit-fix">
+/* Remove all old middle overlays/status blocks. */
+#playerInfoBox,
+#jkrnLiveStatusBar,
+.info-overlay,
+#centerStatus,
+#middleStatusBar { display:none !important; }
+
+/* Slightly larger hand cards with a smaller overlap so every visible card has
+   a reliable touch/click target. */
+#playerGroupsContainer .card {
+  width: clamp(76px, 6.4vw, 96px) !important;
+  min-width: clamp(76px, 6.4vw, 96px) !important;
+  height: clamp(114px, 10vw, 142px) !important;
+  margin-left: -18px !important;
+  position: relative !important;
+  pointer-events: auto !important;
+}
+#playerGroupsContainer .card:first-child { margin-left:0 !important; }
+#playerGroupsContainer .card:nth-child(1){z-index:1}
+#playerGroupsContainer .card:nth-child(2){z-index:2}
+#playerGroupsContainer .card:nth-child(3){z-index:3}
+#playerGroupsContainer .card:nth-child(4){z-index:4}
+#playerGroupsContainer .card:nth-child(5){z-index:5}
+#playerGroupsContainer .card:nth-child(6){z-index:6}
+#playerGroupsContainer .card:nth-child(7){z-index:7}
+#playerGroupsContainer .card:nth-child(8){z-index:8}
+#playerGroupsContainer .card:nth-child(9){z-index:9}
+#playerGroupsContainer .card:nth-child(10){z-index:10}
+#playerGroupsContainer .card:nth-child(11){z-index:11}
+#playerGroupsContainer .card:nth-child(12){z-index:12}
+#playerGroupsContainer .card:nth-child(13){z-index:13}
+
+/* Keep the hand comfortably inside the table on smaller screens. */
+#playerArea { width:min(97%, 1220px) !important; }
+#playerGroupsContainer { max-width:100% !important; }
+
+@media (max-width:900px){
+  #playerGroupsContainer .card{
+    width:clamp(68px,8vw,84px) !important;
+    min-width:clamp(68px,8vw,84px) !important;
+    height:clamp(102px,11.5vw,124px) !important;
+    margin-left:-15px !important;
+  }
+  #playerGroupsContainer .card:first-child{margin-left:0 !important;}
+}
+@media (max-width:600px){
+  #playerGroupsContainer .card{
+    width:clamp(62px,15vw,76px) !important;
+    min-width:clamp(62px,15vw,76px) !important;
+    height:clamp(93px,20vw,114px) !important;
+    margin-left:-13px !important;
+  }
+  #playerGroupsContainer .card:first-child{margin-left:0 !important;}
+}
+</style>
+<script id="jkrn-v25-single-card-hit-fix">
+(function(){
+  /* A short tap selects exactly the card under the finger. Dragging only
+     begins after movement, preventing neighbouring overlapped cards from
+     being selected accidentally. */
+  function install(){
+    const root=document.getElementById('playerGroupsContainer');
+    if(!root || root.dataset.v25HitFix) return;
+    root.dataset.v25HitFix='1';
+    root.addEventListener('pointerdown',function(e){
+      const card=e.target.closest('.card');
+      if(!card || !root.contains(card)) return;
+      if(e.pointerType==='mouse') return;
+      card.__v25Down={x:e.clientX,y:e.clientY,moved:false};
+    },true);
+    root.addEventListener('pointermove',function(e){
+      const card=e.target.closest('.card');
+      if(!card || !card.__v25Down) return;
+      if(Math.hypot(e.clientX-card.__v25Down.x,e.clientY-card.__v25Down.y)>9)
+        card.__v25Down.moved=true;
+    },true);
+    root.addEventListener('pointerup',function(e){
+      const card=e.target.closest('.card');
+      if(!card || !card.__v25Down) return;
+      const moved=card.__v25Down.moved;
+      delete card.__v25Down;
+      if(!moved && e.pointerType!=='mouse'){
+        e.preventDefault(); e.stopPropagation();
+        selectCard(Number(card.dataset.gIdx),Number(card.dataset.cIdx));
+      }
+    },true);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',install);
+  else install();
+  window.addEventListener('load',install);
 })();
 </script>
