@@ -26,7 +26,7 @@ function addPlayerToRoom(room, socket, name){
 }
 
 app.use(express.static(__dirname));
-app.get('/', (req,res)=>res.sendFile(path.join(__dirname,'RUMMY_JKRN_REAL_PLAYERS_V4.html')));
+app.get('/', (req,res)=>res.sendFile(path.join(__dirname,'RUMMY_JKRN_GOLD_TABLE_DESIGN.html')));
 
 const suits = [
   {s:'♥',c:'red'}, {s:'♦',c:'red'}, {s:'♣',c:'black'}, {s:'♠',c:'black'}
@@ -189,10 +189,13 @@ function startToss(room){
   const ranked=room.playersList.map(p=>({p,c:room.tossCards[p.id]})).sort((a,b)=>cardValue(room,a.c)-cardValue(room,b.c));
   room.dealerIndex=ranked[0]?.p.index??0; room.highestTossIndex=ranked[ranked.length-1]?.p.index??0;
   room.currentPlayer=room.highestTossIndex;
-  io.to(room.id).emit('tossStarted',{cards:room.toss.cards,highestIndex:room.highestTossIndex,lowestIndex:room.dealerIndex});
+  io.to(room.id).emit('tossStarted',{cards:room.toss.cards,highestIndex:room.highestTossIndex,lowestIndex:room.dealerIndex,count:room.playersList.length,countdown:3});
+  if(room.tossTimer) clearTimeout(room.tossTimer);
+  room.tossTimer=setTimeout(()=>{ if(room.toss?.active) dealAfterToss(room,'closed'); },3000);
 }
 function dealAfterToss(room,choice,firstOverride=null){
   if(firstOverride==null && !room.toss?.active)return;
+  if(room.tossTimer){clearTimeout(room.tossTimer);room.tossTimer=null;}
   if(room.toss)room.toss.active=false; room.firstDrawChoice=choice==='open'?'open':'closed'; room.dealNumber=(room.dealNumber||0)+1;
   room.deck=shuffle(makeDeck()); room.discard=[]; room.wildJoker=null; room.dropped={}; room.roundPoints={}; room.eliminated=room.eliminated||{};
   room.playersList.forEach(p=>p.hand=[]);
