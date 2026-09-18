@@ -4745,3 +4745,457 @@ button[onclick*="groupSelected"] {
   };
 })();
 </script>
+
+
+<style id="jkrn-auto-sort-ascending-v4">
+/* Auto Sort: groups are displayed as clean ascending sequences/sets. */
+#playerGroupsContainer .cards-in-group{
+  display:flex !important;
+  align-items:flex-start !important;
+  justify-content:center !important;
+  flex-wrap:nowrap !important;
+}
+#playerGroupsContainer .cards-in-group .card{
+  flex:0 0 auto !important;
+}
+</style>
+<script id="jkrn-auto-sort-ascending-v4-js">
+(function(){
+  const RO = {A:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13};
+  const RH = {2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13,A:14};
+  const SUIT = {'♥':1,'♦':2,'♣':3,'♠':4};
+
+  function isWildCard(c){
+    return !!c && (c.isPrintedJoker === true ||
+      (typeof wildJoker !== 'undefined' && wildJoker && c.rank === wildJoker.rank));
+  }
+
+  /* IMPORTANT: a Wild-Joker rank is NOT allowed inside a Pure Life. */
+  window.jkrnStrictPure = function(group){
+    if(!Array.isArray(group) || group.length < 3) return false;
+    if(group.some(isWildCard)) return false;
+    const suit = group[0] && group[0].suit;
+    if(!suit || group.some(c => !c || c.suit !== suit)) return false;
+    const vals = group.map(c => RO[c.rank]).filter(Number.isFinite).sort((a,b)=>a-b);
+    if(vals.length !== group.length || new Set(vals).size !== vals.length) return false;
+
+    let low=true;
+    for(let i=1;i<vals.length;i++) if(vals[i] !== vals[i-1]+1){low=false;break;}
+    if(low) return true;
+
+    const hi = group.map(c => RH[c.rank]).filter(Number.isFinite).sort((a,b)=>a-b);
+    let high=true;
+    for(let i=1;i<hi.length;i++) if(hi[i] !== hi[i-1]+1){high=false;break;}
+    return high;
+  };
+
+  function pure(g){ return window.jkrnStrictPure(g); }
+
+  function impure(g){
+    if(!Array.isArray(g) || g.length < 3) return false;
+    if(pure(g)) return true;
+    const natural=g.filter(c=>!isWildCard(c));
+    const jokers=g.length-natural.length;
+    if(natural.length===0) return jokers>=3;
+    const suit=natural[0].suit;
+    if(!suit || natural.some(c=>c.suit!==suit)) return false;
+    const vals=natural.map(c=>RO[c.rank]).sort((a,b)=>a-b);
+    if(new Set(vals).size!==vals.length) return false;
+    let gaps=0;
+    for(let i=1;i<vals.length;i++) gaps += Math.max(0, vals[i]-vals[i-1]-1);
+    if(gaps<=jokers) return true;
+    const hi=natural.map(c=>RH[c.rank]).sort((a,b)=>a-b);
+    gaps=0;
+    for(let i=1;i<hi.length;i++) gaps += Math.max(0, hi[i]-hi[i-1]-1);
+    return gaps<=jokers;
+  }
+
+  function setGroup(g){
+    if(!Array.isArray(g) || g.length<3 || g.length>4) return false;
+    const natural=g.filter(c=>!isWildCard(c));
+    if(natural.length===0) return true;
+    const r=natural[0].rank;
+    if(natural.some(c=>c.rank!==r)) return false;
+    const suits=new Set();
+    for(const c of natural){
+      if(suits.has(c.suit)) return false;
+      suits.add(c.suit);
+    }
+    return true;
+  }
+
+  function type(g){
+    if(pure(g)) return 'pure';
+    if(impure(g)) return 'second';
+    if(setGroup(g)) return 'set';
+    return 'invalid';
+  }
+
+  function rankVal(c){ return c && RO[c.rank] || 99; }
+
+  /* Put a sequence in ascending order. Wild cards are placed in the
+     missing positions when possible, so the row visually reads like
+     an ascending run instead of random card order. */
+  function orderSequence(g){
+    const a=(g||[]).slice();
+    const natural=a.filter(c=>!isWildCard(c)).sort((x,y)=>rankVal(x)-rankVal(y));
+    const jok=a.filter(isWildCard);
+    if(!jok.length) return natural;
+
+    if(natural.length===0) return jok;
+
+    let bestMode='low', bestGap=Infinity, bestVals=null;
+    for(const mode of ['low','high']){
+      const vals=natural.map(c=> mode==='low'?RO[c.rank]:RH[c.rank]).sort((x,y)=>x-y);
+      let gaps=0;
+      for(let i=1;i<vals.length;i++) gaps += Math.max(0, vals[i]-vals[i-1]-1);
+      if(gaps<bestGap){bestGap=gaps;bestMode=mode;bestVals=vals;}
+    }
+
+    const result=[];
+    const remaining=[...jok];
+    const valOf=c=>bestMode==='low'?RO[c.rank]:RH[c.rank];
+
+    for(let i=0;i<natural.length;i++){
+      result.push(natural[i]);
+      if(i<natural.length-1){
+        let need=Math.max(0, valOf(natural[i+1])-valOf(natural[i])-1);
+        while(need>0 && remaining.length){
+          result.push(remaining.shift()); need--;
+        }
+      }
+    }
+    while(remaining.length) result.push(remaining.shift());
+    return result;
+  }
+
+  function orderGroup(g){
+    const k=type(g);
+    if(k==='pure' || k==='second') return orderSequence(g);
+    if(k==='set'){
+      const a=(g||[]).slice();
+      return a.sort((x,y)=>{
+        const wx=isWildCard(x), wy=isWildCard(y);
+        if(wx!==wy) return wx?1:-1;
+        return (SUIT[x.suit]||99)-(SUIT[y.suit]||99);
+      });
+    }
+    return (g||[]).slice().sort((x,y)=>{
+      const sx=SUIT[x.suit]||99, sy=SUIT[y.suit]||99;
+      return sx!==sy?sx-sy:rankVal(x)-rankVal(y);
+    });
+  }
+
+  function scorePartition(groups){
+    const valid=groups.filter(g=>type(g)!=='invalid');
+    const pureCount=valid.filter(g=>type(g)==='pure').length;
+    const seqCount=valid.filter(g=>type(g)==='pure'||type(g)==='second').length;
+    const covered=valid.reduce((n,g)=>n+g.length,0);
+    return {pureCount,seqCount,covered,count:valid.length};
+  }
+
+  /* Exhaustive partition search for 13 cards. It prefers:
+     1) at least one Pure Life,
+     2) at least two sequences,
+     3) more valid groups/lives,
+     4) more covered cards,
+     5) larger groups.
+     This prevents a greedy first match from consuming cards needed by
+     a better overall arrangement. */
+  function bestGroups(cards){
+    const n=cards.length;
+    if(n<3) return [cards.slice()];
+    const candidates=[];
+    const total=1<<n;
+
+    for(let mask=1;mask<total;mask++){
+      const cnt=mask.toString(2).replace(/0/g,'').length;
+      if(cnt<3) continue;
+      const g=[];
+      for(let i=0;i<n;i++) if(mask&(1<<i)) g.push(cards[i]);
+      const k=type(g);
+      if(k!=='invalid') candidates.push({mask,g,k,cnt});
+    }
+
+    const byBit=Array.from({length:n},()=>[]);
+    candidates.forEach(c=>{
+      for(let i=0;i<n;i++) if(c.mask&(1<<i)) byBit[i].push(c);
+    });
+
+    let best=null;
+    function better(sol){
+      if(!best) return true;
+      const a=scorePartition(sol), b=scorePartition(best);
+      const av=(a.pureCount>=1?1:0), bv=(b.pureCount>=1?1:0);
+      if(av!==bv) return av>bv;
+      const as=(a.seqCount>=2?1:0), bs=(b.seqCount>=2?1:0);
+      if(as!==bs) return as>bs;
+      if(a.count!==b.count) return a.count>b.count;
+      if(a.covered!==b.covered) return a.covered>b.covered;
+      if(a.pureCount!==b.pureCount) return a.pureCount>b.pureCount;
+      return false;
+    }
+
+    function dfs(used,sol){
+      let idx=-1;
+      for(let i=0;i<n;i++) if(!(used&(1<<i))){idx=i;break;}
+      if(idx<0){
+        if(better(sol)) best=sol.slice();
+        return;
+      }
+      /* Option to leave this card for a later/invalid remainder. */
+      dfs(used|(1<<idx),sol);
+
+      for(const c of byBit[idx]){
+        if((c.mask&used)!==0) continue;
+        dfs(used|c.mask,sol.concat([c.g]));
+      }
+    }
+    dfs(0,[]);
+
+    if(!best || !best.length) return [orderGroup(cards)];
+    const used=new Set();
+    best.forEach(g=>g.forEach(c=>used.add(c)));
+    const leftovers=cards.filter(c=>!used.has(c));
+    const ordered=best.map(orderGroup);
+    if(leftovers.length) ordered.push(orderGroup(leftovers));
+    return ordered;
+  }
+
+  window.jkrnAutoSortLifeSetAscending=function(){
+    if(typeof playerGroups==='undefined') return;
+    const cards=playerGroups.flat().filter(Boolean);
+    if(!cards.length) return;
+    playerGroups=bestGroups(cards);
+    selectedCards=[];
+    if(typeof updateUI==='function') updateUI();
+  };
+
+  /* Override every known Auto Sort entry point. */
+  window.autoSortPlayerCards=function(){
+    if(typeof isEliminated==='function' && isEliminated(0)) return;
+    window.jkrnAutoSortLifeSetAscending();
+  };
+  window.autoSortCards=function(){
+    if(typeof playSound==='function') playSound('group');
+    window.jkrnAutoSortLifeSetAscending();
+  };
+
+  /* Badge logic: Wild-Joker ranks can never become 1st/Pure Life. */
+  if(typeof window.getGroupBadgeInfo==='function'){
+    const originalBadge=window.getGroupBadgeInfo;
+    window.getGroupBadgeInfo=function(group){
+      if(pure(group)) return {text:'1st Life',cls:'badge-pure'};
+      if(impure(group)) return {text:'2nd Life',cls:'badge-second'};
+      if(setGroup(group)){
+        return {text:group.some(isWildCard)?'Trill':'Set',
+                cls:group.some(isWildCard)?'badge-trill':'badge-set'};
+      }
+      return originalBadge(group);
+    };
+  }
+})();
+</script>
+
+
+
+<style id="jkrn-auto-sort-group-order-v5">
+/* AUTO SORT group order: Pure Life -> 2nd Life -> Set -> Additional valid groups.
+   Cards inside sequences are kept in ascending order on one line. */
+#playerGroupsContainer .cards-in-group{
+  display:flex !important;
+  align-items:flex-start !important;
+  justify-content:center !important;
+  flex-wrap:nowrap !important;
+}
+</style>
+<script id="jkrn-auto-sort-group-order-v5-js">
+(function(){
+  const LOW={A:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13};
+  const HIGH={2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13,A:14};
+  const SUIT={'♥':1,'♦':2,'♣':3,'♠':4};
+
+  function wild(c){
+    return !!c && c.isPrintedJoker===true ||
+      (!!c && typeof wildJoker!=='undefined' && wildJoker && c.rank===wildJoker.rank);
+  }
+
+  /* USER RULE:
+     If the Wild Joker is a normal suited card and completes a same-suit
+     consecutive run, it MAY be part of Pure Life.
+     Printed Joker is never Pure Life. */
+  function pure(g){
+    if(!Array.isArray(g)||g.length<3) return false;
+    if(g.some(c=>c && c.isPrintedJoker)) return false;
+    const suit=g[0] && g[0].suit;
+    if(!suit || g.some(c=>!c || c.suit!==suit)) return false;
+    const vals=g.map(c=>LOW[c.rank]).sort((a,b)=>a-b);
+    if(vals.some(v=>!Number.isFinite(v)) || new Set(vals).size!==vals.length) return false;
+    let ok=vals.every((v,i)=>i===0||v===vals[i-1]+1);
+    if(ok) return true;
+    const hi=g.map(c=>HIGH[c.rank]).sort((a,b)=>a-b);
+    return hi.every((v,i)=>i===0||v===hi[i-1]+1);
+  }
+
+  function impure(g){
+    if(!Array.isArray(g)||g.length<3) return false;
+    if(pure(g)) return true;
+    const natural=g.filter(c=>!wild(c));
+    const jokers=g.length-natural.length;
+    if(!natural.length) return jokers>=3;
+    const suit=natural[0].suit;
+    if(!suit || natural.some(c=>c.suit!==suit)) return false;
+    const vals=natural.map(c=>LOW[c.rank]).sort((a,b)=>a-b);
+    if(new Set(vals).size!==vals.length) return false;
+    let gaps=0;
+    for(let i=1;i<vals.length;i++) gaps+=Math.max(0,vals[i]-vals[i-1]-1);
+    if(gaps<=jokers) return true;
+    const hi=natural.map(c=>HIGH[c.rank]).sort((a,b)=>a-b);
+    gaps=0;
+    for(let i=1;i<hi.length;i++) gaps+=Math.max(0,hi[i]-hi[i-1]-1);
+    return gaps<=jokers;
+  }
+
+  function setGroup(g){
+    if(!Array.isArray(g)||g.length<3||g.length>4) return false;
+    const natural=g.filter(c=>!wild(c));
+    if(!natural.length) return true;
+    const rank=natural[0].rank;
+    if(natural.some(c=>c.rank!==rank)) return false;
+    const suits=new Set();
+    for(const c of natural){
+      if(suits.has(c.suit)) return false;
+      suits.add(c.suit);
+    }
+    return true;
+  }
+
+  function kind(g){
+    if(pure(g)) return 'pure';
+    if(impure(g)) return 'second';
+    if(setGroup(g)) return 'set';
+    return 'invalid';
+  }
+
+  function sequenceOrder(g){
+    return g.slice().sort((a,b)=>{
+      const av=LOW[a.rank]||99, bv=LOW[b.rank]||99;
+      if(av!==bv) return av-bv;
+      return (SUIT[a.suit]||99)-(SUIT[b.suit]||99);
+    });
+  }
+
+  function groupOrder(g){
+    const k=kind(g);
+    if(k==='pure'||k==='second') return sequenceOrder(g);
+    if(k==='set'){
+      return g.slice().sort((a,b)=>{
+        const aw=wild(a),bw=wild(b);
+        if(aw!==bw) return aw?1:-1;
+        return (SUIT[a.suit]||99)-(SUIT[b.suit]||99);
+      });
+    }
+    return g.slice().sort((a,b)=>{
+      const sa=SUIT[a.suit]||99,sb=SUIT[b.suit]||99;
+      return sa!==sb?sa-sb:(LOW[a.rank]||99)-(LOW[b.rank]||99);
+    });
+  }
+
+  function groupPriority(g){
+    const k=kind(g);
+    return k==='pure'?1:k==='second'?2:k==='set'?3:4;
+  }
+
+  /* Find valid, non-overlapping groups, then DISPLAY them strictly in:
+     PURE LIFE -> 2ND LIFE -> SET -> additional valid groups.
+     Among the same type, larger groups come first. */
+  function autoSort(){
+    if(typeof playerGroups==='undefined') return;
+    const cards=playerGroups.flat().filter(Boolean);
+    if(!cards.length) return;
+
+    const n=cards.length, total=1<<n, candidates=[];
+    for(let mask=1;mask<total;mask++){
+      let count=0;
+      for(let i=0;i<n;i++) if(mask&(1<<i)) count++;
+      if(count<3) continue;
+      const g=[];
+      for(let i=0;i<n;i++) if(mask&(1<<i)) g.push(cards[i]);
+      const k=kind(g);
+      if(k!=='invalid') candidates.push({mask,g,k,count});
+    }
+
+    const used=new Set(), chosen=[];
+
+    /* First secure as many Pure Lives as possible. */
+    function chooseType(type){
+      const pool=candidates.filter(c=>c.k===type && c.count>=3)
+        .sort((a,b)=>b.count-a.count);
+      for(const c of pool){
+        let overlap=false;
+        for(let i=0;i<n;i++){
+          if(c.mask&(1<<i) && used.has(i)){overlap=true;break;}
+        }
+        if(overlap) continue;
+        chosen.push(c);
+        for(let i=0;i<n;i++) if(c.mask&(1<<i)) used.add(i);
+      }
+    }
+
+    chooseType('pure');
+    chooseType('second');
+    chooseType('set');
+
+    /* If a different valid grouping can cover remaining cards, use it too. */
+    const leftovers=cards.filter((c,i)=>!used.has(i));
+    if(leftovers.length>=3){
+      const m=leftovers.length, t=1<<m, extra=[];
+      for(let mask=1;mask<t;mask++){
+        let cnt=0; for(let i=0;i<m;i++) if(mask&(1<<i)) cnt++;
+        if(cnt<3) continue;
+        const g=[]; for(let i=0;i<m;i++) if(mask&(1<<i)) g.push(leftovers[i]);
+        const k=kind(g); if(k!=='invalid') extra.push({g,k,count:cnt});
+      }
+      extra.sort((a,b)=>b.count-a.count);
+      const exUsed=new Set();
+      for(const c of extra){
+        const idxs=c.g.map(x=>leftovers.indexOf(x));
+        if(idxs.some(i=>exUsed.has(i))) continue;
+        chosen.push(c); idxs.forEach(i=>exUsed.add(i));
+      }
+    }
+
+    const result=chosen
+      .sort((a,b)=>groupPriority(a.g)-groupPriority(b.g) || b.count-a.count)
+      .map(c=>groupOrder(c.g));
+
+    const covered=new Set(result.flat());
+    const rem=cards.filter(c=>!covered.has(c));
+    if(rem.length) result.push(groupOrder(rem));
+
+    playerGroups=result.length?result:[groupOrder(cards)];
+    selectedCards=[];
+    if(typeof updateUI==='function') updateUI();
+  }
+
+  window.autoSortPlayerCards=function(){
+    if(typeof isEliminated==='function' && isEliminated(0)) return;
+    autoSort();
+  };
+  window.autoSortCards=function(){
+    if(typeof playSound==='function') playSound('group');
+    autoSort();
+  };
+
+  if(typeof window.getGroupBadgeInfo==='function'){
+    const old=window.getGroupBadgeInfo;
+    window.getGroupBadgeInfo=function(g){
+      if(pure(g)) return {text:'1st Life',cls:'badge-pure'};
+      if(impure(g)) return {text:'2nd Life',cls:'badge-second'};
+      if(setGroup(g)) return {text:g.some(wild)?'Trill':'Set',cls:g.some(wild)?'badge-trill':'badge-set'};
+      return old(g);
+    };
+  }
+})();
+</script>
+
