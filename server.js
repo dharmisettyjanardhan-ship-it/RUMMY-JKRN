@@ -186,12 +186,13 @@ function startToss(room){
   const d=shuffle(makeDeck().filter(c=>!c.isPrintedJoker));
   room.tossCards={}; room.toss={active:true,cards:{}};
   room.playersList.forEach(p=>{const c=d.pop();room.tossCards[p.id]=c;room.toss.cards[p.id]=publicCard(c);});
-  const ranked=room.playersList.map(p=>({p,c:room.tossCards[p.id]})).sort((a,b)=>cardValue(room,a.c)-cardValue(room,b.c));
+  const tossRank={A:1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,J:11,Q:12,K:13};
+  const ranked=room.playersList.map(p=>({p,c:room.tossCards[p.id]})).sort((a,b)=>(tossRank[a.c.rank]||0)-(tossRank[b.c.rank]||0));
   room.dealerIndex=ranked[0]?.p.index??0; room.highestTossIndex=ranked[ranked.length-1]?.p.index??0;
   room.currentPlayer=room.highestTossIndex;
   io.to(room.id).emit('tossStarted',{cards:room.toss.cards,highestIndex:room.highestTossIndex,lowestIndex:room.dealerIndex,count:room.playersList.length,countdown:3});
   if(room.tossTimer) clearTimeout(room.tossTimer);
-  room.tossTimer=setTimeout(()=>{ if(room.toss?.active) dealAfterToss(room,'closed'); },3400);
+  room.tossTimer=setTimeout(()=>{ if(room.toss?.active) dealAfterToss(room,'closed'); },3200);
 }
 function dealAfterToss(room,choice,firstOverride=null){
   if(firstOverride==null && !room.toss?.active)return;
