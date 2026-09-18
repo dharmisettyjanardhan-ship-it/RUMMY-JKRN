@@ -2310,7 +2310,7 @@ let jkrnSelectedPool = 201;
 let jkrnSelectedPlayers = 2;
 let jkrnEntryAmount = 300;
 function selectPoolType(v){ jkrnSelectedPool=Number(v)===101?101:201; document.querySelectorAll('#poolChoiceRow .jkrn-choice').forEach(b=>b.classList.toggle('active',Number(b.dataset.pool)===jkrnSelectedPool)); }
-function selectPlayerCount(v){ const n=Number(v); jkrnSelectedPlayers=[2,4,6].includes(n)?n:2; document.querySelectorAll('#playerChoiceRow .jkrn-choice').forEach(b=>b.classList.toggle('active',Number(b.dataset.players)===jkrnSelectedPlayers)); }
+function selectPlayerCount(v){ const n=Number(v); jkrnSelectedPlayers=(n===4||n===6)?n:2; document.querySelectorAll('#playerChoiceRow .jkrn-choice').forEach(b=>b.classList.toggle('active',Number(b.dataset.players)===jkrnSelectedPlayers)); }
 function updateEntryAmount(v){ jkrnEntryAmount=Math.max(300,Math.min(10000,Number(v)||300)); const e=document.getElementById('entryAmountDisplay'); if(e)e.textContent='₹'+jkrnEntryAmount.toLocaleString('en-IN'); const r=document.getElementById('entryAmount'); if(r&&Number(r.value)!==jkrnEntryAmount)r.value=jkrnEntryAmount; }
 function setEntryAmount(v){updateEntryAmount(v);}
 function updateStartButton(){const b=document.getElementById('startRoomBtn'); const cap=Number(window.__onlineMaxPlayers||jkrnSelectedPlayers); const count=(window.__onlineRoomPlayers||[]).filter(p=>p.connected!==false).length; if(b){b.disabled=!onlineRoomId || count<cap || !!window.__realRoomStarted; b.textContent=count>=cap?'START':'WAITING '+count+'/'+cap;}}
@@ -4458,6 +4458,17 @@ button[onclick*="groupSelected"] {
     playerGroups=groups;
     allHands[0]=fresh;
   }
+  function renderOnlineWildJoker(card){
+    const el=document.getElementById('topJokerDisplay');
+    if(!el) return;
+    if(card){
+      el.className='pile joker-pile '+(card.color||'black');
+      el.innerHTML='<div class="card-top"><span>'+String(card.rank||'')+'</span><span>'+String(card.suit||'')+'</span></div><div class="card-center">'+String(card.suit||'🃏')+'</div><div style="font-size:11px;color:#ffd700;margin-top:2px">👑 WILD JOKER</div>';
+    } else {
+      el.className='pile joker-pile';
+      el.textContent='-';
+    }
+  }
   function applyOnlineState(st){
     if(!st)return;
     window.__onlineMyIndex=st.myIndex;
@@ -4469,6 +4480,7 @@ button[onclick*="groupSelected"] {
     deck=Array(Math.max(0,st.deckCount)).fill(null);
     discardPile=st.discardTop?[st.discardTop]:[];
     wildJoker=st.wildJoker||null;
+    renderOnlineWildJoker(wildJoker);
     window.__onlineDealerIndex=st.dealerIndex; (st.players||[]).forEach(pl=>{const tag=document.getElementById('dealer-tag-p'+(pl.index+1));if(tag)tag.style.display=pl.index===st.dealerIndex?'inline-block':'none';});
     window.__onlineEliminated=!!(st.eliminated&&st.myIndex!=null&&st.players[st.myIndex]&&st.eliminated[st.players[st.myIndex].id]); window.__onlineDropped=!!(st.dropped&&st.myIndex!=null&&st.players[st.myIndex]&&st.dropped[st.players[st.myIndex].id]);
     if(st.scores){(st.players||[]).forEach(pl=>{if(st.scores[pl.id]!=null){gameScores['Player '+(pl.index+1)]=Number(st.scores[pl.id])||0;}});}
@@ -4592,201 +4604,5 @@ button[onclick*="groupSelected"] {
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install); else install(); window.addEventListener('load',install);
 })();
 </script>
-
-<style id="JKRN_REQUIREMENTS_FINAL_PATCH">
-/* COMPLETE REQUIREMENTS PACK: right-side actions + reliable Wild Joker + responsive 2/4/6 */
-.action-buttons{
-  position:fixed !important;
-  right:22px !important;
-  left:auto !important;
-  bottom:16% !important;
-  top:auto !important;
-  z-index:100000 !important;
-  width:170px !important;
-  display:flex !important;
-  flex-direction:column !important;
-  align-items:stretch !important;
-  gap:9px !important;
-}
-.action-buttons button{
-  width:170px !important;
-  min-width:170px !important;
-  height:56px !important;
-  min-height:56px !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  margin:0 !important;
-  font-size:17px !important;
-  font-weight:900 !important;
-  border-radius:11px !important;
-}
-#discardButton,#declareButton{visibility:visible !important;}
-#discardButton:disabled,#declareButton:disabled,#groupButton:disabled{opacity:.45 !important;cursor:not-allowed !important;}
-#topJokerDisplay{
-  color:#111 !important;
-  background:#fff !important;
-  overflow:hidden !important;
-  border:3px solid #ffd700 !important;
-  box-shadow:0 0 16px rgba(255,215,0,.75) !important;
-}
-#topJokerDisplay .card-top{font-weight:900 !important;}
-@media(max-width:900px){
-  .action-buttons{right:8px !important;bottom:14% !important;width:135px !important;gap:7px !important;}
-  .action-buttons button{width:135px !important;min-width:135px !important;height:50px !important;min-height:50px !important;font-size:15px !important;}
-}
-</style>
-<script id="JKRN_REQUIREMENTS_FINAL_PATCH_JS">
-(function(){
-  function esc(v){return String(v==null?'':v).replace(/[&<>\"']/g,function(x){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[x];});}
-  function renderWildJoker(){
-    var el=document.getElementById('topJokerDisplay'); if(!el)return;
-    var w=(window.__onlineState&&window.__onlineState.wildJoker)||null;
-    if(!w && typeof wildJoker!=='undefined') w=wildJoker;
-    if(!w){
-      if(window.__realRoomStarted) el.innerHTML='<div style="font-size:20px;font-weight:900;color:#666;padding-top:38px">WAITING...</div>';
-      return;
-    }
-    el.className='pile joker-pile '+(w.color||'black');
-    el.innerHTML='<div class="card-top"><span>'+esc(w.rank)+'</span><span>'+esc(w.suit)+'</span></div>'+
-      '<div class="card-center">'+esc(w.suit||'🃏')+'</div>'+
-      '<div style="font-size:11px;color:#b8860b;margin-top:2px;font-weight:900">👑 WILD JOKER</div>';
-  }
-  function syncActions(){
-    var wrap=document.querySelector('.action-buttons'); if(!wrap)return;
-    var db=document.getElementById('discardButton'), cb=document.getElementById('declareButton'), gb=document.getElementById('groupButton');
-    var online=!!window.__realRoomStarted, st=window.__onlineState||{};
-    var my=Number.isInteger(window.__onlineMyIndex)?window.__onlineMyIndex:0;
-    var turn=online ? Number(st.currentPlayer)===my : (typeof currentPlayer!=='undefined' && currentPlayer===0);
-    var eliminated=online ? !!window.__onlineEliminated : (typeof isEliminated==='function' && isEliminated(0));
-    var drawn=typeof playerHasDrawn!=='undefined' && !!playerHasDrawn;
-    var count=0;
-    try{count=(playerGroups||[]).flat().filter(Boolean).length;}catch(e){}
-    var active=online ? !!st.started : (typeof gameStarted!=='undefined' && !!gameStarted);
-    var canDiscard=active && turn && !eliminated && drawn && count===14 && Array.isArray(selectedCards) && selectedCards.length===1;
-    var canDeclare=active && turn && !eliminated && drawn && count===14;
-    if(db){db.style.setProperty('display','flex','important');db.style.setProperty('visibility','visible','important');db.disabled=!canDiscard;db.title=canDiscard?'Discard selected card':'Draw first, then select exactly one card';}
-    if(cb){cb.style.setProperty('display','flex','important');cb.style.setProperty('visibility','visible','important');cb.disabled=!canDeclare;cb.title=canDeclare?'Validate and Declare':'Declare after drawing 14 cards';}
-    if(gb){var show=Array.isArray(selectedCards)&&selectedCards.length>=2;gb.disabled=!show;gb.style.setProperty('display',show?'flex':'none','important');}
-  }
-  function run(){renderWildJoker();syncActions();}
-  document.addEventListener('DOMContentLoaded',run);
-  window.addEventListener('load',run);
-  setInterval(run,250);
-})();
-</script>
 </body>
 </html>
-
-<!-- JKRN FINAL FIX: RIGHT-SIDE DISCARD/DECLARE + ONLINE WILD JOKER -->
-<style id="JKRN_FINAL_DISCARD_DECLARE_JOKER_FIX">
-  /* Keep action buttons on the RIGHT side, close to the player's cards. */
-  .action-buttons{
-    position:fixed !important;
-    right:2% !important;
-    left:auto !important;
-    bottom:17% !important;
-    top:auto !important;
-    z-index:100000 !important;
-    display:flex !important;
-    flex-direction:column !important;
-    align-items:stretch !important;
-    gap:8px !important;
-    width:155px !important;
-  }
-  .action-buttons button{
-    position:relative !important;
-    display:flex !important;
-    align-items:center !important;
-    justify-content:center !important;
-    width:155px !important;
-    min-width:155px !important;
-    height:58px !important;
-    min-height:58px !important;
-    margin:0 !important;
-    font-size:18px !important;
-    font-weight:900 !important;
-  }
-  /* The buttons stay visible; game logic enables/disables them. */
-  #discardButton,#declareButton{display:flex !important;visibility:visible !important;}
-  #discardButton:disabled,#declareButton:disabled{opacity:.45 !important;cursor:not-allowed !important;}
-  #topJokerDisplay{
-    overflow:hidden !important;
-    color:#111 !important;
-    background:#fff !important;
-  }
-  @media(max-width:900px){
-    .action-buttons{right:2% !important;bottom:15% !important;width:135px !important;}
-    .action-buttons button{width:135px !important;min-width:135px !important;height:52px !important;min-height:52px !important;font-size:16px !important;}
-  }
-</style>
-<script id="JKRN_FINAL_DISCARD_DECLARE_JOKER_FIX_JS">
-(function(){
-  function renderOnlineWildJoker(){
-    const el=document.getElementById('topJokerDisplay');
-    if(!el) return;
-    const w=window.__onlineState && window.__onlineState.wildJoker;
-    if(!w){
-      /* Do not overwrite a joker already rendered by the local game. */
-      if(!window.__realRoomStarted) return;
-      el.className='pile joker-pile';
-      el.innerHTML='<span style="font-size:24px;color:#555">WAIT...</span>';
-      return;
-    }
-    el.className='pile joker-pile '+(w.color||'black');
-    el.innerHTML='<div class="card-top"><span>'+String(w.rank||'')+'</span><span>'+String(w.suit||'')+'</span></div>'+
-      '<div class="card-center">'+String(w.suit||'🃏')+'</div>'+
-      '<div style="font-size:11px;color:#b8860b;margin-top:2px;font-weight:900">👑 WILD JOKER</div>';
-  }
-
-  function fixActionButtons(){
-    const wrap=document.querySelector('.action-buttons');
-    if(!wrap) return;
-    const discard=document.getElementById('discardButton');
-    const declare=document.getElementById('declareButton');
-    const online=!!window.__realRoomStarted;
-    const st=window.__onlineState||{};
-    const my=Number.isInteger(window.__onlineMyIndex)?window.__onlineMyIndex:0;
-    const myTurn=online ? st.currentPlayer===my : currentPlayer===0;
-    const eliminated=online ? !!window.__onlineEliminated : (typeof isEliminated==='function'&&isEliminated(0));
-    const drawn=!!playerHasDrawn;
-    const count=(playerGroups||[]).flat().filter(Boolean).length;
-    const canAct=!!gameStarted && !gameOver && myTurn && !eliminated;
-    const canDiscard=canAct && drawn && count===14 && selectedCards.length===1;
-    const canDeclare=canAct && drawn && count===14;
-
-    if(discard){
-      discard.style.setProperty('display','flex','important');
-      discard.style.setProperty('visibility','visible','important');
-      discard.disabled=!canDiscard;
-      discard.title=canDiscard?'Select one card and discard it':'Draw a card first, then select one card to discard';
-    }
-    if(declare){
-      declare.style.setProperty('display','flex','important');
-      declare.style.setProperty('visibility','visible','important');
-      declare.disabled=!canDeclare;
-      declare.title=canDeclare?'Declare your hand':'Declare becomes available after drawing (14 cards)';
-    }
-  }
-
-  /* Run after the existing updateUI so the final state wins over older CSS/JS. */
-  const oldUpdateUI=window.updateUI;
-  if(typeof oldUpdateUI==='function' && !window.__jkrnFinalUpdateWrapped){
-    window.__jkrnFinalUpdateWrapped=true;
-    window.updateUI=function(){
-      const r=oldUpdateUI.apply(this,arguments);
-      renderOnlineWildJoker();
-      fixActionButtons();
-      return r;
-    };
-  }
-
-  /* Existing updateUI may be declared with function hoisting after this script; retry safely. */
-  window.addEventListener('load',function(){
-    renderOnlineWildJoker(); fixActionButtons();
-    setTimeout(function(){renderOnlineWildJoker();fixActionButtons();},100);
-    setTimeout(function(){renderOnlineWildJoker();fixActionButtons();},500);
-  });
-  setInterval(function(){renderOnlineWildJoker();fixActionButtons();},250);
-})();
-</script>
