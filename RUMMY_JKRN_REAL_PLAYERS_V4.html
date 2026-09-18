@@ -4634,6 +4634,106 @@ button[onclick*="groupSelected"] {
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install); else install(); window.addEventListener('load',install);
 })();
 </script>
+
+<style id="jkrn-v24-clean-hand-ui">
+/* V24: clean middle area + slightly larger cards */
+#playerInfoBox{display:none!important;}
+#jkrnLiveStatusBar{display:none!important;}
+.info-overlay{display:none!important;}
+#playerGroupsContainer .card,
+#playerHand .card,#playerCards .card,
+.player-hand .card,.hand .card,.cards .card,.card-row .card{
+  width:clamp(68px,6.1vw,102px)!important;
+  min-width:clamp(68px,6.1vw,102px)!important;
+  height:clamp(102px,9.8vw,148px)!important;
+}
+#playerGroupsContainer .card .card-top,
+#playerHand .card .card-top,#playerCards .card .card-top,
+.player-hand .card .card-top,.hand .card .card-top,.cards .card .card-top,.card-row .card .card-top{
+  font-size:clamp(21px,2.1vw,31px)!important;
+}
+#playerGroupsContainer .card .card-center,
+#playerHand .card .card-center,#playerCards .card .card-center,
+.player-hand .card .card-center,.hand .card .card-center,.cards .card .card-center,.card-row .card .card-center{
+  font-size:clamp(36px,3.4vw,50px)!important;
+}
+@media (orientation:landscape) and (max-height:700px){
+ #playerGroupsContainer .card{width:clamp(54px,5.8vw,82px)!important;min-width:clamp(54px,5.8vw,82px)!important;height:clamp(82px,9vw,116px)!important;}
+}
+</style>
+<script id="jkrn-v24-touch-selection-fix">
+(function(){
+  /* Single-touch card selection: a tap selects exactly one card and never
+     accidentally drags/toggles a neighbouring card. Drag starts only after
+     the finger moves a small distance. */
+  const oldDisplayPlayer=window.displayPlayer;
+  if(typeof oldDisplayPlayer!=='function') return;
+  let suppressClickUntil=0;
+  window.displayPlayer=function(){
+    const r=oldDisplayPlayer.apply(this,arguments);
+    const cards=document.querySelectorAll('#playerGroupsContainer .card');
+    cards.forEach(card=>{
+      let sx=0,sy=0,moved=false,longPress=null;
+      card.ontouchstart=function(e){
+        if(e.touches.length!==1)return;
+        const t=e.touches[0]; sx=t.clientX; sy=t.clientY; moved=false;
+        const g=Number(card.dataset.gIdx), c=Number(card.dataset.cIdx);
+        dragCardInfo=null;
+        longPress=setTimeout(function(){
+          if(!moved){ dragCardInfo={gIdx:g,cIdx:c}; card.classList.add('dragging'); }
+        },180);
+      };
+      card.ontouchmove=function(e){
+        if(e.touches.length!==1)return;
+        const t=e.touches[0];
+        if(Math.hypot(t.clientX-sx,t.clientY-sy)>10){
+          moved=true; clearTimeout(longPress);
+          if(!dragCardInfo)return;
+          e.preventDefault();
+          const targetEl=document.elementFromPoint(t.clientX,t.clientY);
+          document.querySelectorAll('.card-group,.new-group-zone').forEach(el=>el.classList.remove('drag-over'));
+          if(targetEl){const grp=targetEl.closest('.card-group')||targetEl.closest('.new-group-zone');if(grp)grp.classList.add('drag-over');}
+        }
+      };
+      card.ontouchend=function(e){
+        clearTimeout(longPress); card.classList.remove('dragging');
+        const info=dragCardInfo; dragCardInfo=null;
+        if(!moved){
+          suppressClickUntil=Date.now()+450;
+          const g=Number(card.dataset.gIdx), c=Number(card.dataset.cIdx);
+          selectCard(g,c);
+          return;
+        }
+        const t=e.changedTouches&&e.changedTouches[0];
+        if(info&&t){
+          const targetEl=document.elementFromPoint(t.clientX,t.clientY);
+          document.querySelectorAll('.card-group,.new-group-zone').forEach(el=>el.classList.remove('drag-over'));
+          const grp=targetEl&&targetEl.closest('.card-group');
+          const zone=targetEl&&targetEl.closest('.new-group-zone');
+          if(grp) moveCardToGroup(info.gIdx,info.cIdx,Number(grp.dataset.gIdx));
+          else if(zone) createNewGroupWithCard(info.gIdx,info.cIdx);
+        }
+      };
+      card.onclick=function(){
+        if(Date.now()<suppressClickUntil)return;
+        selectCard(Number(card.dataset.gIdx),Number(card.dataset.cIdx));
+      };
+    });
+    return r;
+  };
+})();
+</script>
+<script id="jkrn-v24-tool-rules">
+(function(){
+  /* AUTO SORT + GROUP are hand-organization tools. They work regardless of
+     whose turn it is. DRAW/DISCARD/DECLARE/DROP remain turn-controlled. */
+  const auto=window.autoSortCards;
+  if(typeof auto==='function') window.autoSortCards=function(){return auto.apply(this,arguments);};
+  const group=window.groupSelectedCards;
+  if(typeof group==='function') window.groupSelectedCards=function(){return group.apply(this,arguments);};
+})();
+</script>
+
 </body>
 </html>
 
@@ -5680,7 +5780,7 @@ window.jkrnV15JokerRules={
       drop.disabled=!active || eliminated || droppedThisDeal[mySeat()];
     }
     const group=document.getElementById('groupButton');
-    if(group) group.disabled=!active || selectedCards.length<2 || isEliminated(0);
+    if(group) group.disabled=selectedCards.length<2 || isEliminated(0);
   }
 
   function blockIfNotTurn(){
@@ -5700,9 +5800,9 @@ window.jkrnV15JokerRules={
   const oldDrop=window.dropGame;
   if(typeof oldDrop==='function')window.dropGame=function(){if(!blockIfNotTurn())return;return oldDrop.apply(this,arguments);};
   const oldGroup=window.groupSelectedCards;
-  if(typeof oldGroup==='function')window.groupSelectedCards=function(){if(!blockIfNotTurn())return;return oldGroup.apply(this,arguments);};
+  if(typeof oldGroup==='function')window.groupSelectedCards=function(){return oldGroup.apply(this,arguments);};
   const oldAuto=window.autoSortCards;
-  if(typeof oldAuto==='function')window.autoSortCards=function(){if(!blockIfNotTurn())return;return oldAuto.apply(this,arguments);};
+  if(typeof oldAuto==='function')window.autoSortCards=function(){return oldAuto.apply(this,arguments);};
 
   const oldUpdate=window.updateUI;
   if(typeof oldUpdate==='function')window.updateUI=function(){const r=oldUpdate.apply(this,arguments);applySeatLayout();applyTurnControls();if(typeof highlightActiveTurn==='function')highlightActiveTurn();return r;};
