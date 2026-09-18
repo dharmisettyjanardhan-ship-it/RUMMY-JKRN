@@ -2057,9 +2057,6 @@ body{
     <label class="jkrn-label">PLAYERS</label>
     <div class="jkrn-scroll-row" id="playerChoiceRow">
       <button type="button" class="jkrn-choice active" data-players="2" onclick="selectPlayerCount(2)">2</button>
-      <button type="button" class="jkrn-choice" data-players="3" onclick="selectPlayerCount(3)">3</button>
-      <button type="button" class="jkrn-choice" data-players="4" onclick="selectPlayerCount(4)">4</button>
-      <button type="button" class="jkrn-choice" data-players="5" onclick="selectPlayerCount(5)">5</button>
       <button type="button" class="jkrn-choice" data-players="6" onclick="selectPlayerCount(6)">6</button>
     </div>
 
@@ -2235,7 +2232,10 @@ var onlineSocket=null, onlineRoomId=null, onlinePlayerId=null, onlineSessionToke
 function onlineMsg(t){const e=document.getElementById('onlineStatus');if(e)e.innerHTML=t;}
 function saveOnlineSession(){try{localStorage.setItem('jkrnOnlineSession',JSON.stringify({roomId:onlineRoomId,sessionToken:onlineSessionToken,name:(document.getElementById('onlineName')||{}).value||'Player'}));}catch(e){}}
 function loadOnlineSession(){try{return JSON.parse(localStorage.getItem('jkrnOnlineSession')||'null')}catch(e){return null}}
-function renderOnlinePlayers(players,maxPlayers){const e=document.getElementById('onlinePlayers');if(!e)return;const cap=Number(maxPlayers||window.__onlineMaxPlayers||2);window.__onlineMaxPlayers=cap;e.innerHTML='<b>ROOM PLAYERS ('+players.length+'/'+cap+')</b>'+players.map((p,i)=>`<div class="online-player">🪑 SEAT ${i+1}. ${p.name} ${p.connected===false?'🔴 OFFLINE':(p.ready?'✅ READY':'⏳ WAITING')} ${p.index===window.__onlineDealerIndex?'👑 DEALER':''}</div>`).join('');}
+function renderOnlinePlayers(players,maxPlayers){const e=document.getElementById('onlinePlayers');const cap=Number(maxPlayers||window.__onlineMaxPlayers||2);window.__onlineMaxPlayers=cap; if(e)e.innerHTML='<b>ROOM PLAYERS ('+players.length+'/'+cap+')</b>'+players.map((p,i)=>`<div class="online-player">🪑 SEAT ${i+1}. ${p.name} ${p.connected===false?'🔴 OFFLINE':(p.ready?'✅ READY':'⏳ WAITING')} ${p.index===window.__onlineDealerIndex?'👑 DEALER':''}</div>`).join('');
+  window.__onlineRoomPlayers=players||[];
+  players.forEach(p=>{ if(p.index===0)return; const box=document.getElementById('opp'+(p.index+1)); if(!box)return; const name=box.querySelector('.opp-name'); if(name)name.innerHTML=`${p.name} <span id="dealer-tag-p${p.index+1}" class="dealer-badge" style="display:${p.index===window.__onlineDealerIndex?'inline-block':'none'}">DEALER</span><span id="elim-tag-p${p.index+1}" class="elim-badge" style="display:none">OUT</span>`; const avatar=box.querySelector('.opp-avatar'); if(avatar)avatar.textContent='👤'; box.style.display='flex'; });
+}
 function ensureOnlineSocket(){
 if(onlineSocket)return;
 if(location.protocol==='file:'){
@@ -2267,8 +2267,10 @@ function startOnlineTossUI(d){
   initializeGameLobby();
   const stage=document.getElementById('dealerTossStage'),cardsBox=document.getElementById('dealerTossCards'),info=document.getElementById('dealerTossInfo'),choice=document.getElementById('onlineTossChoice');
   if(!stage||!cardsBox)return; stage.classList.add('active'); cardsBox.innerHTML='';
+  let cd=3; if(info) info.innerHTML=`🃏 TOSS CARDS OPEN<br><b>STARTING IN ${cd} SECONDS</b>`;
+  clearInterval(window.__tossCountdownTimer); window.__tossCountdownTimer=setInterval(()=>{ cd--; if(info) info.innerHTML=`🃏 TOSS CARDS OPEN<br><b>${cd>0?`STARTING IN ${cd} SECONDS`:`DEALING 13 CARDS...`}</b>`; if(cd<=0) clearInterval(window.__tossCountdownTimer); },1000);
   const cards=d.cards||{}; const hi=Number(d.highestIndex),lo=Number(d.lowestIndex);
-  Object.keys(cards).forEach(pid=>{const idx=(window.__onlineRoomPlayers||[]).findIndex(x=>x.id===pid); const c=cards[pid]; if(idx<0)return; const el=document.createElement('div');el.className='toss-seat-card p'+idx+(idx===hi?' highest':'')+(idx===lo?' lowest':''); const positions={0:'left:50%;bottom:170px;transform:translateX(-50%)',1:'left:3%;top:43%',2:'left:18%;top:20%',3:'left:50%;top:9%;transform:translateX(-50%)',4:'right:18%;top:20%',5:'right:3%;top:43%'};el.style.cssText+=(positions[idx]||'');el.innerHTML=`<div class="toss-player">${idx===(window.__onlineMyIndex||0)?'YOU':(window.__onlineRoomPlayers[idx]?.name||'PLAYER '+(idx+1))}</div><div class="toss-rank ${c.color}">${c.rank}</div><div class="toss-suit ${c.color}">${c.suit}</div><div class="toss-badge">${idx===hi?'HIGHEST • FIRST DRAW':idx===lo?'LOWEST • DEALER':'TOSS'}</div>`;cardsBox.appendChild(el);});
+  Object.keys(cards).forEach(pid=>{const idx=(window.__onlineRoomPlayers||[]).findIndex(x=>x.id===pid); const c=cards[pid]; if(idx<0)return; const el=document.createElement('div');el.className='toss-seat-card p'+idx+(idx===hi?' highest':'')+(idx===lo?' lowest':''); const positions=(window.__onlineRoomPlayers||[]).length===2 ? {0:'left:50%;bottom:170px;transform:translateX(-50%)',1:'left:50%;top:8%;transform:translateX(-50%)'} : {0:'left:50%;bottom:170px;transform:translateX(-50%)',1:'left:3%;top:43%',2:'left:18%;top:20%',3:'left:50%;top:9%;transform:translateX(-50%)',4:'right:18%;top:20%',5:'right:3%;top:43%'};el.style.cssText+=(positions[idx]||'');el.innerHTML=`<div class="toss-player">${idx===(window.__onlineMyIndex||0)?'YOU':(window.__onlineRoomPlayers[idx]?.name||'PLAYER '+(idx+1))}</div><div class="toss-rank ${c.color}">${c.rank}</div><div class="toss-suit ${c.color}">${c.suit}</div><div class="toss-badge">${idx===hi?'HIGHEST • FIRST DRAW':idx===lo?'LOWEST • DEALER':'TOSS'}</div>`;cardsBox.appendChild(el);});
   const highName=(window.__onlineRoomPlayers[hi]||{}).name||('Player '+(hi+1)); const lowName=(window.__onlineRoomPlayers[lo]||{}).name||('Player '+(lo+1));
   if(info)info.innerHTML=`🃏 TOSS COMPLETE • ⬆️ <b>${highName}</b> = FIRST DRAW • ⬇️ <b>${lowName}</b> = DEALER`;
   if(choice){choice.style.display='none';}
@@ -2307,7 +2309,7 @@ let jkrnSelectedPool = 201;
 let jkrnSelectedPlayers = 2;
 let jkrnEntryAmount = 300;
 function selectPoolType(v){ jkrnSelectedPool=Number(v)===101?101:201; document.querySelectorAll('#poolChoiceRow .jkrn-choice').forEach(b=>b.classList.toggle('active',Number(b.dataset.pool)===jkrnSelectedPool)); }
-function selectPlayerCount(v){ jkrnSelectedPlayers=Math.max(2,Math.min(6,Number(v)||2)); document.querySelectorAll('#playerChoiceRow .jkrn-choice').forEach(b=>b.classList.toggle('active',Number(b.dataset.players)===jkrnSelectedPlayers)); }
+function selectPlayerCount(v){ jkrnSelectedPlayers=(Number(v)===6)?6:2; document.querySelectorAll('#playerChoiceRow .jkrn-choice').forEach(b=>b.classList.toggle('active',Number(b.dataset.players)===jkrnSelectedPlayers)); }
 function updateEntryAmount(v){ jkrnEntryAmount=Math.max(300,Math.min(10000,Number(v)||300)); const e=document.getElementById('entryAmountDisplay'); if(e)e.textContent='₹'+jkrnEntryAmount.toLocaleString('en-IN'); const r=document.getElementById('entryAmount'); if(r&&Number(r.value)!==jkrnEntryAmount)r.value=jkrnEntryAmount; }
 function setEntryAmount(v){updateEntryAmount(v);}
 function updateStartButton(){const b=document.getElementById('startRoomBtn'); const cap=Number(window.__onlineMaxPlayers||jkrnSelectedPlayers); const count=(window.__onlineRoomPlayers||[]).filter(p=>p.connected!==false).length; if(b){b.disabled=!onlineRoomId || count<cap || !!window.__realRoomStarted; b.textContent=count>=cap?'START':'WAITING '+count+'/'+cap;}}
@@ -2335,7 +2337,10 @@ function startOnlineGameUI(d){
 function initializeGameLobby() {
     for(let i=2; i<=6; i++) {
         let el = document.getElementById(`opp${i}`);
-        if(el) el.style.display = (i <= numPlayers) ? "flex" : "none";
+        if(!el) continue;
+        el.style.display = (i <= numPlayers) ? "flex" : "none";
+        if(numPlayers===2 && i===2){ el.style.top="5%"; el.style.left="50%"; el.style.right="auto"; el.style.transform="translateX(-50%)"; }
+        if(numPlayers===6 && i===2){ el.style.top="35%"; el.style.left="3%"; el.style.right="auto"; el.style.transform="none"; }
     }
 }
 
