@@ -2044,6 +2044,49 @@ body{
 .cards-in-group .card:active{cursor:grabbing;}
 .card-group.drag-over{outline:3px dashed #ffd700;outline-offset:3px;}
 </style>
+
+<style id="jkrn-premium-table-ui">
+/* PREMIUM POOL RUMMY TABLE PACK */
+.table{background:radial-gradient(ellipse at 50% 45%,#1d9a55 0%,#0d753d 43%,#064224 78%,#031f12 100%);border:10px solid #5a350c;box-shadow:inset 0 0 0 2px rgba(255,215,0,.18),inset 0 0 80px rgba(0,0,0,.72),0 10px 40px rgba(0,0,0,.72);}
+.table:before{content:"";position:absolute;inset:12px;border:1px solid rgba(255,215,0,.18);border-radius:50% / 42%;pointer-events:none;}
+#jkrnLiveStatusBar{top:16px;background:linear-gradient(180deg,rgba(5,12,8,.94),rgba(0,0,0,.84));border:1px solid rgba(255,215,0,.72);padding:7px 12px;border-radius:13px;box-shadow:0 5px 18px rgba(0,0,0,.48),inset 0 0 12px rgba(255,215,0,.05);font-size:11px;gap:12px;z-index:30;}
+#jkrnLiveStatusBar span{padding:2px 6px;border-right:1px solid rgba(255,255,255,.12)}
+#jkrnLiveStatusBar span:last-child{border-right:0}
+#jkrnLiveStatusBar b{color:#ffe36a}
+.deal-info{top:68px;right:20px;border:1px solid rgba(255,215,0,.5);box-shadow:0 3px 12px rgba(0,0,0,.4)}
+.opp-box,.player-info{background:linear-gradient(180deg,rgba(8,12,10,.94),rgba(0,0,0,.86));border-color:rgba(255,215,0,.38);box-shadow:0 5px 14px rgba(0,0,0,.5)}
+.opp-box.active-turn,.player-info.active-turn{border-color:#63ff78!important;box-shadow:0 0 22px rgba(0,255,90,.48)!important}
+.opp-box{width:195px;min-height:55px}
+.center-area{gap:22px;top:38%;}
+.pile-container{min-width:96px}
+.pile{width:92px;height:130px;border-radius:10px;border:2px solid rgba(255,255,255,.9);box-shadow:0 7px 18px rgba(0,0,0,.65),inset 0 0 0 1px rgba(0,0,0,.12)}
+.joker-pile{border-color:#ffd700!important;box-shadow:0 0 18px rgba(255,215,0,.55),0 7px 18px rgba(0,0,0,.6)}
+.printed-joker-display{margin-top:5px;display:flex;align-items:center;justify-content:center;gap:5px;font-size:10px;font-weight:900;color:#ffd700;background:rgba(0,0,0,.72);border:1px solid rgba(255,215,0,.5);border-radius:8px;padding:4px 6px;white-space:nowrap;box-shadow:0 3px 8px rgba(0,0,0,.35)}
+.printed-joker-display span{font-size:16px;line-height:1}
+.groups-container{gap:13px;padding-top:5px}
+.card-group{padding:5px;border-color:rgba(255,255,255,.08);background:rgba(0,0,0,.34);min-width:82px;}
+.cards-in-group{gap:0}
+.card{width:72px;height:106px;min-width:72px;border-radius:7px;box-shadow:-2px 0 7px rgba(0,0,0,.58),0 2px 5px rgba(0,0,0,.28)}
+.cards-in-group .card + .card{margin-left:-30px}
+.group-status-badge{font-size:9px;padding:3px 2px;border-radius:5px}
+.selected{border:3px solid #ffb300!important;box-shadow:0 0 16px rgba(255,179,0,.85)!important}
+.left-controls,.action-buttons{gap:9px}
+.left-controls button,.action-buttons button{width:118px;min-width:118px;height:42px;padding:9px 12px;border-radius:10px;font-size:12px;font-weight:900;letter-spacing:.3px;border:2px solid rgba(255,255,255,.7);box-shadow:0 5px 12px rgba(0,0,0,.55),inset 0 1px rgba(255,255,255,.25);}
+.btn-drop{background:linear-gradient(180deg,#f04444,#9e1717)!important}
+.btn-auto-sort{background:linear-gradient(180deg,#35a853,#176b2a)!important}
+.btn-discard{background:linear-gradient(180deg,#2999ff,#0755ad)!important}
+.btn-declare{background:linear-gradient(180deg,#ffb12b,#dc6200)!important}
+.btn-group{background:linear-gradient(180deg,#ffe05a,#c79a08)!important}
+.left-controls button:hover,.action-buttons button:hover{transform:translateY(-2px);filter:brightness(1.08)}
+.left-controls button:disabled,.action-buttons button:disabled{opacity:.45;filter:grayscale(.35);cursor:not-allowed;transform:none}
+#status{border:1px solid rgba(255,215,0,.38);padding:5px 12px;box-shadow:0 3px 10px rgba(0,0,0,.4)}
+@media(max-width:700px){
+ .table{border-width:5px}.center-area{gap:7px;top:44%}.pile{width:62px;height:90px}.pile-container{min-width:64px}.printed-joker-display{font-size:7px;padding:3px 2px}.printed-joker-display span{font-size:12px}
+ #jkrnLiveStatusBar{top:8px;font-size:8px;gap:2px;padding:4px 5px;max-width:97%}#jkrnLiveStatusBar span{padding:1px 3px}.deal-info{top:55px;right:8px;font-size:8px;padding:4px 6px}
+ .card{width:58px;height:88px;min-width:58px}.cards-in-group .card + .card{margin-left:-24px}.groups-container{gap:7px}
+ .left-controls button,.action-buttons button{width:92px;min-width:92px;height:36px;padding:6px 7px;font-size:9px}
+}
+</style>
 </head>
 <body onload="initAutoGame()">
 
@@ -2068,9 +2111,9 @@ body{
 
     <label class="jkrn-label">PLAYERS</label>
     <div class="jkrn-scroll-row" id="playerChoiceRow">
-      <button type="button" class="jkrn-choice active" data-players="2" onclick="selectPlayerCount(2)">2</button>
+      <button type="button" class="jkrn-choice" data-players="2" onclick="selectPlayerCount(2)">2</button>
       <button type="button" class="jkrn-choice" data-players="4" onclick="selectPlayerCount(4)">4</button>
-      <button type="button" class="jkrn-choice" data-players="6" onclick="selectPlayerCount(6)">6</button>
+      <button type="button" class="jkrn-choice active" data-players="6" onclick="selectPlayerCount(6)">6</button>
     </div>
 
     <label class="jkrn-label">ENTRY AMOUNT</label>
@@ -2161,7 +2204,7 @@ body{
         <div class="pile-container">
             <div class="pile-label">WILD JOKER</div>
             <div class="pile joker-pile" id="topJokerDisplay">-</div>
-            <div id="printedJokerLabel" style="font-size:9px;color:#ffd700;font-weight:900;margin-top:2px">PRINTED JOKER: 🃏</div>
+            <div id="printedJokerLabel" class="printed-joker-display">PRINTED JOKER <span>🃏</span></div>
         </div>
 
         <div class="pile-container">
@@ -2348,7 +2391,7 @@ let dealNumber = 1, hasLiftedThisDeal = false;
 let dragCardInfo = null;
 
 let jkrnSelectedPool = 201;
-let jkrnSelectedPlayers = 2;
+let jkrnSelectedPlayers = 6;
 let jkrnEntryAmount = 300;
 function selectPoolType(v){ jkrnSelectedPool=Number(v)===101?101:201; document.querySelectorAll('#poolChoiceRow .jkrn-choice').forEach(b=>b.classList.toggle('active',Number(b.dataset.pool)===jkrnSelectedPool)); }
 function selectPlayerCount(v){ const n=Number(v); jkrnSelectedPlayers=(n===4||n===6)?n:2; document.querySelectorAll('#playerChoiceRow .jkrn-choice').forEach(b=>b.classList.toggle('active',Number(b.dataset.players)===jkrnSelectedPlayers)); }
@@ -2356,7 +2399,7 @@ function updateEntryAmount(v){ jkrnEntryAmount=Math.max(300,Math.min(10000,Numbe
 function setEntryAmount(v){updateEntryAmount(v);}
 function updateStartButton(){const b=document.getElementById('startRoomBtn'); const cap=Number(window.__onlineMaxPlayers||jkrnSelectedPlayers); const count=(window.__onlineRoomPlayers||[]).filter(p=>p.connected!==false).length; if(b){b.disabled=!onlineRoomId || count<cap || !!window.__realRoomStarted; b.textContent=count>=cap?'START':'WAITING '+count+'/'+cap;}}
 function initAutoGame() {
-    numPlayers = 2; poolLimit = 201; jkrnSelectedPool=201; jkrnSelectedPlayers=2; jkrnEntryAmount=300;
+    numPlayers = 6; poolLimit = 201; jkrnSelectedPool=201; jkrnSelectedPlayers=6; jkrnEntryAmount=300;
     document.getElementById("poolTypeDisplay").innerText = "201";
     document.getElementById("poolLimitLabel").innerText = "201";
     initializeGameLobby(); document.getElementById("lobbyScreen").classList.add("hidden");
@@ -2985,7 +3028,7 @@ function computerShowGame(compIdx, groups) {
         if (i === compIdx || isEliminated(i)) continue;
 
         if (droppedThisDeal[i]) {
-            playerDealStatus[i] = {result: "Drop", points: 25};
+            playerDealStatus[i] = {result: "Drop", points: (playerDealStatus[i] && (Number(playerDealStatus[i].points)===20 || Number(playerDealStatus[i].points)===40)) ? Number(playerDealStatus[i].points) : 20};
             continue;
         }
 
@@ -3185,16 +3228,47 @@ function displayPlayer() {
 function moveCardToGroup(fromGIdx, fromCIdx, toGIdx, toCIdx = null) {
     if (!playerGroups[fromGIdx] || !playerGroups[fromGIdx][fromCIdx]) return;
     playSound('group');
-    const card = playerGroups[fromGIdx].splice(fromCIdx, 1)[0];
+    const card = playerGroups[fromGIdx][fromCIdx];
+
+    // V14 Joker movement rule: moving a Printed/Wild Joker is allowed only
+    // when BOTH resulting groups remain valid. This prevents a Joker from
+    // being moved out of a valid life/set and leaving an invalid group.
+    if (typeof isJoker === 'function' && isJoker(card) && fromGIdx !== toGIdx) {
+        const sourceAfter = playerGroups[fromGIdx].slice();
+        sourceAfter.splice(fromCIdx, 1);
+        const destAfter = playerGroups[toGIdx] ? playerGroups[toGIdx].slice() : [];
+        destAfter.push(card);
+
+        const sourceValid = sourceAfter.length >= 3 &&
+            (typeof isPureSequence === 'function' ? isPureSequence(sourceAfter) : false) ||
+            sourceAfter.length >= 3 &&
+            (typeof isSequence === 'function' ? isSequence(sourceAfter) : false) ||
+            sourceAfter.length >= 3 &&
+            (typeof isValidSet === 'function' ? isValidSet(sourceAfter) : false);
+
+        const destValid = destAfter.length >= 3 &&
+            ((typeof isPureSequence === 'function' && isPureSequence(destAfter)) ||
+             (typeof isSequence === 'function' && isSequence(destAfter)) ||
+             (typeof isValidSet === 'function' && isValidSet(destAfter)));
+
+        if (!sourceValid || !destValid) {
+            if (typeof showToast === 'function') showToast('⚠️ Invalid Joker movement: both resulting groups must remain valid.');
+            else if (typeof showMessage === 'function') showMessage('⚠️ Invalid Joker movement: both resulting groups must remain valid.');
+            else alert('⚠️ Invalid Joker movement: both resulting groups must remain valid.');
+            return;
+        }
+    }
+
+    const cardRemoved = playerGroups[fromGIdx].splice(fromCIdx, 1)[0];
     if (fromGIdx === toGIdx) {
         let insertAt = Number.isInteger(toCIdx) ? toCIdx : playerGroups[toGIdx].length;
         if (fromCIdx < insertAt) insertAt--;
         insertAt = Math.max(0, Math.min(insertAt, playerGroups[toGIdx].length));
-        playerGroups[toGIdx].splice(insertAt, 0, card);
+        playerGroups[toGIdx].splice(insertAt, 0, cardRemoved || card);
     } else {
         let insertAt = Number.isInteger(toCIdx) ? toCIdx : playerGroups[toGIdx].length;
         insertAt = Math.max(0, Math.min(insertAt, playerGroups[toGIdx].length));
-        playerGroups[toGIdx].splice(insertAt, 0, card);
+        playerGroups[toGIdx].splice(insertAt, 0, cardRemoved || card);
     }
     playerGroups = playerGroups.filter(g => g.length > 0);
     selectedCards = [];
@@ -3350,8 +3424,8 @@ function dropGame() {
     if (currentPlayer !== 0 || isEliminated(0) || gameOver) return;
 
     // STRICT DROP RULE:
-    // Player drops before/after lifting -> fixed 25 points for this version.
-    const dropPoints = 25;
+    // First Drop = 25; Middle Drop after lifting = 50.
+    const dropPoints = (typeof hasLiftedThisDeal !== "undefined" && hasLiftedThisDeal) ? 50 : 25;
 
     gameScores["Player 1"] += dropPoints;
     playerDealStatus[0] = {result: "Drop", points: dropPoints};
@@ -3605,7 +3679,7 @@ function openGlobalScoreboardModal() {
             result = "ELIMINATED";
         } else if (dropped) {
             result = "Drop";
-            roundPoints = 25;
+            roundPoints = Number(status.points || 0);
         } else if (status.result && status.result !== "In Game") {
             result = status.result;
             roundPoints = Number(status.points || 0);
@@ -4417,7 +4491,7 @@ button[onclick*="groupSelected"] {
     window.__onlineDealerIndex=st.dealerIndex; (st.players||[]).forEach(pl=>{const tag=document.getElementById('dealer-tag-p'+(pl.index+1));if(tag)tag.style.display=pl.index===st.dealerIndex?'inline-block':'none';});
     window.__onlineEliminated=!!(st.eliminated&&st.myIndex!=null&&st.players[st.myIndex]&&st.eliminated[st.players[st.myIndex].id]); window.__onlineDropped=!!(st.dropped&&st.myIndex!=null&&st.players[st.myIndex]&&st.dropped[st.players[st.myIndex].id]);
     if(st.scores){(st.players||[]).forEach(pl=>{if(st.scores[pl.id]!=null){gameScores['Player '+(pl.index+1)]=Number(st.scores[pl.id])||0;}});}
-    (st.players||[]).forEach(pl=>{const drop=!!st.dropped?.[pl.id],elim=!!st.eliminated?.[pl.id]; const a=document.getElementById('action-p'+(pl.index+1));if(a)a.textContent=elim?'ELIMINATED':drop?'DROP +'+(st.roundPoints?.[pl.id]||0):st.currentPlayer===pl.index?(st.turnPhase==='grace'?'15 MIN GRACE':'YOUR TURN'):'Waiting'; const tag=document.getElementById('elim-tag-p'+(pl.index+1));if(tag)tag.style.display=elim?'inline-block':'none';});
+    (st.players||[]).forEach(pl=>{const drop=!!st.dropped?.[pl.id],elim=!!st.eliminated?.[pl.id]; const a=document.getElementById('action-p'+(pl.index+1));if(a)a.textContent=elim?'ELIMINATED':drop?'DROP +'+(Number(st.roundPoints?.[pl.id])||0):st.currentPlayer===pl.index?(st.turnPhase==='grace'?'15 MIN GRACE':'YOUR TURN'):'Waiting'; const tag=document.getElementById('elim-tag-p'+(pl.index+1));if(tag)tag.style.display=elim?'inline-block':'none';});
     if(st.scores){ Object.entries(st.scores).forEach(([pid,score])=>{ const pl=(st.players||[]).find(x=>x.id===pid); if(pl&&pl.index>=0){ const el=document.getElementById('score-p'+(pl.index+1)); if(el)el.textContent=score; } }); }
     const me=st.hands[st.myIndex];
     if(Array.isArray(me)) rebuildLocalGroups(me);
@@ -5199,3 +5273,298 @@ button[onclick*="groupSelected"] {
 })();
 </script>
 
+
+
+<script id="jkrn-smart-score-auto-sort-v13">
+(function(){
+const L={A:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13};
+const H={2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13,A:14};
+const S={'♥':1,'♦':2,'♣':3,'♠':4};
+function w(c){return !!c&&(c.isPrintedJoker===true||(typeof wildJoker!=='undefined'&&wildJoker&&c.rank===wildJoker.rank));}
+function pure(g){
+ if(!Array.isArray(g)||g.length<3||g.some(c=>c&&c.isPrintedJoker))return false;
+ const s=g[0]?.suit;if(!s||g.some(c=>!c||c.suit!==s))return false;
+ const a=g.map(c=>L[c.rank]);if(a.some(v=>v==null)||new Set(a).size!==a.length)return false;
+ a.sort((x,y)=>x-y);if(a.every((v,i)=>i===0||v===a[i-1]+1))return true;
+ const b=g.map(c=>H[c.rank]).sort((x,y)=>x-y);return b.every((v,i)=>i===0||v===b[i-1]+1);
+}
+function imp(g){
+ if(!Array.isArray(g)||g.length<3)return false;if(pure(g))return true;
+ const n=g.filter(c=>!w(c)),j=g.length-n.length;if(!n.length)return j>=3;
+ const s=n[0].suit;if(!s||n.some(c=>c.suit!==s))return false;
+ let a=n.map(c=>L[c.rank]).sort((x,y)=>x-y);if(new Set(a).size!==a.length)return false;
+ let gap=0;for(let i=1;i<a.length;i++)gap+=Math.max(0,a[i]-a[i-1]-1);if(gap<=j)return true;
+ a=n.map(c=>H[c.rank]).sort((x,y)=>x-y);gap=0;for(let i=1;i<a.length;i++)gap+=Math.max(0,a[i]-a[i-1]-1);return gap<=j;
+}
+function setg(g){
+ if(!Array.isArray(g)||g.length<3||g.length>4)return false;
+ const n=g.filter(c=>!w(c));if(!n.length)return true;const r=n[0].rank;if(n.some(c=>c.rank!==r))return false;
+ const ss=new Set();for(const c of n){if(ss.has(c.suit))return false;ss.add(c.suit);}return true;
+}
+function kind(g){return pure(g)?'pure':imp(g)?'second':setg(g)?'set':'invalid';}
+function pts(c){if(!c||w(c))return 0;let r=String(c.rank).toUpperCase();if(['A','K','Q','J'].includes(r))return 10;return parseInt(r,10)||0;}
+function ord(g){
+ let k=kind(g),a=g.slice();
+ if(k==='pure'||k==='second')return a.sort((x,y)=>(L[x.rank]??99)-(L[y.rank]??99));
+ if(k==='set')return a.sort((x,y)=>(w(x)-w(y))||((S[x.suit]||99)-(S[y.suit]||99)));
+ return a.sort((x,y)=>((S[x.suit]||99)-(S[y.suit]||99))||((L[x.rank]||99)-(L[y.rank]||99)));
+}
+function solve(cards){
+ const n=cards.length, full=(1<<n)-1, cand=Array.from({length:n},()=>[]);
+ for(let m=1;m<=full;m++){
+  let cnt=0;for(let i=0;i<n;i++)if(m&(1<<i))cnt++;if(cnt<3)continue;
+  let g=[];for(let i=0;i<n;i++)if(m&(1<<i))g.push(cards[i]);let k=kind(g);if(k==='invalid')continue;
+  let c={m,g,k,cnt};for(let i=0;i<n;i++)if(m&(1<<i))cand[i].push(c);
+ }
+ const memo=new Map();
+ function better(a,b){
+  if(!b)return a;
+  if(a.valid!==b.valid)return a.valid>b.valid?a:b;
+  if(a.dead!==b.dead)return a.dead<b.dead?a:b;
+  if(a.pure!==b.pure)return a.pure>b.pure?a:b;
+  if(a.seq!==b.seq)return a.seq>b.seq?a:b;
+  if(a.groups!==b.groups)return a.groups>b.groups?a:b;
+  if(a.covered!==b.covered)return a.covered>b.covered?a:b;
+  return a;
+ }
+ function dp(mask){
+  if(!mask)return {dead:0,pure:0,seq:0,groups:0,covered:0,valid:0,chosen:[]};
+  if(memo.has(mask))return memo.get(mask);
+  let bit=mask&-mask,i=Math.log2(bit)|0,sub=dp(mask^bit);
+  let best={dead:sub.dead+pts(cards[i]),pure:sub.pure,seq:sub.seq,groups:sub.groups,covered:sub.covered,valid:sub.valid,chosen:sub.chosen};
+  for(const c of cand[i]){
+   if((c.m&mask)!==c.m)continue;
+   const q=dp(mask^c.m),x={dead:q.dead,pure:q.pure+(c.k==='pure'),seq:q.seq+((c.k==='pure'||c.k==='second')?1:0),groups:q.groups+1,covered:q.covered+c.cnt,valid:0,chosen:q.chosen.concat(c)};
+   if(x.covered===n&&x.pure>=1&&x.seq>=2)x.valid=1;
+   best=better(x,best);
+  }
+  memo.set(mask,best);return best;
+ }
+ const a=dp(full),res=a.chosen.map(c=>ord(c.g)),used=new Set();
+ a.chosen.forEach(c=>{for(let i=0;i<n;i++)if(c.m&(1<<i))used.add(i);});
+ const left=cards.filter((c,i)=>!used.has(i));if(left.length)res.push(ord(left));
+ res.sort((a,b)=>({pure:1,second:2,set:5,invalid:6}[kind(a)]-({pure:1,second:2,set:5,invalid:6}[kind(b)]))||b.length-a.length);
+ return res;
+}
+window.autoSortPlayerCards=function(){if(typeof isEliminated==='function'&&isEliminated(0))return;const c=playerGroups.flat().filter(Boolean);if(c.length)playerGroups=solve(c),selectedCards=[],updateUI();};
+window.autoSortCards=window.autoSortPlayerCards;
+})();
+</script>
+
+
+<script id="jkrn-v14-joker-rules-ui">
+(function(){
+  window.jkrnJokerRules = {
+    printedAndWildAreWild: true,
+    jokersInPure: false,
+    jokersInImpure: true,
+    jokersInSets: true,
+    multipleJokers: true,
+    printedPlusWild: true
+  };
+})();
+</script>
+
+
+<script id="jkrn-v15-final-joker-rules">
+window.jkrnV15JokerRules={
+  printedJokerIsWild:true,
+  wildJokerIsWild:true,
+  printedJokerInPure:false,
+  wildRankCardMayBePureWhenNatural:true,
+  jokersInImpure:true,
+  jokersInSet:true,
+  multipleJokers:true,
+  printedPlusWild:true,
+  minimumPureForDeclare:1,
+  minimumSequencesForDeclare:2,
+  validateAllGroups:true
+};
+</script>
+
+
+<style id="jkrn-v16-6player-table">
+/* Six fixed seats: five opponent seats + YOU at bottom. */
+.opp-box{z-index:25;min-width:118px;box-sizing:border-box;transition:all .18s ease;}
+.opp-box.active-turn{transform:scale(1.05);z-index:60;}
+.opp-card-backs{display:flex;justify-content:center;align-items:center;height:34px;margin-top:3px;pointer-events:none;overflow:hidden;}
+.opp-card-back{width:18px;height:27px;margin-left:-8px;border:1px solid #ffd54f;border-radius:3px;background:repeating-linear-gradient(45deg,#173d8f 0,#173d8f 3px,#245db4 3px,#245db4 6px);box-shadow:0 1px 4px #000;flex:0 0 auto;}
+.opp-card-back:first-child{margin-left:0;}
+.opp-seat-label{font-size:9px;color:#ffd84a;font-weight:900;margin-top:2px;text-align:center;white-space:nowrap;}
+#playerInfoBox.active-turn{z-index:70;box-shadow:0 0 24px #42ff00,0 0 0 2px #42ff00!important;}
+@media(max-width:900px){
+ .opp-box{min-width:92px!important;max-width:118px!important;}
+ .opp-card-back{width:13px;height:20px;margin-left:-6px;}
+ .opp-card-backs{height:25px;}
+}
+</style>
+<script id="jkrn-v16-6player-turns-js">
+(function(){
+  const MAX_SEATS=6;
+
+  function isMyTurn(){
+    const idx=(window.__realRoomStarted && Number.isInteger(window.__onlineMyIndex))
+      ? Number(window.__onlineMyIndex) : 0;
+    return typeof currentPlayer==='number' && currentPlayer===idx &&
+      !((window.__realRoomStarted && window.__onlineEliminated) || isEliminated(idx) || droppedThisDeal[idx]);
+  }
+
+  function renderSixSeatBacks(){
+    for(let i=1;i<MAX_SEATS;i++){
+      const box=document.getElementById('opp'+(i+1));
+      if(!box)continue;
+      let backs=box.querySelector('.opp-card-backs');
+      if(!backs){
+        backs=document.createElement('div');
+        backs.className='opp-card-backs';
+        box.insertBefore(backs,box.querySelector('.opp-details'));
+      }
+      let count=13;
+      if(window.__realRoomStarted && window.__onlineState){
+        const pl=window.__onlineState.players?.[i];
+        const h=window.__onlineState.hands?.[i];
+        count=Array.isArray(h)?h.length:(h&&h.count)||13;
+        if(!pl) count=0;
+      }else if(Array.isArray(allHands?.[i])) count=allHands[i].length;
+      backs.innerHTML='';
+      const visible=Math.min(13,Math.max(0,count));
+      for(let j=0;j<visible;j++){
+        const b=document.createElement('span');
+        b.className='opp-card-back';
+        backs.appendChild(b);
+      }
+      let label=box.querySelector('.opp-seat-label');
+      if(!label){
+        label=document.createElement('div'); label.className='opp-seat-label';
+        box.appendChild(label);
+      }
+      label.textContent=visible?`🂠 ${visible} CARDS`:'SEAT';
+    }
+  }
+
+  function guardTurn(){
+    if(!isMyTurn()){
+      if(typeof showToast==='function')showToast('⚠️ Not your turn.');
+      return false;
+    }
+    return true;
+  }
+
+  const oldSelect=window.selectCard;
+  window.selectCard=function(g,c){
+    if(!guardTurn())return;
+    return oldSelect.apply(this,arguments);
+  };
+
+  const oldMove=window.moveCardToGroup;
+  window.moveCardToGroup=function(){
+    if(!guardTurn())return;
+    return oldMove.apply(this,arguments);
+  };
+
+  const oldNewGroup=window.createNewGroupWithCard;
+  window.createNewGroupWithCard=function(){
+    if(!guardTurn())return;
+    return oldNewGroup.apply(this,arguments);
+  };
+
+  const oldAuto=window.autoSortPlayerCards;
+  window.autoSortPlayerCards=function(){
+    if(!guardTurn())return;
+    return oldAuto.apply(this,arguments);
+  };
+  window.autoSortCards=function(){
+    if(!guardTurn())return;
+    if(typeof playSound==='function')playSound('group');
+    return window.autoSortPlayerCards();
+  };
+
+  /* Drag/touch cannot start for another seat. */
+  document.addEventListener('dragstart',function(e){
+    const card=e.target.closest('#playerGroupsContainer .card');
+    if(card && !isMyTurn()){
+      e.preventDefault(); e.stopPropagation();
+    }
+  },true);
+
+  const oldUpdateUI=window.updateUI;
+  window.updateUI=function(){
+    const r=oldUpdateUI.apply(this,arguments);
+    renderSixSeatBacks();
+    if(typeof highlightActiveTurn==='function')highlightActiveTurn();
+    return r;
+  };
+
+  window.addEventListener('load',function(){
+    renderSixSeatBacks();
+    if(typeof highlightActiveTurn==='function')highlightActiveTurn();
+  });
+})();
+</script>
+
+
+<style id="jkrn-v18-drop-style">
+.sb-res-drop{font-weight:900!important;}
+</style>
+<script id="jkrn-v18-drop-rules">
+(function(){
+  window.jkrnV19DropRules={firstDrop:25,middleDrop:50};
+
+  function firstDrop(){
+    return !hasLiftedThisDeal && !playerHasDrawn;
+  }
+
+  /* Local/quick game fallback. Online game uses the server as authority. */
+  window.dropGame=function(){
+    if(typeof currentPlayer!=='number' || currentPlayer!==0 || isEliminated(0) || gameOver) return;
+    if(droppedThisDeal[0]) return;
+
+    const pts=firstDrop()?25:50;
+    gameScores["Player 1"]=(gameScores["Player 1"]||0)+pts;
+    playerDealStatus[0]={result:"Drop",points:pts,dropType:pts===20?"First Drop":"Middle Drop"};
+    droppedThisDeal[0]=true;
+    playerHasDrawn=false;
+    selectedCards=[];
+    if(typeof turnTimer!=="undefined" && turnTimer){clearInterval(turnTimer);turnTimer=null;}
+
+    const active=getActivePlayers().filter(i=>!droppedThisDeal[i]&&!isEliminated(i));
+    if(active.length<=1){
+      const winner=active[0];
+      if(winner!==undefined){
+        playerDealStatus[winner]={result:"Winner",points:0};
+        currentPlayer=winner;
+      }
+      gameOver=true;
+      if(typeof playSound==='function')playSound('win');
+      updateUI();
+      if(typeof showDealResultModal==='function')
+        showDealResultModal(`🏆 ${winner===0?"YOU":"Player "+(winner+1)} Winner — only active player remains`);
+      return;
+    }
+
+    currentPlayer=getNextActivePlayer(0);
+    timeLeft=30;
+    updateUI();
+    if(typeof startTurnTimer==='function')startTurnTimer();
+  };
+
+  /* Normalize only known server/local Drop values. Never invent 20/40 for an
+     online opponent when the server did not provide a drop result. */
+  const oldModal=window.showDealResultModal;
+  if(typeof oldModal==='function'){
+    window.showDealResultModal=function(){
+      for(let i=0;i<(typeof numPlayers==='number'?numPlayers:6);i++){
+        if(droppedThisDeal[i]){
+          const st=playerDealStatus[i]||{};
+          const n=Number(st.points);
+          if(n!==20 && n!==40){
+            st.points = firstDrop() ? 25 : 50;
+          }
+          playerDealStatus[i]=st;
+        }
+      }
+      return oldModal.apply(this,arguments);
+    };
+  }
+})();
+</script>
