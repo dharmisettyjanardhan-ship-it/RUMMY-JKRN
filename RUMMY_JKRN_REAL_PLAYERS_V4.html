@@ -157,8 +157,8 @@ h1 { margin: 0; color: #ffd700; font-size: 18px; }
 
 .card-top { display: flex; flex-direction: column; line-height: 1; font-size: 15px; }
 .card-center { font-size: 28px; align-self: center; margin: auto 0; }
-.red { color: #d32f2f; }
-.black { color: #111; }
+.red { color: #d32f2f !important; }
+.black { color: #111 !important; }
 .joker-badge { 
     position: absolute; bottom: 2px; right: 2px; font-size: 11px; 
     background: #ffeb3b; border-radius: 50%; padding: 1px 3px; border: 1px solid #000; z-index: 5; 
@@ -237,8 +237,8 @@ h1 { margin: 0; color: #ffd700; font-size: 18px; }
     box-shadow: -1px 0 3px rgba(0,0,0,0.5); line-height: 1;
 }
 .sb-card-stack .sb-mini-card + .sb-mini-card { margin-left: -12px; }
-.sb-mini-card.red { color: #d32f2f; }
-.sb-mini-card.black { color: #111; }
+.sb-mini-card.red { color: #d32f2f !important; }
+.sb-mini-card.black { color: #111 !important; }
 
 .sb-group-badge { font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 3px; margin-top: 3px; text-transform: uppercase; }
 .sb-badge-pure { background: #2e7d32; color: #fff; }
@@ -2289,7 +2289,7 @@ function startOnlineTossUI(d){
     }
   },1000);
   const cards=d.cards||{}; const hi=Number(d.highestIndex),lo=Number(d.lowestIndex);
-  Object.keys(cards).forEach(pid=>{const idx=(window.__onlineRoomPlayers||[]).findIndex(x=>x.id===pid); const c=cards[pid]; if(idx<0)return; const el=document.createElement('div');el.className='toss-seat-card p'+idx+(idx===hi?' highest':'')+(idx===lo?' lowest':''); const positions=(window.__onlineRoomPlayers||[]).length===2 ? {0:'left:50%;bottom:170px;transform:translateX(-50%)',1:'left:50%;top:8%;transform:translateX(-50%)'} : {0:'left:50%;bottom:170px;transform:translateX(-50%)',1:'left:3%;top:43%',2:'left:18%;top:20%',3:'left:50%;top:9%;transform:translateX(-50%)',4:'right:18%;top:20%',5:'right:3%;top:43%'};el.style.cssText+=(positions[idx]||'');el.innerHTML=`<div class="toss-rank ${c.color}">${c.rank}</div><div class="toss-suit ${c.color}">${c.suit}</div><div class="toss-badge">${idx===hi?'HIGHEST • FIRST LIFT':idx===lo?'LOWEST • DEALER':'TOSS'}</div>`;cardsBox.appendChild(el);});
+  Object.keys(cards).forEach(pid=>{const idx=(window.__onlineRoomPlayers||[]).findIndex(x=>x.id===pid); const c=cards[pid]; if(idx<0)return; const el=document.createElement('div');el.className='toss-seat-card p'+idx+(idx===hi?' highest':'')+(idx===lo?' lowest':''); const positions=(window.__onlineRoomPlayers||[]).length===2 ? {0:'left:50%;bottom:170px;transform:translateX(-50%)',1:'left:50%;top:8%;transform:translateX(-50%)'} : {0:'left:50%;bottom:170px;transform:translateX(-50%)',1:'left:3%;top:43%',2:'left:18%;top:20%',3:'left:50%;top:9%;transform:translateX(-50%)',4:'right:18%;top:20%',5:'right:3%;top:43%'};el.style.cssText+=(positions[idx]||'');el.innerHTML=`<div class="toss-rank ${suitColor(c.suit)}">${c.rank}</div><div class="toss-suit ${suitColor(c.suit)}">${c.suit}</div><div class="toss-badge">${idx===hi?'HIGHEST • FIRST LIFT':idx===lo?'LOWEST • DEALER':'TOSS'}</div>`;cardsBox.appendChild(el);});
   const highName=(window.__onlineRoomPlayers[hi]||{}).name||('Player '+(hi+1)); const lowName=(window.__onlineRoomPlayers[lo]||{}).name||('Player '+(lo+1));
   if(info)info.innerHTML=`🃏 TOSS COMPLETE • ⬆️ <b>${highName}</b> = FIRST DRAW • ⬇️ <b>${lowName}</b> = DEALER`;
   if(choice){choice.style.display='none';}
@@ -2320,6 +2320,8 @@ window.addEventListener('load',initOnline);
 
 <script>
 var suits = [{s: "♥", c: "red"}, {s: "♦", c: "red"}, {s: "♣", c: "black"}, {s: "♠", c: "black"}];
+function suitColor(suit){ return (suit === "♥" || suit === "♦") ? "red" : "black"; }
+function normalizeCard(c){ if(!c)return c; c.color=suitColor(c.suit); return c; }
 const ranks = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
 const rankOrder = {"A":1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":10,"J":11,"Q":12,"K":13};
 
@@ -2418,8 +2420,9 @@ function runLeastCardToss() {
         cardEl.className = cls;
         const positions = {0:'left:50%;bottom:170px;transform:translateX(-50%)',1:'left:3%;top:43%',2:'left:18%;top:20%',3:'left:50%;top:9%;transform:translateX(-50%)',4:'right:18%;top:20%',5:'right:3%;top:43%'};
         cardEl.style.cssText += ';'+(positions[p]||'');
+        const cardColor = suitColor(item.card.suit);
         const role = (p===dealerIndex && p===highestTossPlayer) ? 'DEALER + FIRST LIFT' : (p===dealerIndex ? 'LOWEST • DEALER' : (p===highestTossPlayer ? 'HIGHEST • FIRST LIFT' : 'OPEN'));
-        cardEl.innerHTML = `<div class="toss-player">${p===0?'YOU':'PLAYER '+(p+1)}</div><div class="toss-rank ${item.card.color}">${item.card.rank}</div><div class="toss-suit ${item.card.color}">${item.card.suit}</div><div class="toss-badge">${role}</div>`;
+        cardEl.innerHTML = `<div class="toss-player">${p===0?'YOU':'PLAYER '+(p+1)}</div><div class="toss-rank ${cardColor}">${item.card.rank}</div><div class="toss-suit ${item.card.color}">${item.card.suit}</div><div class="toss-badge">${role}</div>`;
         cardsBox.appendChild(cardEl);
     });
 
@@ -3095,7 +3098,7 @@ function displayPlayer() {
 
         group.forEach((card, cIdx) => {
             const cDiv = document.createElement("div");
-            cDiv.className = `card ${card.color} ${selectedCards.some(s=>s.gIdx===gIdx&&s.cIdx===cIdx)?"selected":""}`;
+            cDiv.className = `card ${suitColor(card.suit)} ${selectedCards.some(s=>s.gIdx===gIdx&&s.cIdx===cIdx)?"selected":""}`;
             cDiv.draggable = true;
 
             let valDiv = card.isPrintedJoker 
@@ -4471,7 +4474,7 @@ button[onclick*="groupSelected"] {
   function rebuildLocalGroups(hand){
     const old = (playerGroups||[]).flat();
     const oldMap=new Map(old.filter(c=>c&&c.id).map(c=>[c.id,c]));
-    const fresh=hand.map(c=>Object.assign({},c));
+    const fresh=hand.map(c=>normalizeCard(Object.assign({},c)));
     const freshIds=new Set(fresh.map(c=>c.id));
     const groups=[];
     (playerGroups||[]).forEach(g=>{
@@ -4488,7 +4491,7 @@ button[onclick*="groupSelected"] {
     const el=document.getElementById('topJokerDisplay');
     if(!el) return;
     if(card){
-      el.className='pile joker-pile '+(card.color||'black');
+      el.className='pile joker-pile '+suitColor(card.suit);
       el.innerHTML='<div class="card-top"><span>'+String(card.rank||'')+'</span><span>'+String(card.suit||'')+'</span></div><div class="card-center">'+String(card.suit||'🃏')+'</div><div style="font-size:11px;color:#ffd700;margin-top:2px">👑 WILD JOKER</div>';
     } else {
       el.className='pile joker-pile';
