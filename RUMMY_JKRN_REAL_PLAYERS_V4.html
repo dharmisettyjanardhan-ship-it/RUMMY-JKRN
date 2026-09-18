@@ -2260,7 +2260,7 @@ onlineSocket.on('onlineCount',d=>{const e=document.getElementById('globalOnlineC
 onlineSocket.on('quickMatchReady',d=>{onlineMsg('🎯 '+d.message);updateStartButton();});
 onlineSocket.on('readyAck',()=>{onlineMsg('Waiting for all players...');});
 onlineSocket.on('tossStarted',d=>{startOnlineTossUI(d);});
-onlineSocket.on('realGameStarted',d=>{startOnlineGameUI(d); if(d&&d.firstChoice)showFirstDrawChoice();});
+onlineSocket.on('realGameStarted',d=>{startOnlineGameUI(d); if(d&&d.firstChoice)showFirstDrawChoice(d);});
 onlineSocket.on('roomError',m=>onlineMsg('❌ '+m));}
 function startOnlineTossUI(d){
   window.__realRoomStarted=false;
@@ -2269,18 +2269,37 @@ function startOnlineTossUI(d){
   const stage=document.getElementById('dealerTossStage'),cardsBox=document.getElementById('dealerTossCards'),info=document.getElementById('dealerTossInfo'),choice=document.getElementById('onlineTossChoice');
   if(!stage||!cardsBox)return; stage.classList.add('active'); cardsBox.innerHTML='';
   let cd=3; if(info) info.innerHTML=`🃏 TOSS CARDS OPEN<br><b>STARTING IN ${cd} SECONDS</b>`;
-  clearInterval(window.__tossCountdownTimer); window.__tossCountdownTimer=setInterval(()=>{ cd--; if(info) info.innerHTML=`🃏 TOSS CARDS OPEN<br><b>${cd>0?`STARTING IN ${cd} SECONDS`:`DEALING 13 CARDS...`}</b>`; if(cd<=0) clearInterval(window.__tossCountdownTimer); },1000);
+  clearInterval(window.__tossCountdownTimer);
+  window.__tossCardsVisible=true;
+  window.__tossCountdownTimer=setInterval(()=>{
+    cd--;
+    if(cd>0){ if(info) info.innerHTML=`🃏 HI / LO CARDS OPEN<br><b>DISAPPEARING IN ${cd} SECONDS</b>`; }
+    else {
+      clearInterval(window.__tossCountdownTimer);
+      window.__tossCardsVisible=false;
+      if(cardsBox) cardsBox.innerHTML='';
+      if(info) info.innerHTML=`🎴 HI / LO CARDS GONE<br><b>DEALING 13 CARDS...</b>`;
+    }
+  },1000);
   const cards=d.cards||{}; const hi=Number(d.highestIndex),lo=Number(d.lowestIndex);
   Object.keys(cards).forEach(pid=>{const idx=(window.__onlineRoomPlayers||[]).findIndex(x=>x.id===pid); const c=cards[pid]; if(idx<0)return; const el=document.createElement('div');el.className='toss-seat-card p'+idx+(idx===hi?' highest':'')+(idx===lo?' lowest':''); const positions=(window.__onlineRoomPlayers||[]).length===2 ? {0:'left:50%;bottom:170px;transform:translateX(-50%)',1:'left:50%;top:8%;transform:translateX(-50%)'} : {0:'left:50%;bottom:170px;transform:translateX(-50%)',1:'left:3%;top:43%',2:'left:18%;top:20%',3:'left:50%;top:9%;transform:translateX(-50%)',4:'right:18%;top:20%',5:'right:3%;top:43%'};el.style.cssText+=(positions[idx]||'');el.innerHTML=`<div class="toss-player">${idx===(window.__onlineMyIndex||0)?'YOU':(window.__onlineRoomPlayers[idx]?.name||'PLAYER '+(idx+1))}</div><div class="toss-rank ${c.color}">${c.rank}</div><div class="toss-suit ${c.color}">${c.suit}</div><div class="toss-badge">${idx===hi?'HIGHEST • FIRST DRAW':idx===lo?'LOWEST • DEALER':'TOSS'}</div>`;cardsBox.appendChild(el);});
   const highName=(window.__onlineRoomPlayers[hi]||{}).name||('Player '+(hi+1)); const lowName=(window.__onlineRoomPlayers[lo]||{}).name||('Player '+(lo+1));
   if(info)info.innerHTML=`🃏 TOSS COMPLETE • ⬆️ <b>${highName}</b> = FIRST DRAW • ⬇️ <b>${lowName}</b> = DEALER`;
   if(choice){choice.style.display='none';}
 }
-function chooseOnlineDraw(choice){if(window.onlineSocket)window.onlineSocket.emit('tossChoice',{choice});const c=document.getElementById('onlineTossChoice');if(c)c.style.display='none';}
-function showFirstDrawChoice(){
+function chooseOnlineDraw(choice){if(window.onlineSocket)window.onlineSocket.emit('tossChoice',{choice});const c=document.getElementById('onlineTossChoice');if(c)c.style.display='none';const info=document.getElementById('dealerTossInfo');if(info)info.innerHTML='✅ '+(choice==='open'?'OPEN CARD':'CLOSED CARD')+' SELECTED • NOW DISCARD ONE CARD';}
+function showFirstDrawChoice(gameData){
   const c=document.getElementById('onlineTossChoice');if(!c)return;
-  c.style.display=(Number(window.__onlineMyIndex)===Number(window.__onlineState?.currentPlayer))?'block':'none';
-  const info=document.getElementById('dealerTossInfo');if(info)info.innerHTML='🎴 13 CARDS DEALT • WILD JOKER SET • OPEN CARD READY<br><b>HIGHEST TOSS PLAYER: CHOOSE OPEN CARD OR CLOSED CARD</b>';
+  const my=Number(window.__onlineMyIndex);
+  const first=Number(gameData?.currentPlayer ?? window.__onlineState?.currentPlayer);
+  const isHighest=my===first;
+  c.style.display=isHighest?'block':'none';
+  const cardsBox=document.getElementById('dealerTossCards');
+  if(cardsBox) cardsBox.innerHTML='';
+  const info=document.getElementById('dealerTossInfo');
+  if(info)info.innerHTML=isHighest
+    ? '🎴 13 CARDS DEALT • WILD JOKER SET • OPEN CARD READY<br><b>YOU ARE HI CARD — CHOOSE OPEN CARD OR CLOSED CARD</b>'
+    : '🎴 13 CARDS DEALT • WILD JOKER SET • OPEN CARD READY<br><b>HI CARD PLAYER IS CHOOSING OPEN / CLOSED</b>';
   const stage=document.getElementById('dealerTossStage');if(stage)stage.classList.add('active');
 }
 function createOnlineRoom(){ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();if(!name)return onlineMsg('Enter PROFILE NAME first.');onlineSocket.emit('createRoom',{name,maxPlayers:jkrnSelectedPlayers,poolLimit:jkrnSelectedPool,entryFee:jkrnEntryAmount});}
@@ -4519,7 +4538,7 @@ button[onclick*="groupSelected"] {
     ensureOnlineSocket();
     if(window.__realV2Hooked)return; window.__realV2Hooked=true;
     onlineSocket.on('gameState',applyOnlineState);
-    onlineSocket.on('realGameStarted',d=>{if(!window.__realRoomStarted)startOnlineGameUI(d); gameOver=false; gameStarted=true; if(d&&Number.isInteger(d.currentPlayer))currentPlayer=d.currentPlayer; if(typeof updateUI==='function')updateUI();});
+    onlineSocket.on('realGameStarted',d=>{if(!window.__realRoomStarted)startOnlineGameUI(d); gameOver=false; gameStarted=true; if(d&&Number.isInteger(d.currentPlayer))currentPlayer=d.currentPlayer; if(d&&d.firstChoice)showFirstDrawChoice(d); if(typeof updateUI==='function')updateUI();});
     onlineSocket.on('onlineActionError',m=>{const st=document.getElementById('status');if(st)st.innerText='⚠️ '+((m&&m.message)||'Action not allowed');});
     onlineSocket.on('onlineActionAck',m=>{const st=document.getElementById('status');if(st&&m&&m.action==='draw')st.innerText='Card received. Select one card to discard.';});
     onlineSocket.on('dealResult',r=>{ window.__onlineRoomStarted=false; window.__realRoomStarted=false; window.__onlineLastResult=r; gameOver=true; if(r.scores){(window.__onlineRoomPlayers||[]).forEach(pl=>{if(r.scores[pl.id]!=null)gameScores['Player '+(pl.index+1)]=Number(r.scores[pl.id])||0;});} (window.__onlineRoomPlayers||[]).forEach(pl=>{const pts=Number(r.roundPoints?.[pl.id]||0); const dropped=pts>0 && r.valid && pl.id!==r.winnerId && !(r.penalties||[]).some(x=>x.playerId===pl.id); playerDealStatus[pl.index]={result:pl.id===r.winnerId?'Winner':(dropped?'Drop':'Lost'),points:pts}; droppedThisDeal[pl.index]=dropped;}); const msg=r.valid?('🏆 '+r.winnerName+' SHOW / ROUND COMPLETE'):('❌ WRONG SHOW! '+r.loserName+' +80 points'); if(typeof showDealResultModal==='function')showDealResultModal(msg); const b=document.getElementById('nextDealBtn'); if(b){b.innerText=r.matchWinner?'MATCH FINISHED':'NEXT DEAL';b.onclick=r.matchWinner?(()=>location.reload()):onlineNextDeal;} });
