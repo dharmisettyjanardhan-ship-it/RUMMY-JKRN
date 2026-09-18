@@ -191,7 +191,7 @@ function startToss(room){
   room.currentPlayer=room.highestTossIndex;
   io.to(room.id).emit('tossStarted',{cards:room.toss.cards,highestIndex:room.highestTossIndex,lowestIndex:room.dealerIndex,count:room.playersList.length,countdown:3});
   if(room.tossTimer) clearTimeout(room.tossTimer);
-  room.tossTimer=setTimeout(()=>{ if(room.toss?.active) dealAfterToss(room,'closed'); },3000);
+  room.tossTimer=setTimeout(()=>{ if(room.toss?.active) dealAfterToss(room,'closed'); },3400);
 }
 function dealAfterToss(room,choice,firstOverride=null){
   if(firstOverride==null && !room.toss?.active)return;
