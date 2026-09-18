@@ -26,7 +26,7 @@ function addPlayerToRoom(room, socket, name){
 }
 
 app.use(express.static(__dirname));
-app.get('/', (req,res)=>res.sendFile(path.join(__dirname,'RUMMY_JKRN_GOLD_TABLE_DESIGN.html')));
+app.get('/', (req,res)=>res.sendFile(path.join(__dirname,'index.html')));
 
 const suits = [
   {s:'♥',c:'red'}, {s:'♦',c:'red'}, {s:'♣',c:'black'}, {s:'♠',c:'black'}
