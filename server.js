@@ -112,7 +112,7 @@ function validateShow(room,p,groupIds,discardId){
   for(const ids of groupIds){
     if(!Array.isArray(ids)||ids.length<3)return {ok:false,reason:'Every group must contain at least 3 cards.'};
     const g=[];for(const id of ids){if(used.has(id))return {ok:false,reason:'A card is used in more than one group.'};const c=byId.get(id);if(!c||id===discardId)return {ok:false,reason:'Invalid card in group.'};used.add(id);g.push(c);}
-    if(!validGroup(g,room))return {ok:false,reason:'One or more groups are invalid.'};groups.push(g);
+    if(!validGroup(g,room)){const hasJ=g.some(c=>jkrnV14IsWild(room,c));return {ok:false,reason:hasJ?'Invalid Joker usage: Printed Joker cannot be in a Pure Sequence. A Wild-Joker rank card is Pure only when it naturally forms the same-suit consecutive sequence; otherwise use the Joker in a valid Impure Sequence or Set.':'One or more groups are invalid.'};}groups.push(g);
   }
   const remaining=hand.filter(c=>!used.has(c.id));
   if(remaining.length)return {ok:false,reason:'All 13 cards must be covered by valid groups.'};
@@ -153,7 +153,7 @@ function endTurn(room){
   room.turnTimer=room.graceTimer=null;
   const next=nextActiveIndex(room,room.currentPlayer);
   room.currentPlayer=next; room.playerHasDrawn=false; room.turnPhase='draw'; room.graceEndsAt=0; room.turnEndsAt=Date.now()+30000;
-  room.turnTimer=setTimeout(()=>startGraceTimer(room),30000);
+  room.turnTimer=setTimeout(()=>endTurn(room),30000);
   broadcastState(room);
 }
 function startGraceTimer(room){
@@ -162,14 +162,14 @@ function startGraceTimer(room){
   if(room.graceTimer)clearTimeout(room.graceTimer);
   room.graceTimer=setTimeout(()=>{
     if(!room.started||room.playerHasDrawn)return;
-    const p=room.playersList[room.currentPlayer]; if(p) dropPlayer(room,p,25,true);
+    const p=room.playersList[room.currentPlayer]; if(p) dropPlayer(room,p,true);
   },15*60*1000);
   broadcastState(room);
 }
 function startTurn(room){
   if(room.turnTimer)clearTimeout(room.turnTimer); if(room.graceTimer)clearTimeout(room.graceTimer);
   room.graceTimer=null; room.playerHasDrawn=false; room.turnPhase='draw'; room.graceEndsAt=0; room.turnEndsAt=Date.now()+30000;
-  room.turnTimer=setTimeout(()=>startGraceTimer(room),30000); broadcastState(room);
+  room.turnTimer=setTimeout(()=>endTurn(room),30000); broadcastState(room);
 }
 function dropPlayer(room,p,points,automatic=false){
   if(!room.started||!p||room.dropped?.[p.id]||room.eliminated?.[p.id])return false;
@@ -180,7 +180,7 @@ function dropPlayer(room,p,points,automatic=false){
   const remaining=activePlayers(room).filter(x=>!room.dropped[x.id]);
   if(remaining.length<=1){ finishRoundByDrop(room); return true; }
   room.currentPlayer=nextActiveIndex(room,p.index); room.playerHasDrawn=false; room.turnPhase='draw'; room.turnEndsAt=Date.now()+30000; room.graceEndsAt=0;
-  room.turnTimer=setTimeout(()=>startGraceTimer(room),30000);
+  room.turnTimer=setTimeout(()=>endTurn(room),30000);
   io.to(room.id).emit('playerDropped',{playerId:p.id,index:p.index,name:p.name,points,automatic}); broadcastState(room); return true;
 }
 function finishRoundByDrop(room){
@@ -437,8 +437,8 @@ io.on('connection',socket=>{
       const still=room.playersList.find(x=>x.sessionToken===p.sessionToken);
       if(!still || still.connected)return;
       if(room.started){
-        dropPlayer(room,still,25,true);
-        io.to(id).emit('roomError',still.name+' did not reconnect within 15 minutes and was dropped (+25).');
+        dropPlayer(room,still,true);
+        io.to(id).emit('roomError',still.name+' did not reconnect within 15 minutes and was dropped (+20).');
         return;
       }
       room.players.delete(still.id); room.playersList=room.playersList.filter(x=>x.sessionToken!==still.sessionToken);
@@ -512,3 +512,107 @@ function pureSeq(group, room) {
     return hv.every((v,i)=>i===0 || v===hv[i-1]+1);
 }
 
+
+
+/* JKRN V14 - OFFICIAL JOKER RULES
+   Printed Joker + Wild Joker are wild cards.
+   Neither type may be used in a Pure Sequence.
+   Jokers may be used in Impure Sequences and Sets, including multiple Jokers
+   and Printed Joker + Wild Joker together. */
+function jkrnV14IsWild(room, card) {
+  if (!card) return false;
+  if (card.isPrintedJoker) return true;
+  return !!(room && room.wildJoker && card.rank === room.wildJoker.rank);
+}
+function pureSeq(group, room) {
+  if (!Array.isArray(group) || group.length < 3) return false;
+  if (group.some(c => jkrnV14IsWild(room, c))) return false;
+  const suit = group[0] && group[0].suit;
+  if (!suit || group.some(c => !c || c.suit !== suit)) return false;
+  const low = {A:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13};
+  const high = {2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13,A:14};
+  const ranks = group.map(c => c.rank);
+  if (ranks.some(r => low[r] == null) || new Set(ranks).size !== ranks.length) return false;
+  const lv = ranks.map(r => low[r]).sort((a,b)=>a-b);
+  if (lv.every((v,i)=>i===0 || v===lv[i-1]+1)) return true;
+  const hv = ranks.map(r => high[r]).sort((a,b)=>a-b);
+  return hv.every((v,i)=>i===0 || v===hv[i-1]+1);
+}
+
+
+
+/* JKRN V15 FINAL JOKER RULE:
+   - Printed Joker is a wild card and cannot be part of Pure Sequence.
+   - A Wild-Joker rank card is a real suited card. If it naturally forms a
+     same-suit consecutive sequence, it MAY be Pure. Otherwise it can act
+     as a Wild Joker in Impure Sequence/Set.
+   - Multiple Jokers and Printed + Wild combinations remain valid in
+     Impure Sequence/Set when the resulting group is valid. */
+function pureSeq(group, room) {
+  if (!Array.isArray(group) || group.length < 3) return false;
+  if (group.some(c => c && c.isPrintedJoker)) return false;
+  const suit = group[0] && group[0].suit;
+  if (!suit || group.some(c => !c || c.suit !== suit)) return false;
+
+  const low = {A:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13};
+  const high = {2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13,A:14};
+  const ranks = group.map(c => c.rank);
+  if (ranks.some(r => low[r] == null) || new Set(ranks).size !== ranks.length) return false;
+
+  const lv = ranks.map(r => low[r]).sort((a,b)=>a-b);
+  if (lv.every((v,i)=>i===0 || v===lv[i-1]+1)) return true;
+
+  const hv = ranks.map(r => high[r]).sort((a,b)=>a-b);
+  return hv.every((v,i)=>i===0 || v===hv[i-1]+1);
+}
+
+
+
+/* JKRN V18 - DROP RULES
+   First Drop = 25 points, Middle Drop = 50 points.
+   First Drop means the player has not drawn during this deal.
+   A dropped player cannot act again in the same deal.
+   If only one active player remains, the deal finishes immediately. */
+function jkrnV18Drop(room, p, automatic=false){
+  if(!room || !p || room.started===false) return false;
+  if(!room.dropped) room.dropped={};
+  if(!room.roundPoints) room.roundPoints={};
+  if(!room.scores) room.scores={};
+  if(room.dropped[p.id] || room.eliminated?.[p.id]) return false;
+
+  // Authoritative per-deal state: hasDrawnEver is reset when a new deal starts.
+  // No draw yet => First Drop (20); already drew earlier in this deal => Middle Drop (40).
+  const firstDrop = !room.hasDrawnEver?.[p.id];
+  const points = firstDrop ? 25 : 50;
+
+  room.dropped[p.id]=true;
+  room.roundPoints[p.id]=points;
+  room.scores[p.id]=(room.scores[p.id]||0)+points;
+  p.hand=[];
+
+  if(room.turnTimer) clearTimeout(room.turnTimer);
+  if(room.graceTimer) clearTimeout(room.graceTimer);
+  room.turnTimer=null; room.graceTimer=null;
+
+  const remaining=activePlayers(room).filter(x=>!room.dropped?.[x.id] && !room.eliminated?.[x.id]);
+  io.to(room.id).emit('playerDropped',{
+    playerId:p.id,index:p.index,name:p.name,points,
+    dropType:firstDrop?'First Drop':'Middle Drop',automatic
+  });
+
+  if(remaining.length<=1){
+    finishRoundByDrop(room);
+    return true;
+  }
+
+  // Move directly to the next valid player and give that player a fresh 30s turn.
+  room.currentPlayer=nextActiveIndex(room,p.index);
+  room.playerHasDrawn=false;
+  room.turnPhase='draw';
+  room.turnEndsAt=Date.now()+30000;
+  room.graceEndsAt=0;
+  room.turnTimer=setTimeout(()=>endTurn(room),30000);
+  broadcastState(room);
+  return true;
+}
+function dropPlayer(room,p,automatic=false){ return jkrnV18Drop(room,p,automatic); }
