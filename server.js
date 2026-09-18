@@ -1,853 +1,395 @@
-# 101 & 201 POOL RUMMY
-
-## COMPLETE GAME REQUIREMENTS & LOGIC DOCUMENT
-
-### 1. GAME MODES
-
-The application shall support two Pool Rummy modes:
-
-* 101 Pool Rummy
-* 201 Pool Rummy
-
-### 2. BASIC DIFFERENCE
-
-| Feature           |                                      101 Pool |                                      201 Pool |
-| ----------------- | --------------------------------------------: | --------------------------------------------: |
-| Elimination Limit |                                    101 Points |                                    201 Points |
-| First Drop        |                                    20 Points* |                                    25 Points* |
-| Middle Drop       |                                    40 Points* |                                    50 Points* |
-| Objective         | Remain until all other players are eliminated | Remain until all other players are eliminated |
-
-*Drop values must be configurable in the game settings.
-
----
-
-# 3. GAME LOBBY
-
-Before starting a game, display:
-
-* Game Type: 101 / 201
-* Number of Players
-* Entry/Room information
-* Player names
-* Player profile/photo
-* Ready status
-* Start Game button
-
-Example:
-
-PLAYER 1 – READY
-PLAYER 2 – READY
-PLAYER 3 – READY
-PLAYER 4 – READY
-
-START GAME
-
----
-
-# 4. TOSS SYSTEM
-
-The game shall perform a random toss before the first round.
-
-### Toss Flow
-
-TOSS START
-↓
-Random Head/Tail Result
-↓
-Assign Result to Players
-↓
-Select Toss Winner
-↓
-Display Toss Winner
-↓
-Toss Winner Gets First Turn
-
-Example:
-
-TOSS RESULT
-
-Player 1 – HEAD
-Player 2 – TAIL
-Player 3 – HEAD
-Player 4 – TAIL
-
-TOSS WINNER: PLAYER 1
-
-PLAYER 1 STARTS
-
-The randomization must be server-side in multiplayer mode to prevent manipulation.
-
----
-
-# 5. CARD DECK
-
-The game shall use standard Rummy cards according to the selected table configuration.
-
-Required card elements:
-
-* Clubs
-* Diamonds
-* Hearts
-* Spades
-* Number cards
-* A, J, Q, K
-* Printed Joker
-* Wild Joker
-
-The exact number of decks shall be configurable according to the table/player configuration.
-
----
-
-# 6. JOKER SELECTION
-
-At the beginning of each round:
-
-1. Shuffle the deck.
-2. Select the Wild Joker randomly.
-3. Display the Joker clearly.
-4. Mark all cards of that rank as Wild Jokers.
-5. Printed Joker shall be separately identified.
-
-Example:
-
-WILD JOKER = 8♥
-
-Then 8♠, 8♥, 8♦ and 8♣ can function as Wild Jokers according to the selected rules.
-
-PRINTED JOKER must also be visually identifiable.
-
----
-
-# 7. DEALING 13 CARDS
-
-Each active player shall receive 13 cards.
-
-Example:
-
-Player 1 → 13 Cards
-Player 2 → 13 Cards
-Player 3 → 13 Cards
-Player 4 → 13 Cards
-
-Cards shall be dealt automatically.
-
-The dealing animation should show cards moving from the deck to each player's hand.
-
----
-
-# 8. TABLE DESIGN
-
-The table shall contain:
-
-### Center Area
-
-* Closed Deck
-* Open/Discard Deck
-* Wild Joker display
-* Round number
-* Current turn indicator
-
-### Player Area
-
-Each player shall display:
-
-* Player name
-* Profile image
-* Current score
-* Total score
-* Cards remaining
-* Turn indicator
-* Drop status
-* Connection status
-
----
-
-# 9. CLOSED DECK
-
-The closed deck shall appear face-down.
-
-Example:
-
-CLOSED DECK
-[ 🂠 ]
-
-When the player clicks/touches the Closed Deck:
-
-→ One card is drawn.
-
-The card shall be added to the player's hand.
-
----
-
-# 10. OPEN / DISCARD DECK
-
-The discard pile shall display the latest discarded card.
-
-Example:
-
-OPEN DECK
-[ 7♥ ]
-
-Player can select the top available discard card according to the game's pickup rules.
-
-After taking a card, the player must discard one card.
-
----
-
-# 11. PLAYER TURN
-
-Every turn shall follow this sequence:
-
-START TURN
-↓
-30 SECOND TIMER
-↓
-DRAW CARD
-↓
-CARD ADDED TO HAND
-↓
-ARRANGE / SELECT CARDS
-↓
-DISCARD ONE CARD
-↓
-TURN ENDS
-↓
-NEXT PLAYER
-
-Only the active player can perform Draw/Discard actions.
-
----
-
-# 12. 30-SECOND TIMER
-
-Each player turn shall have a 30-second countdown.
-
-Display:
-
-30
-29
-28
-27
-...
-05
-04
-03
-02
-01
-
-When timer reaches zero:
-
-TIME OUT
-
-The application shall execute the predefined timeout rule.
-
-Timeout behaviour must be configurable by the game administrator.
-
----
-
-# 13. DRAW CARD
-
-The Draw button shall be enabled only during the player's turn.
-
-DRAW CARD
-
-After drawing:
-
-* Add card to hand.
-* Disable further draw action for that turn.
-* Enable discard action.
-
-The drawn card should be visually highlighted.
-
----
-
-# 14. DRAWN CARD TOUCH / CLICK
-
-After a player draws a card:
-
-1. The drawn card shall be highlighted.
-2. Player can click/touch the card.
-3. A Discard popup shall appear.
-
-Example:
-
-CARD SELECTED
-
-[ DISCARD ]
-
-[ CANCEL ]
-
-If the player selects DISCARD:
-
-→ Card moves to Open/Discard Deck.
-
-If CANCEL:
-
-→ Return to player's hand.
-
-This feature must work for both mouse click and mobile touch.
-
----
-
-# 15. DISCARD
-
-A player must discard one card before the turn ends.
-
-Discard flow:
-
-SELECT CARD
-↓
-DISCARD POPUP
-↓
-CONFIRM DISCARD
-↓
-CARD MOVES TO OPEN DECK
-↓
-TURN COMPLETE
-↓
-NEXT PLAYER
-
-The application must prevent a player from discarding another player's card.
-
----
-
-# 16. RUMMY GROUPS
-
-Cards can be arranged into:
-
-### PURE SEQUENCE
-
-Example:
-
-4♥ – 5♥ – 6♥
-
-No Joker required.
-
-### IMPURE SEQUENCE
-
-Example:
-
-4♥ – 5♥ – Wild Joker
-
-Joker substitutes for the missing card according to the game rules.
-
-### SET
-
-Example:
-
-7♥ – 7♣ – 7♦
-
-A valid declaration must satisfy the configured Rummy validation rules.
-
----
-
-# 17. VALID DECLARATION
-
-The standard validation requirement should be:
-
-* 13 cards must be arranged into valid groups.
-* At least 2 sequences are required.
-* At least 1 sequence must be a Pure Sequence.
-* Remaining cards must form valid sequences/sets.
-
-When player presses:
-
-DECLARE
-
-the system must automatically validate all 13 cards.
-
----
-
-# 18. INVALID DECLARATION
-
-If the cards are invalid:
-
-INVALID DECLARATION
-
-The player remains in the round.
-
-The system must display an appropriate error message.
-
-Example:
-
-"Invalid Declaration. At least one Pure Sequence is required."
-
----
-
-# 19. VALID DECLARATION
-
-If the cards are valid:
-
-VALID DECLARATION
-
-ROUND COMPLETED
-
-The declaring player receives the appropriate round score according to the configured scoring rules, normally 0 points.
-
----
-
-# 20. DROP SYSTEM
-
-The application shall provide a DROP button.
-
-Drop rules must distinguish:
-
-### FIRST DROP
-
-Player drops before completing meaningful play in the round.
-
-101 Pool → normally 20 points
-201 Pool → normally 25 points
-
-### MIDDLE DROP
-
-Player drops after participating in the round.
-
-101 Pool → normally 40 points
-201 Pool → normally 50 points
-
-Drop values must be configurable.
-
----
-
-# 21. ROUND SCORING
-
-At the end of every round:
-
-1. Identify the winner/declarer.
-2. Validate all remaining players.
-3. Calculate each player's card points.
-4. Apply maximum penalty if configured.
-5. Add round score to total score.
-6. Check elimination threshold.
-
-Example:
-
-Player 1:
-
-Previous Total = 45
-Round Score = 20
-New Total = 65
-
-Player 2:
-
-Previous Total = 85
-Round Score = 25
-New Total = 110
-
-In 101 Pool:
-
-Player 2 → ELIMINATED
-
----
-
-# 22. CARD POINT VALUES
-
-Default scoring configuration:
-
-Number cards:
-
-2 → 2 points
-3 → 3 points
-4 → 4 points
-5 → 5 points
-6 → 6 points
-7 → 7 points
-8 → 8 points
-9 → 9 points
-10 → 10 points
-
-Face cards:
-
-J → 10 points
-Q → 10 points
-K → 10 points
-A → 10 points
-
-Jokers:
-
-Wild Joker → 0 points
-Printed Joker → 0 points
-
-The exact Ace/Joker rules must remain configurable.
-
----
-
-# 23. MAXIMUM PENALTY
-
-The game shall support a configurable maximum penalty per round.
-
-Example configuration:
-
-MAX ROUND PENALTY = 80
-
-If a player's calculated penalty exceeds the configured maximum:
-
-Final Round Score = Maximum Penalty
-
-Example:
-
-Calculated = 96
-Maximum = 80
-
-Final Score = 80
-
----
-
-# 24. TOTAL SCORE
-
-The player's score shall accumulate across rounds.
-
-Example:
-
-ROUND 1 = 20
-ROUND 2 = 15
-ROUND 3 = 30
-
-TOTAL = 65
-
-The scoreboard must update immediately after each completed round.
-
----
-
-# 25. 101 ELIMINATION
-
-For 101 Pool:
-
-If:
-
-TOTAL SCORE >= 101
-
-then:
-
-PLAYER ELIMINATED
-
-Example:
-
-Current Score = 100
-Round Score = 5
-
-New Score = 105
-
-105 >= 101
-
-PLAYER OUT
-
----
-
-# 26. 201 ELIMINATION
-
-For 201 Pool:
-
-If:
-
-TOTAL SCORE >= 201
-
-then:
-
-PLAYER ELIMINATED
-
-Example:
-
-Current Score = 190
-Round Score = 15
-
-New Score = 205
-
-205 >= 201
-
-PLAYER OUT
-
----
-
-# 27. ELIMINATED PLAYER
-
-After elimination:
-
-* Player status changes to ELIMINATED.
-* Player cannot participate in future rounds.
-* Player cards are removed from active gameplay.
-* Player remains visible in scoreboard.
-* Display total score.
-* Display elimination status.
-
-Example:
-
-PLAYER 3
-TOTAL: 105
-STATUS: ELIMINATED
-
----
-
-# 28. NEXT ROUND
-
-After scoring:
-
-ROUND COMPLETE
-↓
-UPDATE SCOREBOARD
-↓
-ELIMINATION CHECK
-↓
-REMOVE ELIMINATED PLAYERS
-↓
-CHECK ACTIVE PLAYERS
-↓
-IF MORE THAN ONE PLAYER
-↓
-START NEXT ROUND
-
----
-
-# 29. NEW ROUND
-
-For every new round:
-
-1. Reset cards.
-2. Create/shuffle deck.
-3. Select new Joker.
-4. Deal 13 cards.
-5. Determine first player.
-6. Start timer.
-7. Begin gameplay.
-
-Each new round must use a fresh randomized card sequence.
-
----
-
-# 30. TURN ORDER
-
-Turn order should follow the table seating order.
-
-Example:
-
-P1 → P2 → P3 → P4 → P1
-
-If P2 is eliminated:
-
-P1 → P3 → P4 → P1
-
-Eliminated players must be skipped automatically.
-
----
-
-# 31. SCOREBOARD
-
-Display:
-
-| Player   | Round Score | Total Score | Status     |
-| -------- | ----------: | ----------: | ---------- |
-| Player 1 |          10 |          45 | Playing    |
-| Player 2 |          25 |         105 | Eliminated |
-| Player 3 |           0 |          60 | Playing    |
-| Player 4 |          20 |          80 | Playing    |
-
-The scoreboard shall update after every round.
-
----
-
-# 32. WINNER LOGIC
-
-After every elimination check:
-
-IF ACTIVE PLAYERS > 1
-→ Continue Game
-
-IF ACTIVE PLAYERS = 1
-→ End Game
-
-The final active player is declared the winner.
-
-Display:
-
-🏆 GAME OVER
-
-WINNER
-PLAYER NAME
-
-FINAL SCORE
-XX POINTS
-
----
-
-# 33. COMPLETE GAME FLOW
-
-LOBBY
-↓
-SELECT 101 / 201
-↓
-PLAYERS JOIN
-↓
-READY
-↓
-TOSS
-↓
-TOSS WINNER
-↓
-SHUFFLE
-↓
-JOKER SELECTION
-↓
-DEAL 13 CARDS
-↓
-ROUND START
-↓
-30 SECOND TIMER
-↓
-DRAW
-↓
-ARRANGE CARDS
-↓
-DISCARD
-↓
-NEXT PLAYER
-↓
-DRAW
-↓
-DISCARD
-↓
-DECLARE / DROP / CONTINUE
-↓
-ROUND END
-↓
-VALIDATE
-↓
-CALCULATE SCORE
-↓
-UPDATE TOTAL SCORE
-↓
-ELIMINATION CHECK
-↓
-NEXT ROUND
-↓
-REPEAT
-↓
-ONE ACTIVE PLAYER
-↓
-WINNER
-↓
-GAME OVER
-
----
-
-# 34. IMPORTANT ANTI-CHEAT REQUIREMENTS
-
-For a multiplayer application:
-
-* Card shuffle must be server controlled.
-* Random numbers must not be generated only in the browser.
-* Other players' cards must never be sent to the client.
-* Toss result must be server generated.
-* Joker selection must be server generated.
-* Player score must be validated server-side.
-* Declare validation must be server-side.
-* A player must not be able to draw twice.
-* A player must not be able to discard twice.
-* A player must not play after timeout.
-* A player must not play after elimination.
-* Turn ownership must be server validated.
-
----
-
-# 35. MOBILE SUPPORT
-
-The complete game must support:
-
-* Desktop
-* Android
-* Mobile browser
-* Touch screens
-
-Buttons must be touch-friendly.
-
-Required buttons:
-
-DRAW
-DISCARD
-DROP
-DECLARE
-SORT
-GROUP
-CLOSE
-
-Cards must support:
-
-* Click
-* Touch
-* Drag
-* Select
-* Move
-
----
-
-# 36. UI STATUS INDICATORS
-
-During gameplay display:
-
-CURRENT TURN: PLAYER 2
-
-TIME LEFT: 24 SEC
-
-JOKER: 8♥
-
-ROUND: 4
-
-YOUR SCORE: 65
-
-TOTAL PLAYERS: 5
-
-ACTIVE PLAYERS: 4
-
----
-
-# 37. REQUIRED GAME STATES
-
-The application should support these states:
-
-LOBBY
-TOSS
-DEALING
-ROUND_START
-PLAYER_TURN
-DRAW
-CARD_SELECTED
-DISCARD
-DROP
-DECLARE
-VALIDATION
-ROUND_END
-SCORING
-ELIMINATION
-NEXT_ROUND
-GAME_OVER
-
----
-
-# 38. FINAL DEVELOPER REQUIREMENT
-
-The developer must implement **101 Pool Rummy and 201 Pool Rummy as configurable game modes**, rather than creating two completely separate games.
-
-The following values should be configurable:
-
-* Pool limit
-* First Drop score
-* Middle Drop score
-* Maximum penalty
-* Number of players
-* Number of decks
-* Turn timer
-* Joker rules
-* Ace rules
-* Timeout rules
-* Re-entry rules, if enabled
-
-This allows the same game engine to run both:
-
-**101 POOL RUMMY**
-
-and
-
-**201 POOL RUMMY**
-
-with different configuration values.
+const path = require('path');
+const http = require('http');
+const express = require('express');
+const { Server } = require('socket.io');
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: '*' } });
+const rooms = new Map();
+const DEFAULT_POOL_LIMIT = 201;
+const MAX_PLAYERS = 6;
+const RECONNECT_GRACE_MS = 15*60*1000;
+// V9 grouping rules: 7-10-J-K is NOT a sequence; a wild 9 may complete 10-J-K.
+// A same-rank group such as 10-10-9(wild) is a valid 3-card set (TRILL).
+
+function onlinePlayerCount(){
+  let count=0;
+  for(const room of rooms.values()) for(const p of room.playersList) if(p.connected) count++;
+  return count;
+}
+function broadcastOnlineCount(){ io.emit('onlineCount', {count: onlinePlayerCount()}); }
+function addPlayerToRoom(room, socket, name){
+  const p={id:socket.id,sessionToken:require('crypto').randomUUID(),name:String(name||'Player').slice(0,18),ready:false,index:room.playersList.length,hand:[],connected:true};
+  room.scores[p.id]=0; room.players.set(socket.id,p); room.playersList.push(p); socket.join(room.id); socket.roomId=room.id;
+  return p;
+}
+
+app.use(express.static(__dirname));
+app.get('/', (req,res)=>res.sendFile(path.join(__dirname,'RUMMY_JKRN_REAL_PLAYERS_V4.html')));
+
+const suits = [
+  {s:'♥',c:'red'}, {s:'♦',c:'red'}, {s:'♣',c:'black'}, {s:'♠',c:'black'}
+];
+const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+
+function makeDeck(){
+  const d=[];
+  for(let n=0;n<2;n++) suits.forEach(x=>ranks.forEach(r=>d.push({rank:r,suit:x.s,color:x.c,isPrintedJoker:false,id:''})));
+  d.push({rank:'PJ',suit:'🃏',color:'red',isPrintedJoker:true,id:''});
+  d.push({rank:'PJ',suit:'🃏',color:'black',isPrintedJoker:true,id:''});
+  d.forEach((c,i)=>c.id=`${Date.now().toString(36)}_${i}_${Math.random().toString(36).slice(2,8)}`);
+  return d;
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function code(){let s;do{s=Math.floor(100000+Math.random()*900000).toString();}while(rooms.has(s));return s;}
+function publicPlayers(room){return room.playersList.map(p=>({id:p.id,name:p.name,ready:p.ready,index:p.index,connected:!!p.connected}));}
+function roomCapacity(room){return room.maxPlayers||2;}
+function publicCard(c){return c?{rank:c.rank,suit:c.suit,color:c.color,isPrintedJoker:!!c.isPrintedJoker,id:c.id}:null;}
+
+const RANK={A:1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":10,J:11,Q:12,K:13};
+function isWild(room,c){return !!c && (c.isPrintedJoker || (!!room.wildJoker && c.rank===room.wildJoker.rank));}
+function pureSeq(g){
+  if(!Array.isArray(g)||g.length<3||g.some(c=>c.isPrintedJoker))return false;
+  const suit=g[0]?.suit;if(!suit||g.some(c=>c.suit!==suit))return false;
+  const vals=g.map(c=>RANK[c.rank]).sort((a,b)=>a-b); if(new Set(vals).size!==vals.length)return false;
+  let low=vals.every((v,i)=>i===0||v===vals[i-1]+1); if(low)return true;
+  const hi=g.map(c=>c.rank==='A'?14:RANK[c.rank]).sort((a,b)=>a-b);
+  return hi.every((v,i)=>i===0||v===hi[i-1]+1);
+}
+function impureSeq(g,room){
+  if(!Array.isArray(g)||g.length<3)return false;
+  if(pureSeq(g))return true;
+  const nj=g.filter(c=>!isWild(room,c)), jok=g.length-nj.length;
+  if(!nj.length)return jok>=3;
+  const suit=nj[0].suit;if(nj.some(c=>c.suit!==suit))return false;
+  const vals=nj.map(c=>RANK[c.rank]).sort((a,b)=>a-b);if(new Set(vals).size!==vals.length)return false;
+  let gaps=0;for(let i=1;i<vals.length;i++)gaps+=vals[i]-vals[i-1]-1;
+  if(gaps<=jok)return true;
+  const hi=nj.map(c=>c.rank==='A'?14:RANK[c.rank]).sort((a,b)=>a-b);gaps=0;for(let i=1;i<hi.length;i++)gaps+=hi[i]-hi[i-1]-1;
+  return gaps<=jok;
+}
+function validSet(g,room){
+  if(!Array.isArray(g)||g.length<3||g.length>4)return false;
+  const nj=g.filter(c=>!isWild(room,c));if(!nj.length)return true;
+  const r=nj[0].rank;if(nj.some(c=>c.rank!==r))return false;
+  const ss=new Set();for(const c of nj){if(ss.has(c.suit))return false;ss.add(c.suit);}return true;
+}
+function validGroup(g,room){return pureSeq(g)||impureSeq(g,room)||validSet(g,room);}
+function cardValue(room,c){if(!c||isWild(room,c))return 0;return ['J','Q','K','A'].includes(c.rank)?10:(parseInt(c.rank,10)||0);}
+function bestLifeScore(hand,room){
+  const cards=hand.filter(Boolean), n=cards.length;
+  const groups=[];
+  function rec(start,cur){
+    if(cur.length>=3 && cur.length<=n){const g=cur.map(i=>cards[i]);if(validGroup(g,room))groups.push({idx:[...cur],g});}
+    if(cur.length>=13)return;
+    for(let i=start;i<n;i++)rec(i+1,[...cur,i]);
+  }
+  rec(0,[]);
+  // maximize covered value, while requiring at least one pure sequence for a valid show
+  let best={covered:0,hasPure:false,groups:[]};
+  function search(pos,used,chosen,hasPure){
+    let covered=0;for(const i of used)covered+=cardValue(room,cards[i]);
+    if(hasPure && covered>best.covered)best={covered,hasPure,groups:chosen.map(x=>x.g)};
+    for(let j=pos;j<groups.length;j++){
+      const x=groups[j]; if(x.idx.some(i=>used.has(i)))continue;
+      const nu=new Set(used);x.idx.forEach(i=>nu.add(i));search(j+1,nu,[...chosen,x],hasPure||pureSeq(x.g));
+    }
+  }
+  search(0,new Set(),[],false);
+  const total=cards.reduce((a,c)=>a+cardValue(room,c),0);
+  return {points:Math.min(80,Math.max(0,total-best.covered)),hasFirstLife:best.hasPure,lives:best.groups};
+}
+function validateShow(room,p,groupIds,discardId){
+  const hand=p.hand.slice();
+  if(discardId){const k=hand.findIndex(c=>c.id===discardId);if(k<0)return {ok:false,reason:'Selected discard card is not in your hand.'};hand.splice(k,1);}
+  if(hand.length!==13)return {ok:false,reason:'Declare requires 13 cards after selecting the discard card.'};
+  if(!Array.isArray(groupIds)||!groupIds.length)return {ok:false,reason:'No groups submitted.'};
+  const byId=new Map(p.hand.map(c=>[c.id,c])), used=new Set(), groups=[];
+  for(const ids of groupIds){
+    if(!Array.isArray(ids)||ids.length<3)return {ok:false,reason:'Every group must contain at least 3 cards.'};
+    const g=[];for(const id of ids){if(used.has(id))return {ok:false,reason:'A card is used in more than one group.'};const c=byId.get(id);if(!c||id===discardId)return {ok:false,reason:'Invalid card in group.'};used.add(id);g.push(c);}
+    if(!validGroup(g,room))return {ok:false,reason:'One or more groups are invalid.'};groups.push(g);
+  }
+  const remaining=hand.filter(c=>!used.has(c.id));
+  if(remaining.length)return {ok:false,reason:'All 13 cards must be covered by valid groups.'};
+  const pure=groups.some(pureSeq), seq=groups.filter(g=>impureSeq(g,room)).length;
+  if(!pure)return {ok:false,reason:'1st Life (Pure Sequence) is missing.'};
+  if(seq<2)return {ok:false,reason:'2nd Life (Sequence) is missing.'};
+  return {ok:true,groups};
+}
+
+function stateFor(room,socketId){
+  const me=room.players.get(socketId); if(!me)return null;
+  return {
+    roomId:room.id, players:publicPlayers(room), maxPlayers:room.maxPlayers,
+    poolLimit:room.poolLimit||DEFAULT_POOL_LIMIT, entryFee:room.entryFee||300,
+    myIndex:me.index, hands:room.playersList.map(p=>p.id===socketId ? p.hand.map(publicCard) : {count:p.hand.length}),
+    deckCount:room.deck.length, discardTop:publicCard(room.discard[room.discard.length-1]), wildJoker:publicCard(room.wildJoker),
+    currentPlayer:room.currentPlayer, playerHasDrawn:room.playerHasDrawn, turnEndsAt:room.turnEndsAt,
+    turnPhase:room.turnPhase||'draw', graceEndsAt:room.graceEndsAt||0, started:room.started, scores:room.scores||{},
+    dealerIndex:room.dealerIndex, dealerName:room.playersList[room.dealerIndex]?.name||null,
+    dropped:room.dropped||{}, eliminated:room.eliminated||{}, hasDrawnEver:room.hasDrawnEver||{}, toss:room.toss||null,
+    roundPoints:room.roundPoints||{}
+  };
+}
+function broadcastState(room){ for(const p of room.playersList){io.to(p.id).emit('gameState',stateFor(room,p.id));} }
+function activePlayers(room){ return room.playersList.filter(p=>!room.eliminated?.[p.id]); }
+function nextActiveIndex(room,from){
+  const n=room.playersList.length;
+  for(let step=1;step<=n;step++){const i=(from+step)%n,p=room.playersList[i];if(p&&!room.eliminated?.[p.id]&&!room.dropped?.[p.id])return i;}
+  return from;
+}
+function endTurn(room){
+  if(room.turnTimer)clearTimeout(room.turnTimer);
+  if(room.graceTimer)clearTimeout(room.graceTimer);
+  room.turnTimer=room.graceTimer=null;
+  const next=nextActiveIndex(room,room.currentPlayer);
+  room.currentPlayer=next; room.playerHasDrawn=false; room.turnPhase='draw'; room.graceEndsAt=0; room.turnEndsAt=Date.now()+30000;
+  room.turnTimer=setTimeout(()=>startGraceTimer(room),30000);
+  broadcastState(room);
+}
+function startGraceTimer(room){
+  if(!room.started)return;
+  room.turnTimer=null; room.turnPhase='grace'; room.graceEndsAt=Date.now()+15*60*1000;
+  if(room.graceTimer)clearTimeout(room.graceTimer);
+  room.graceTimer=setTimeout(()=>{
+    if(!room.started||room.playerHasDrawn)return;
+    const p=room.playersList[room.currentPlayer]; if(p) dropPlayer(room,p,25,true);
+  },15*60*1000);
+  broadcastState(room);
+}
+function startTurn(room){
+  if(room.turnTimer)clearTimeout(room.turnTimer); if(room.graceTimer)clearTimeout(room.graceTimer);
+  room.graceTimer=null; room.playerHasDrawn=false; room.turnPhase='draw'; room.graceEndsAt=0; room.turnEndsAt=Date.now()+30000;
+  room.turnTimer=setTimeout(()=>startGraceTimer(room),30000); broadcastState(room);
+}
+function dropPlayer(room,p,points,automatic=false){
+  if(!room.started||!p||room.dropped?.[p.id]||room.eliminated?.[p.id])return false;
+  if(!room.dropped)room.dropped={}; if(!room.roundPoints)room.roundPoints={};
+  room.dropped[p.id]=true; room.roundPoints[p.id]=points; room.scores[p.id]=(room.scores[p.id]||0)+points;
+  if(room.turnTimer)clearTimeout(room.turnTimer); if(room.graceTimer)clearTimeout(room.graceTimer);
+  p.hand=[];
+  const remaining=activePlayers(room).filter(x=>!room.dropped[x.id]);
+  if(remaining.length<=1){ finishRoundByDrop(room); return true; }
+  room.currentPlayer=nextActiveIndex(room,p.index); room.playerHasDrawn=false; room.turnPhase='draw'; room.turnEndsAt=Date.now()+30000; room.graceEndsAt=0;
+  room.turnTimer=setTimeout(()=>startGraceTimer(room),30000);
+  io.to(room.id).emit('playerDropped',{playerId:p.id,index:p.index,name:p.name,points,automatic}); broadcastState(room); return true;
+}
+function finishRoundByDrop(room){
+  if(room.turnTimer)clearTimeout(room.turnTimer);if(room.graceTimer)clearTimeout(room.graceTimer);
+  const winner=activePlayers(room).find(p=>!room.dropped[p.id]);
+  room.started=false; room.result={valid:true,winnerId:winner?.id||null,winnerName:winner?.name||'Remaining Player',penalties:[],roundPoints:room.roundPoints||{},scores:room.scores,matchWinner:activePlayers(room).find(p=>(room.scores[p.id]||0)>=room.poolLimit)?.name||null};
+  io.to(room.id).emit('dealResult',room.result); broadcastState(room);
+}
+function startToss(room){
+  const d=shuffle(makeDeck().filter(c=>!c.isPrintedJoker));
+  room.tossCards={}; room.toss={active:true,cards:{}};
+  room.playersList.forEach(p=>{const c=d.pop();room.tossCards[p.id]=c;room.toss.cards[p.id]=publicCard(c);});
+  const ranked=room.playersList.map(p=>({p,c:room.tossCards[p.id]})).sort((a,b)=>cardValue(room,a.c)-cardValue(room,b.c));
+  room.dealerIndex=ranked[0]?.p.index??0; room.highestTossIndex=ranked[ranked.length-1]?.p.index??0;
+  room.currentPlayer=room.highestTossIndex;
+  io.to(room.id).emit('tossStarted',{cards:room.toss.cards,highestIndex:room.highestTossIndex,lowestIndex:room.dealerIndex,count:room.playersList.length,countdown:3});
+  if(room.tossTimer) clearTimeout(room.tossTimer);
+  room.tossTimer=setTimeout(()=>{ if(room.toss?.active) dealAfterToss(room,'closed'); },3000);
+}
+function dealAfterToss(room,choice,firstOverride=null){
+  if(firstOverride==null && !room.toss?.active)return;
+  if(room.tossTimer){clearTimeout(room.tossTimer);room.tossTimer=null;}
+  if(room.toss)room.toss.active=false; room.firstDrawChoice=choice==='open'?'open':'closed'; room.dealNumber=(room.dealNumber||0)+1;
+  room.deck=shuffle(makeDeck()); room.discard=[]; room.wildJoker=null; room.dropped={}; room.roundPoints={}; room.eliminated=room.eliminated||{};
+  room.playersList.forEach(p=>p.hand=[]);
+  const n=room.playersList.length, first=(firstOverride!=null?firstOverride:room.highestTossIndex); room.firstPlayerIndex=first;
+  for(let r=0;r<13;r++)for(let step=0;step<n;step++){const idx=(first+step)%n;const p=room.playersList[idx];if(p&&!room.eliminated[p.id])p.hand.push(room.deck.pop());}
+  const nonPrinted=room.deck.filter(c=>!c.isPrintedJoker); room.wildJoker=nonPrinted[Math.floor(Math.random()*nonPrinted.length)]||null;
+  const open=room.deck.pop(); if(open)room.discard.push(open);
+  room.started=true; room.currentPlayer=first; room.playerHasDrawn=false; room.turnPhase='firstChoice'; room.hasDrawnEver={};
+  room.playersList.forEach(p=>room.hasDrawnEver[p.id]=false);
+  room.turnEndsAt=Date.now()+30000;
+  io.to(room.id).emit('realGameStarted',{roomId:room.id,players:publicPlayers(room),dealerIndex:room.dealerIndex,currentPlayer:first,dealNumber:room.dealNumber,firstChoice:true});
+  broadcastState(room);
+}
+function startRealGame(room){ startToss(room); }
+
+io.on('connection',socket=>{
+  broadcastOnlineCount();
+  socket.on('createRoom',({name,maxPlayers,poolLimit,entryFee})=>{
+    const id=code();
+    const requested=Number(maxPlayers)||2; const capacity=Math.max(2,Math.min(MAX_PLAYERS,requested));
+    const selectedPool=Number(poolLimit)===101?101:201;
+    const selectedEntry=Math.max(300,Math.min(10000,Number(entryFee)||300));
+    const room={id,maxPlayers:capacity,poolLimit:selectedPool,entryFee:selectedEntry,players:new Map(),playersList:[],started:false,deck:[],discard:[],wildJoker:null,currentPlayer:0,playerHasDrawn:false,turnEndsAt:0,turnTimer:null,scores:{},dealerIndex:null,dealNumber:0,toss:null,tossCards:{},highestTossIndex:0,firstDrawChoice:'closed',turnPhase:'draw',graceEndsAt:0,graceTimer:null,dropped:{},eliminated:{},hasDrawnEver:{},roundPoints:{}};
+    rooms.set(id,room);
+    const p=addPlayerToRoom(room,socket,name);
+    socket.emit('roomCreated',{roomId:id,playerId:socket.id,sessionToken:p.sessionToken,maxPlayers:room.maxPlayers,poolLimit:room.poolLimit,entryFee:room.entryFee});
+    io.to(id).emit('roomUpdate',{players:publicPlayers(room),maxPlayers:room.maxPlayers,poolLimit:room.poolLimit,entryFee:room.entryFee});
+    broadcastOnlineCount();
+  });
+  socket.on('joinRoom',({name,roomId})=>{
+    const id=String(roomId||'').toUpperCase(),room=rooms.get(id);
+    if(!room)return socket.emit('roomError','Room not found.');
+    if(room.started)return socket.emit('roomError','Game already started.');
+    if(room.playersList.length>=roomCapacity(room))return socket.emit('roomError',`Room is full (${roomCapacity(room)} players maximum).`);
+    const p=addPlayerToRoom(room,socket,name);
+    socket.emit('roomJoined',{roomId:room.id,playerId:socket.id,sessionToken:p.sessionToken,maxPlayers:room.maxPlayers,poolLimit:room.poolLimit,entryFee:room.entryFee});
+    io.to(room.id).emit('roomUpdate',{players:publicPlayers(room),maxPlayers:room.maxPlayers,poolLimit:room.poolLimit,entryFee:room.entryFee});
+    broadcastOnlineCount();
+    if(room.playersList.length===roomCapacity(room) && room.playersList.every(x=>x.connected)) startRealGame(room);
+  });
+  socket.on('quickJoin',({name,maxPlayers,poolLimit,entryFee})=>{
+    const requested=Number(maxPlayers)||6; const capacity=Math.max(2,Math.min(MAX_PLAYERS,requested));
+    const selectedPool=Number(poolLimit)===101?101:201;
+    const selectedEntry=Math.max(300,Math.min(10000,Number(entryFee)||300));
+    let room=[...rooms.values()].find(r=>!r.started && r.maxPlayers===capacity && r.poolLimit===selectedPool && r.entryFee===selectedEntry && r.playersList.length<capacity);
+    if(!room){
+      const id=code(); room={id,maxPlayers:capacity,poolLimit:selectedPool,entryFee:selectedEntry,players:new Map(),playersList:[],started:false,deck:[],discard:[],wildJoker:null,currentPlayer:0,playerHasDrawn:false,turnEndsAt:0,turnTimer:null,scores:{},dealerIndex:null,dealNumber:0,toss:null,tossCards:{},highestTossIndex:0,firstDrawChoice:'closed',turnPhase:'draw',graceEndsAt:0,graceTimer:null,dropped:{},eliminated:{},hasDrawnEver:{},roundPoints:{}}; rooms.set(id,room);
+    }
+    const p=addPlayerToRoom(room,socket,name);
+    socket.emit('roomJoined',{roomId:room.id,playerId:socket.id,sessionToken:p.sessionToken,maxPlayers:room.maxPlayers,poolLimit:room.poolLimit,entryFee:room.entryFee,quickJoin:true});
+    io.to(room.id).emit('roomUpdate',{players:publicPlayers(room),maxPlayers:room.maxPlayers,poolLimit:room.poolLimit,entryFee:room.entryFee});
+    broadcastOnlineCount();
+    if(room.playersList.length===capacity) io.to(room.id).emit('quickMatchReady',{message:`Table full: ${capacity} players. Starting game automatically.`});
+    if(room.playersList.length===roomCapacity(room) && room.playersList.every(x=>x.connected)) startRealGame(room);
+  });
+  socket.on('ready',({roomId,playerId})=>{
+    const room=rooms.get(String(roomId||'').toUpperCase());if(!room)return;
+    const p=room.players.get(playerId||socket.id);if(!p)return;
+    p.ready=true;io.to(room.id).emit('roomUpdate',{players:publicPlayers(room),maxPlayers:room.maxPlayers,poolLimit:room.poolLimit,entryFee:room.entryFee});
+    if(room.playersList.length===roomCapacity(room) && room.playersList.every(x=>x.connected))startRealGame(room);else socket.emit('readyAck');
+  });
+  socket.on('startRoom',({roomId})=>{
+    const room=rooms.get(String(roomId||'').toUpperCase());
+    if(!room)return socket.emit('roomError','Room not found.');
+    if(room.started)return;
+    if(room.playersList.length!==roomCapacity(room))return socket.emit('roomError',`Waiting for players: ${room.playersList.length}/${roomCapacity(room)}`);
+    if(!room.playersList.every(x=>x.connected))return socket.emit('roomError','Waiting for all players to reconnect.');
+    room.playersList.forEach(x=>x.ready=true);
+    startRealGame(room);
+  });
+
+  socket.on('tossChoice',({choice})=>{
+    const room=rooms.get(socket.roomId),p=room&&room.players.get(socket.id);
+    if(!room||!p||p.index!==room.highestTossIndex)return socket.emit('onlineActionError',{message:'Only the highest toss card player can choose OPEN or CLOSED.'});
+    if(room.toss?.active){ dealAfterToss(room,'closed'); return; }
+    if(!room.started||room.currentPlayer!==p.index||room.turnPhase!=='firstChoice'||room.playerHasDrawn)return socket.emit('onlineActionError',{message:'First draw choice is not available now.'});
+    const takeOpen=choice==='open';
+    if(takeOpen){ if(!room.discard.length)return socket.emit('onlineActionError',{message:'OPEN card is empty.'}); p.hand.push(room.discard.pop()); }
+    else { if(!room.deck.length)return socket.emit('onlineActionError',{message:'Closed deck is empty.'}); p.hand.push(room.deck.pop()); }
+    room.firstDrawChoice=takeOpen?'open':'closed'; room.playerHasDrawn=true; room.hasDrawnEver[p.id]=true; room.turnPhase='afterDraw'; room.turnEndsAt=0;
+    if(room.turnTimer)clearTimeout(room.turnTimer);room.turnTimer=null; broadcastState(room);
+  });
+  socket.on('drawDeck',()=>{
+    const room=rooms.get(socket.roomId),p=room&&room.players.get(socket.id);
+    if(!room||!p||!room.started||room.eliminated?.[p.id]||room.dropped?.[p.id]||p.index!==room.currentPlayer||room.playerHasDrawn)return socket.emit('onlineActionError',{message:'Not your draw turn.'});
+    if(!room.deck.length&&room.discard.length>1){const top=room.discard.pop();room.deck=shuffle(room.discard);room.discard=[top];}
+    if(!room.deck.length)return socket.emit('onlineActionError',{message:'Closed deck is empty.'});
+    p.hand.push(room.deck.pop()); room.playerHasDrawn=true; room.hasDrawnEver[p.id]=true; room.turnPhase='afterDraw'; room.turnEndsAt=0;
+    if(room.turnTimer)clearTimeout(room.turnTimer);if(room.graceTimer)clearTimeout(room.graceTimer);
+    room.turnTimer=room.graceTimer=null; socket.emit('onlineActionAck',{action:'draw'}); broadcastState(room);
+  });
+  socket.on('drawDiscard',()=>{
+    const room=rooms.get(socket.roomId),p=room&&room.players.get(socket.id);
+    if(!room||!p||!room.started||room.eliminated?.[p.id]||room.dropped?.[p.id]||p.index!==room.currentPlayer||room.playerHasDrawn||room.discard.length===0)return socket.emit('onlineActionError',{message:'OPEN card cannot be drawn now.'});
+    p.hand.push(room.discard.pop()); room.playerHasDrawn=true; room.hasDrawnEver[p.id]=true; room.turnPhase='afterDraw'; room.turnEndsAt=0;
+    if(room.turnTimer)clearTimeout(room.turnTimer);if(room.graceTimer)clearTimeout(room.graceTimer);
+    room.turnTimer=room.graceTimer=null; socket.emit('onlineActionAck',{action:'draw'}); broadcastState(room);
+  });
+  socket.on('discardCard',({cardId})=>{
+    const room=rooms.get(socket.roomId),p=room&&room.players.get(socket.id);
+    if(!room||!p||!room.started||room.eliminated?.[p.id]||room.dropped?.[p.id]||p.index!==room.currentPlayer||!room.playerHasDrawn)return socket.emit('onlineActionError',{message:'Draw first, then discard one card.'});
+    if(p.hand.length!==14)return socket.emit('onlineActionError',{message:'You must have 14 cards before discard.'});
+    const idx=p.hand.findIndex(c=>c.id===cardId);if(idx<0)return socket.emit('onlineActionError',{message:'Select one card to discard.'});
+    room.discard.push(p.hand.splice(idx,1)[0]); endTurn(room);
+  });
+  socket.on('drop',()=>{
+    const room=rooms.get(socket.roomId),p=room&&room.players.get(socket.id);
+    if(!room||!p||!room.started||room.eliminated?.[p.id]||room.dropped?.[p.id]||p.index!==room.currentPlayer)return socket.emit('onlineActionError',{message:'Drop is not available.'});
+    if(room.playerHasDrawn)return socket.emit('onlineActionError',{message:'After drawing, DROP/MIDDLE DROP is not allowed this turn.'});
+    const points=room.hasDrawnEver?.[p.id]?50:25; dropPlayer(room,p,points,false);
+  });
+  socket.on('declare',({groupIds,discardId})=>{
+    const room=rooms.get(socket.roomId),p=room&&room.players.get(socket.id);
+    if(!room||!p||!room.started||room.eliminated?.[p.id]||room.dropped?.[p.id]||p.index!==room.currentPlayer||!room.playerHasDrawn)return socket.emit('onlineActionError',{message:'Show is allowed only after drawing.'});
+    const check=validateShow(room,p,groupIds,discardId);
+    if(!check.ok){room.scores[p.id]=(room.scores[p.id]||0)+80;room.roundPoints[p.id]=80;room.started=false;room.result={valid:false,wrongShow:true,loserId:p.id,loserName:p.name,penalties:[{playerId:p.id,name:p.name,points:80}],scores:room.scores,reason:check.reason};return io.to(room.id).emit('dealResult',room.result);}
+    const penalties=[];
+    for(const opp of activePlayers(room)){if(opp.id===p.id||room.dropped?.[opp.id])continue;const pts=bestLifeScore(opp.hand,room).points;room.scores[opp.id]=(room.scores[opp.id]||0)+pts;room.roundPoints[opp.id]=pts;penalties.push({playerId:opp.id,name:opp.name,points:pts});}
+    room.roundPoints[p.id]=0; room.started=false; if(room.turnTimer)clearTimeout(room.turnTimer);
+    const matchWinner=room.playersList.find(x=>(room.scores[x.id]||0)>=room.poolLimit);
+    room.result={valid:true,winnerId:p.id,winnerName:p.name,penalties,roundPoints:room.roundPoints,scores:room.scores,matchWinner:matchWinner?.name||null}; io.to(room.id).emit('dealResult',room.result);broadcastState(room);
+  });
+  socket.on('nextDeal',()=>{
+    const room=rooms.get(socket.roomId);if(!room||room.started||room.playersList.length<2)return;
+    const out=room.playersList.filter(p=>(room.scores[p.id]||0)>=room.poolLimit);out.forEach(p=>room.eliminated[p.id]=true);
+    const active=activePlayers(room); if(active.length<=1)return io.to(room.id).emit('poolFinished',{scores:room.scores,result:room.result});
+    room.playersList.forEach(p=>{p.hand=[];p.ready=true;});
+    let nextFirst=Number.isInteger(room.firstPlayerIndex)?room.firstPlayerIndex:0;
+    for(let step=1;step<=room.playersList.length;step++){const i=(nextFirst+step)%room.playersList.length;if(!room.eliminated?.[room.playersList[i].id]){nextFirst=i;break;}}
+    dealAfterToss(room,'closed',nextFirst);
+  });
+
+  socket.on('reconnectPlayer',({roomId,sessionToken,name})=>{
+    const room=rooms.get(String(roomId||'').toUpperCase()); if(!room)return socket.emit('roomError','Room not found.');
+    const p=room.playersList.find(x=>x.sessionToken===sessionToken); if(!p)return socket.emit('roomError','Reconnect session expired.');
+    const oldSocketId=p.id;
+    if(oldSocketId && oldSocketId!==socket.id){
+      const oldSocket=io.sockets.sockets.get(oldSocketId);
+      if(oldSocket){ try{oldSocket.disconnect(true);}catch(e){} }
+      room.players.delete(oldSocketId);
+    }
+    p.id=socket.id; p.connected=true; p.lastDisconnect=0; if(name)p.name=String(name).slice(0,18);
+    room.players.set(socket.id,p); socket.join(room.id); socket.roomId=room.id;
+    socket.emit('reconnected',{roomId:room.id,playerId:socket.id,sessionToken:p.sessionToken,maxPlayers:room.maxPlayers});
+    io.to(room.id).emit('roomUpdate',{players:publicPlayers(room),maxPlayers:room.maxPlayers,poolLimit:room.poolLimit,entryFee:room.entryFee}); broadcastState(room);
+  });
+  socket.on('chatMessage',({text})=>{
+    const room=rooms.get(socket.roomId),p=room&&room.players.get(socket.id); if(!room||!p||!String(text||'').trim())return;
+    io.to(room.id).emit('chatMessage',{name:p.name,text:String(text).trim().slice(0,200),at:Date.now()});
+  });
+  socket.on('leaveRoom',()=>{
+    const id=socket.roomId,room=id&&rooms.get(id); if(!room)return;
+    const p=room.players.get(socket.id); if(!p)return;
+    if(room.turnTimer) clearTimeout(room.turnTimer);
+    room.players.delete(socket.id); room.playersList=room.playersList.filter(x=>x.id!==socket.id);
+    if(room.playersList.length===0){rooms.delete(id); socket.leave(id); socket.roomId=null; broadcastOnlineCount(); return;}
+    room.playersList.forEach((x,i)=>x.index=i);
+    room.started=false; room.playersList.forEach(x=>x.ready=false);
+    if(room.dealerIndex!=null) room.dealerIndex=Math.min(room.dealerIndex,room.playersList.length-1);
+    io.to(id).emit('roomUpdate',{players:publicPlayers(room),maxPlayers:room.maxPlayers,poolLimit:room.poolLimit,entryFee:room.entryFee});
+    io.to(id).emit('roomError',p.name+' left the room. Please READY again.');
+    socket.leave(id); socket.roomId=null; socket.emit('leftRoom'); broadcastOnlineCount();
+  });
+  socket.on('requestRematch',()=>{
+    const room=rooms.get(socket.roomId),p=room&&room.players.get(socket.id); if(!room||!p)return;
+    if(room.started||room.playersList.length<2)return;
+    room.playersList.forEach(x=>{x.ready=true;x.hand=[];});
+    if(room.dealerIndex!=null) room.dealerIndex=(room.dealerIndex+1)%room.playersList.length;
+    startRealGame(room);
+  });
+  socket.on('disconnect',()=>{
+    const id=socket.roomId,room=id&&rooms.get(id);if(!room)return;
+    const p=room.players.get(socket.id); if(!p)return;
+    p.connected=false; p.lastDisconnect=Date.now();
+    io.to(id).emit('roomUpdate',{players:publicPlayers(room),maxPlayers:room.maxPlayers,poolLimit:room.poolLimit,entryFee:room.entryFee});
+    broadcastOnlineCount();
+    if(room.started){io.to(id).emit('roomError',p.name+' disconnected. Waiting for reconnect...');}
+    setTimeout(()=>{
+      const still=room.playersList.find(x=>x.sessionToken===p.sessionToken);
+      if(!still || still.connected)return;
+      if(room.started){
+        dropPlayer(room,still,25,true);
+        io.to(id).emit('roomError',still.name+' did not reconnect within 15 minutes and was dropped (+25).');
+        return;
+      }
+      room.players.delete(still.id); room.playersList=room.playersList.filter(x=>x.sessionToken!==still.sessionToken);
+      if(room.playersList.length===0){rooms.delete(id);return;}
+      room.playersList.forEach((x,i)=>x.index=i);
+      if(room.dealerIndex!=null)room.dealerIndex=Math.min(room.dealerIndex,room.playersList.length-1);
+      io.to(id).emit('roomUpdate',{players:publicPlayers(room),maxPlayers:room.maxPlayers,poolLimit:room.poolLimit,entryFee:room.entryFee});
+      io.to(id).emit('roomError',still.name+' left the room.');
+    },RECONNECT_GRACE_MS);
+  });
+});
+
+const PORT=process.env.PORT||3000;
+server.listen(PORT,()=>console.log(`RUMMY JKRN real-player server: http://localhost:${PORT}`));
