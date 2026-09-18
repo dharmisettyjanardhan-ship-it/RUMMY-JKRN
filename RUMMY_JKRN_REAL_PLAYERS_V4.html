@@ -3459,12 +3459,19 @@ function dropGame() {
 function declareGame() {
     if (currentPlayer !== 0 || !playerHasDrawn || isEliminated(0)) return;
 
+    // DECLARE is made after lifting the 14th card.
+    // The 14th card MAY be used inside any valid Life/Set. The player must
+    // explicitly select exactly one card to discard; DECLARE must never
+    // automatically discard a singleton, because that could incorrectly
+    // remove the newly lifted 14th card from a valid group.
     let testGroups = playerGroups.filter(g => g && g.length > 0);
+    let discardGroupIndex = -1;
     if (selectedCards.length === 1) {
         const s = selectedCards[0];
-        testGroups = JSON.parse(JSON.stringify(playerGroups));
-        testGroups[s.gIdx].splice(s.cIdx, 1);
-        testGroups = testGroups.filter(g => g.length > 0);
+        if (playerGroups[s.gIdx] && playerGroups[s.gIdx][s.cIdx]) discardGroupIndex = s.gIdx;
+    }
+    if (discardGroupIndex >= 0) {
+        testGroups = playerGroups.map(g=>g.slice()).filter((g,i)=>i!==discardGroupIndex && g.length>0);
     }
 
     let pureSeqs = 0, otherSeqs = 0, validSets = 0, invalidGroups = 0;
@@ -4514,9 +4521,25 @@ button[onclick*="groupSelected"] {
 
   function onlineDeclare(){
     if(!window.__realRoomStarted || currentPlayer!==onlinePlayerIndex() || !playerHasDrawn)return;
-    const groups=(playerGroups||[]).filter(g=>g&&g.length).map(g=>g.map(c=>c.id));
-    let discardId=null;
-    if(selectedCards && selectedCards.length===1){const x=selectedCards[0];const g=playerGroups[x.gIdx];if(g&&g[x.cIdx])discardId=g[x.cIdx].id;}
+    let source=(playerGroups||[]).filter(g=>g&&g.length);
+    let discardGroupIndex=-1, discardId=null;
+    if(selectedCards && selectedCards.length===1){
+      const x=selectedCards[0], g=playerGroups[x.gIdx];
+      if(g&&g[x.cIdx]){ discardId=g[x.cIdx].id; discardGroupIndex=x.gIdx; }
+    }
+    // If there is one singleton group among 14 cards, treat that card as the
+    // discard automatically. This fixes DECLARE when the last card is shown
+    // separately but was not explicitly selected.
+    if(!discardId && (playerGroups||[]).flat().length===14){
+      const singles=playerGroups.map((g,i)=>({g,i})).filter(x=>x.g&&x.g.length===1);
+      if(singles.length===1){ discardGroupIndex=singles[0].i; discardId=singles[0].g[0].id; }
+    }
+    if(!discardId){
+      const st=document.getElementById('status');
+      if(st)st.innerText='⚠️ 14 cards ఉన్నాయి. DECLARE ముందు discard చేయాల్సిన 1 card ని select చేయండి. 14th card ని Life/Set లో ఉపయోగించవచ్చు.';
+      return;
+    }
+    const groups=source.filter((g,i)=>i!==discardGroupIndex).map(g=>g.map(c=>c.id));
     onlineSocket.emit('declare',{groupIds:groups,discardId});
   }
   function onlineNextDeal(){ if(onlineSocket&&onlineRoomId)onlineSocket.emit('nextDeal'); }
@@ -5566,5 +5589,125 @@ window.jkrnV15JokerRules={
       return oldModal.apply(this,arguments);
     };
   }
+})();
+</script>
+
+<style id="jkrn-v23-fixed-circular-seating">
+/* V23: fixed circular seating — YOU bottom center, opponents clockwise */
+.table{isolation:isolate;}
+.opp-box{position:absolute!important;width:clamp(128px,16vw,190px)!important;min-width:0!important;max-width:190px!important;z-index:40!important;transform:none;}
+#opp2{left:50%!important;top:5%!important;right:auto!important;bottom:auto!important;transform:translateX(-50%)!important;} /* Computer 1: top center */
+#opp3{left:3%!important;top:43%!important;right:auto!important;bottom:auto!important;transform:none!important;} /* Computer 2: left */
+#opp4{left:auto!important;top:43%!important;right:3%!important;bottom:auto!important;transform:none!important;} /* Computer 3: right */
+#opp5{left:15%!important;top:12%!important;right:auto!important;bottom:auto!important;transform:none!important;} /* Computer 4: upper-left */
+#opp6{left:auto!important;top:12%!important;right:15%!important;bottom:auto!important;transform:none!important;} /* Computer 5: upper-right */
+#playerArea{left:50%!important;right:auto!important;top:auto!important;bottom:5%!important;transform:translateX(-50%)!important;width:min(94%,1180px)!important;z-index:100!important;}
+#playerInfoBox{position:relative!important;}
+/* Active seat/name highlight */
+.opp-box.active-turn,.player-info.active-turn{border-color:#63ff78!important;box-shadow:0 0 22px rgba(0,255,90,.9),0 0 0 2px rgba(99,255,120,.35)!important;}
+.opp-box.active-turn .opp-name,.player-info.active-turn{color:#fff!important;}
+/* Non-current controls look and behave disabled */
+.jkrn-not-my-turn{opacity:.38!important;filter:grayscale(.75)!important;cursor:not-allowed!important;pointer-events:none!important;}
+#dropButton:disabled,#groupButton:disabled,#discardButton:disabled,#declareButton:disabled{opacity:.38!important;filter:grayscale(.75)!important;cursor:not-allowed!important;}
+#centerArea .pile.jkrn-draw-disabled{opacity:.38!important;filter:grayscale(.75)!important;cursor:not-allowed!important;}
+@media(max-width:900px){
+  .opp-box{width:clamp(112px,20vw,155px)!important;padding:3px 7px 3px 3px!important;}
+  #opp2{top:4%!important;}
+  #opp5{left:6%!important;top:15%!important;}
+  #opp6{right:6%!important;top:15%!important;}
+  #opp3{left:1.5%!important;top:44%!important;}
+  #opp4{right:1.5%!important;top:44%!important;}
+  #playerArea{bottom:2%!important;width:98%!important;}
+}
+@media(max-width:600px){
+  .opp-box{width:108px!important;font-size:9px!important;}
+  .opp-avatar-container,.opp-avatar{width:30px!important;height:30px!important;}
+  .opp-avatar{font-size:15px!important;}
+  .opp-details{margin-left:4px!important;}
+  .opp-name{font-size:9px!important;}
+  .opp-score{font-size:9px!important;}
+  .opp-action{font-size:8px!important;}
+  #opp5{left:1%!important;top:18%!important;}
+  #opp6{right:1%!important;top:18%!important;}
+  #opp3{left:0!important;top:46%!important;}
+  #opp4{right:0!important;top:46%!important;}
+  #opp2{top:3%!important;}
+}
+</style>
+<script id="jkrn-v23-turn-seat-controls">
+(function(){
+  const MAX=6;
+  function mySeat(){
+    return window.__realRoomStarted && Number.isInteger(window.__onlineMyIndex)
+      ? Number(window.__onlineMyIndex) : 0;
+  }
+  function onlineTurn(){ return !!window.__realRoomStarted && Number.isInteger(window.__onlineMyIndex) && currentPlayer===mySeat(); }
+  function canAct(){ return window.__realRoomStarted ? onlineTurn() : currentPlayer===0; }
+
+  function applySeatLayout(){
+    const n=Math.min(MAX,Math.max(2,Number(numPlayers)||6));
+    for(let i=2;i<=MAX;i++){
+      const el=document.getElementById('opp'+i); if(!el)continue;
+      el.style.display=(i<=n)?'flex':'none';
+    }
+    /* 2-player: YOU bottom, Computer 1 top. */
+    if(n===2){
+      const e=document.getElementById('opp2'); if(e){e.style.left='50%';e.style.top='5%';e.style.right='auto';e.style.transform='translateX(-50%)';}
+      return;
+    }
+    /* 4-player: top, left, right around YOU. */
+    if(n===4){
+      const map={2:['50%','5%','auto','translateX(-50%)'],3:['3%','43%','auto','none'],4:['auto','43%','3%','none']};
+      Object.keys(map).forEach(k=>{const e=document.getElementById('opp'+k);if(!e)return;const m=map[k];e.style.left=m[0];e.style.top=m[1];e.style.right=m[2];e.style.transform=m[3];});
+      return;
+    }
+    /* 6-player fixed circular positions. */
+    const map={2:['50%','5%','auto','translateX(-50%)'],3:['3%','43%','auto','none'],4:['auto','43%','3%','none'],5:['15%','12%','auto','none'],6:['auto','12%','15%','none']};
+    Object.keys(map).forEach(k=>{const e=document.getElementById('opp'+k);if(!e)return;const m=map[k];e.style.left=m[0];e.style.top=m[1];e.style.right=m[2];e.style.transform=m[3];});
+  }
+
+  function applyTurnControls(){
+    const active=canAct() && !gameOver;
+    const ids=['dropButton','groupButton','discardButton','declareButton'];
+    ids.forEach(id=>{const b=document.getElementById(id);if(!b)return;b.classList.toggle('jkrn-not-my-turn',!active);});
+    const draw=document.querySelector('#centerArea .draw-pile');
+    const open=document.getElementById('discardPile');
+    [draw,open].forEach(el=>{if(el)el.classList.toggle('jkrn-draw-disabled',!active);});
+
+    const drop=document.getElementById('dropButton');
+    if(drop){
+      const eliminated=window.__realRoomStarted ? !!window.__onlineEliminated : isEliminated(0);
+      drop.disabled=!active || eliminated || droppedThisDeal[mySeat()];
+    }
+    const group=document.getElementById('groupButton');
+    if(group) group.disabled=!active || selectedCards.length<2 || isEliminated(0);
+  }
+
+  function blockIfNotTurn(){
+    if(!canAct() || gameOver){ if(typeof showToast==='function')showToast('⚠️ Not your turn.'); return false; }
+    return true;
+  }
+
+  /* Make both closed/open deck clicks current-turn only. */
+  const oldDraw=window.drawCard;
+  if(typeof oldDraw==='function')window.drawCard=function(){if(!blockIfNotTurn())return;return oldDraw.apply(this,arguments);};
+  const oldOpen=window.drawFromDiscard;
+  if(typeof oldOpen==='function')window.drawFromDiscard=function(){if(!blockIfNotTurn())return;return oldOpen.apply(this,arguments);};
+  const oldDiscard=window.discardCard;
+  if(typeof oldDiscard==='function')window.discardCard=function(){if(!blockIfNotTurn())return;return oldDiscard.apply(this,arguments);};
+  const oldDeclare=window.declareGame;
+  if(typeof oldDeclare==='function')window.declareGame=function(){if(!blockIfNotTurn())return;return oldDeclare.apply(this,arguments);};
+  const oldDrop=window.dropGame;
+  if(typeof oldDrop==='function')window.dropGame=function(){if(!blockIfNotTurn())return;return oldDrop.apply(this,arguments);};
+  const oldGroup=window.groupSelectedCards;
+  if(typeof oldGroup==='function')window.groupSelectedCards=function(){if(!blockIfNotTurn())return;return oldGroup.apply(this,arguments);};
+  const oldAuto=window.autoSortCards;
+  if(typeof oldAuto==='function')window.autoSortCards=function(){if(!blockIfNotTurn())return;return oldAuto.apply(this,arguments);};
+
+  const oldUpdate=window.updateUI;
+  if(typeof oldUpdate==='function')window.updateUI=function(){const r=oldUpdate.apply(this,arguments);applySeatLayout();applyTurnControls();if(typeof highlightActiveTurn==='function')highlightActiveTurn();return r;};
+
+  window.addEventListener('load',function(){applySeatLayout();applyTurnControls();if(typeof highlightActiveTurn==='function')highlightActiveTurn();});
+  window.jkrnV23={applySeatLayout,applyTurnControls};
 })();
 </script>
