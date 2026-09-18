@@ -66,7 +66,6 @@ h1 { margin: 0; color: #ffd700; font-size: 18px; }
     display: none;
 }
 .opp-box.active-turn .opp-timer { display: block; }
-#onlineTossChoice button:disabled{opacity:.45;cursor:not-allowed} .grace-timer{color:#ff9800!important;border-color:#ff9800!important}
 
 .opp-details { margin-left: 8px; text-align: left; }
 .opp-name { font-size: 11px; color: #fff; margin: 0; white-space: nowrap; }
@@ -157,8 +156,8 @@ h1 { margin: 0; color: #ffd700; font-size: 18px; }
 
 .card-top { display: flex; flex-direction: column; line-height: 1; font-size: 15px; }
 .card-center { font-size: 28px; align-self: center; margin: auto 0; }
-.card.red, .card.red .card-top, .card.red .card-top span, .card.red .card-center, .red { color: #d32f2f !important; }
-.card.black, .card.black .card-top, .card.black .card-top span, .card.black .card-center, .black { color: #111 !important; }
+.red { color: #d32f2f; }
+.black { color: #111; }
 .joker-badge { 
     position: absolute; bottom: 2px; right: 2px; font-size: 11px; 
     background: #ffeb3b; border-radius: 50%; padding: 1px 3px; border: 1px solid #000; z-index: 5; 
@@ -198,11 +197,6 @@ h1 { margin: 0; color: #ffd700; font-size: 18px; }
 .btn-declare { background: linear-gradient(to bottom, #ff9800, #e65100); color: white; }
 
 .info-overlay { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); text-align: center; z-index: 10; }
-#jkrnLiveStatusBar{position:absolute;top:42px;left:50%;transform:translateX(-50%);z-index:25;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;max-width:92%;padding:5px 9px;border:1px solid rgba(255,215,0,.55);border-radius:10px;background:rgba(0,0,0,.78);color:#fff;font-size:10px;font-weight:800;box-shadow:0 3px 10px rgba(0,0,0,.35)}
-#jkrnLiveStatusBar span{white-space:nowrap}#jkrnLiveStatusBar b{color:#ffd700}
-#jkrnLiveStatusBar .urgent{color:#ff5252!important}
-@media(max-width:700px){#jkrnLiveStatusBar{top:38px;font-size:8px;gap:4px;padding:4px 6px;max-width:96%}}
-
 #status { font-size: 13px; font-weight: bold; background: rgba(0,0,0,0.75); padding: 3px 10px; border-radius: 6px; }
 
 /* JILI CASINO STYLE SCOREBOARD */
@@ -1824,226 +1818,6 @@ html, body {
 </style>
 
 <script src="/socket.io/socket.io.js"></script>
-
-<style id="RUMMY_JKRN_GOLD_TABLE_DESIGN">
-/* RUMMY JKRN - luxury green/gold table design */
-:root{
-  --jkrn-green:#063d1d;
-  --jkrn-green2:#0b6b32;
-  --jkrn-gold:#d7a83e;
-  --jkrn-gold2:#ffe08a;
-  --jkrn-dark:#07110b;
-}
-body{
-  background:
-    radial-gradient(circle at 50% 8%,rgba(255,215,90,.13),transparent 28%),
-    linear-gradient(135deg,#080d0a,#15100a 45%,#050806);
-}
-.top-bar{
-  background:linear-gradient(180deg,#11140f,#050806)!important;
-  border-bottom:2px solid var(--jkrn-gold)!important;
-  box-shadow:0 4px 22px rgba(0,0,0,.7),0 1px 0 #fff2a0 inset!important;
-}
-.top-bar h1,.top-bar .title,.top-bar *{
-  text-shadow:0 2px 3px #000;
-}
-.table{
-  background:
-    radial-gradient(ellipse at center,#149247 0%,#087032 32%,#045526 62%,#023719 100%)!important;
-  border:14px solid #8d5a19!important;
-  box-shadow:
-    0 0 0 3px #f3ce67,
-    0 0 0 7px #4b2b0d,
-    0 18px 45px rgba(0,0,0,.8),
-    inset 0 0 80px rgba(0,0,0,.42)!important;
-}
-.table:before{
-  content:"RUMMY JKRN   •   GOOD CARDS • GOOD COMPANY • GREAT GAMES";
-  position:absolute;
-  left:50%; bottom:10px;
-  transform:translateX(-50%);
-  color:#f4d36b;
-  font-weight:900;
-  font-size:13px;
-  letter-spacing:2px;
-  text-shadow:0 2px 3px #000;
-  pointer-events:none;
-  opacity:.9;
-}
-.table:after{
-  content:"♠";
-  position:absolute;
-  left:50%; top:50%;
-  transform:translate(-50%,-50%);
-  font-size:210px;
-  color:rgba(255,215,80,.07);
-  pointer-events:none;
-}
-.opp-box{
-  background:linear-gradient(145deg,rgba(5,18,10,.96),rgba(1,8,4,.92))!important;
-  border:2px solid #c99b35!important;
-  border-radius:28px!important;
-  box-shadow:0 4px 16px rgba(0,0,0,.65),0 0 12px rgba(255,210,75,.18)!important;
-}
-.opp-avatar{
-  border:3px solid #e6c45e!important;
-  box-shadow:0 0 0 2px #38250b,0 0 12px rgba(255,210,70,.35)!important;
-}
-.opp-name{font-weight:900!important;color:#fff!important}
-.opp-score{color:#ffd83d!important;font-weight:900!important}
-.opp-action{color:#45ff5b!important;font-weight:800!important}
-.center-area{
-  filter:drop-shadow(0 7px 14px rgba(0,0,0,.35));
-}
-.pile-container .pile-label{
-  color:#fff!important;
-  font-weight:1000!important;
-  text-shadow:0 2px 4px #000!important;
-  letter-spacing:.5px;
-}
-.pile{
-  border:3px solid #e1b84c!important;
-  box-shadow:0 5px 12px rgba(0,0,0,.65),0 0 10px rgba(255,215,90,.15)!important;
-  border-radius:10px!important;
-}
-.draw-pile{
-  background:
-    repeating-linear-gradient(45deg,rgba(255,255,255,.08) 0 2px,transparent 2px 7px),
-    linear-gradient(135deg,#0e4c91,#082d60)!important;
-}
-.joker-pile{
-  background:linear-gradient(145deg,#fff,#e9e9e9)!important;
-  color:#111!important;
-  border-color:#ffd64f!important;
-}
-.discard-pile{
-  background:linear-gradient(145deg,#fff,#e9e9e9)!important;
-}
-.deck-count{
-  background:#07120b!important;
-  border:2px solid #a87925!important;
-  color:#ffd94d!important;
-  border-radius:15px!important;
-  font-weight:900!important;
-}
-.player-info{
-  background:linear-gradient(180deg,rgba(0,0,0,.92),rgba(2,15,7,.95))!important;
-  border:3px solid #72ff00!important;
-  box-shadow:0 0 14px rgba(78,255,0,.35)!important;
-  border-radius:28px!important;
-  font-weight:900!important;
-}
-.groups-container{
-  align-items:flex-end!important;
-  justify-content:center!important;
-  gap:10px!important;
-  padding:8px 12px 2px!important;
-}
-.card-group{
-  background:rgba(0,0,0,.18)!important;
-  border:1px solid rgba(255,214,74,.35)!important;
-  border-radius:10px!important;
-  box-shadow:0 4px 10px rgba(0,0,0,.35)!important;
-  padding:3px!important;
-}
-.cards-in-group{
-  gap:0!important;
-}
-.card{
-  width:74px!important;
-  height:108px!important;
-  border-radius:9px!important;
-  border:2px solid #dedede!important;
-  background:linear-gradient(145deg,#fff,#f1f1f1)!important;
-  color:#111!important;
-  font-weight:1000!important;
-  box-shadow:0 5px 10px rgba(0,0,0,.6)!important;
-  margin-left:-32px!important;
-  transition:transform .15s ease,box-shadow .15s ease!important;
-}
-.card:first-child{margin-left:0!important}
-.card:hover{
-  transform:translateY(-10px)!important;
-  z-index:20!important;
-  box-shadow:0 12px 18px rgba(0,0,0,.55)!important;
-}
-.card.selected{
-  transform:translateY(-16px)!important;
-  border-color:#ffd83d!important;
-  box-shadow:0 0 0 3px #ffec91,0 10px 18px rgba(0,0,0,.7)!important;
-}
-.left-controls{
-  gap:14px!important;
-}
-.left-controls button,.action-buttons button{
-  border:2px solid rgba(255,255,255,.35)!important;
-  border-radius:16px!important;
-  box-shadow:0 6px 14px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.3)!important;
-  font-weight:1000!important;
-  text-transform:uppercase!important;
-  letter-spacing:.5px!important;
-}
-.btn-drop{
-  background:linear-gradient(180deg,#ff5555,#bd1111)!important;
-}
-.btn-auto-sort,.btn-group{
-  background:linear-gradient(180deg,#39c85a,#087d28)!important;
-}
-.btn-discard{
-  background:linear-gradient(180deg,#28a9ed,#075e9d)!important;
-}
-.btn-declare{
-  background:linear-gradient(180deg,#ffbf32,#df7c00)!important;
-}
-.dealer-badge{
-  background:#ffd53d!important;
-  color:#17100a!important;
-  border:1px solid #fff0a0!important;
-}
-#status,.deal-info{
-  font-weight:900!important;
-  text-shadow:0 2px 3px #000!important;
-}
-@media(max-width:900px){
-  .table{
-    border-width:8px!important;
-  }
-  .card{
-    width:58px!important;
-    height:84px!important;
-    font-size:.82em!important;
-    margin-left:-25px!important;
-  }
-  .groups-container{gap:5px!important;padding-left:4px!important;padding-right:4px!important}
-  .table:before{font-size:8px;letter-spacing:1px;bottom:5px}
-  .table:after{font-size:130px}
-}
-</style>
-
-
-<style id="JKRN_CREATE_ROOM_LATEST_DESIGN">
-#onlineLobby{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;overflow:auto;padding:24px 12px;box-sizing:border-box;background:radial-gradient(circle at 50% 25%,#173d28 0%,#07130c 48%,#020503 100%);font-family:Arial,sans-serif;color:#fff}
-#onlineLobby.hidden{display:none!important}
-.jkrn-create-card{width:min(560px,96vw);box-sizing:border-box;padding:24px 26px 22px;background:linear-gradient(155deg,#12251a,#07110b 70%);border:2px solid #d7ae35;border-radius:24px;box-shadow:0 0 35px rgba(215,174,53,.25),inset 0 1px 0 rgba(255,235,145,.25);text-align:center}
-.jkrn-brand{font-size:31px;font-weight:1000;color:#ffe04a;text-shadow:0 2px 4px #000}.jkrn-brand span{letter-spacing:.5px}.jkrn-subbrand{color:#bfc8c2;font-weight:800;margin:4px 0 18px}
-.jkrn-label{display:block;text-align:left;color:#ffd94f;font-size:13px;font-weight:1000;margin:12px 0 6px;letter-spacing:.7px}
-.jkrn-input{width:100%;box-sizing:border-box;padding:13px 14px;border:1px solid #496d52;border-radius:11px;background:#06100a;color:#fff;font-size:16px;outline:none}.jkrn-input:focus{border-color:#d7ae35;box-shadow:0 0 8px rgba(215,174,53,.2)}
-.jkrn-scroll-row{display:flex;gap:8px;overflow-x:auto;padding:2px 1px 6px;scrollbar-width:thin}.jkrn-choice{flex:0 0 auto;min-width:88px;padding:11px 15px;border:1px solid #4b7654;border-radius:10px;background:#0a1710;color:#dfe8e2;font-weight:1000;cursor:pointer}.jkrn-choice.active{background:linear-gradient(#ffd951,#d89e00);border-color:#fff0a1;color:#171007;box-shadow:0 3px 9px rgba(0,0,0,.4)}
-.jkrn-amount-line{display:flex;align-items:center;justify-content:space-between;color:#aeb9b1;font-size:12px}.jkrn-amount-line strong{font-size:27px;color:#ffe04a}.jkrn-range{width:100%;accent-color:#e4b72f;margin:5px 0 7px}.jkrn-quick-amounts{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}.jkrn-quick-amounts button{flex:0 0 auto;border:1px solid #6c5720;border-radius:8px;background:#17170d;color:#ffd84a;padding:7px 10px;font-weight:900;cursor:pointer}
-.jkrn-main-buttons{display:grid;grid-template-columns:1.5fr 1fr;gap:9px;margin-top:14px}.jkrn-create-btn,.jkrn-start-btn,.jkrn-join-btn{border:0;border-radius:12px;padding:14px;font-weight:1000;font-size:16px;cursor:pointer;box-shadow:0 5px 12px rgba(0,0,0,.45)}.jkrn-create-btn{background:linear-gradient(#ffd95b,#dda400);color:#171007}.jkrn-start-btn{background:linear-gradient(#39d65e,#128b32);color:#fff}.jkrn-start-btn:disabled{opacity:.38;cursor:not-allowed;filter:grayscale(.4)}.jkrn-join-btn{width:100%;margin-top:9px;background:linear-gradient(#36ad57,#19732e);color:#fff}
-.jkrn-room-code{font-size:25px;letter-spacing:5px;color:#ffe04a;font-weight:1000;margin:13px 0 3px}.jkrn-status{min-height:22px;padding:10px;border-radius:10px;background:#061009;color:#a7ffad;font-weight:700;font-size:13px}.jkrn-players{text-align:left;margin-top:10px;max-height:155px;overflow:auto}.jkrn-players b{color:#ffd94f}.jkrn-players .online-player{padding:8px 10px;background:#122019;border:1px solid #294a32;border-radius:8px;margin:5px 0}.jkrn-online-count{margin-top:12px;color:#ffd94f;font-weight:900}
-@media(max-width:600px){.jkrn-create-card{padding:18px 15px}.jkrn-brand{font-size:26px}.jkrn-main-buttons{grid-template-columns:1fr 1fr}.jkrn-choice{min-width:72px;padding:10px 12px}}
-/* Hand can slide vertically while preserving the grouped card layout. */
-.player-area{touch-action:none;transition:transform .18s ease}.player-area.jkrn-hand-raised{transform:translateY(-48px)}
-.jkrn-hand-lift-btn{position:absolute;left:50%;transform:translateX(-50%);bottom:100%;z-index:50;border:1px solid #e0b83d;border-radius:10px;background:#08140c;color:#ffd94f;padding:5px 12px;font-weight:900;cursor:pointer}
-</style>
-
-<style id="jkrn-hand-drag-fix">
-.cards-in-group{min-height:74px;display:flex;align-items:flex-start;cursor:default;}
-.cards-in-group .card{cursor:grab;user-select:none;-webkit-user-select:none;}
-.cards-in-group .card:active{cursor:grabbing;}
-.card-group.drag-over{outline:3px dashed #ffd700;outline-offset:3px;}
-</style>
 </head>
 <body onload="initAutoGame()">
 
@@ -2053,45 +1827,24 @@ body{
 #onlineLobby.hidden{display:none!important}.online-box{width:min(430px,92vw);background:#101b13;border:2px solid #d4af37;border-radius:22px;padding:26px;box-shadow:0 0 35px rgba(212,175,55,.35);text-align:center}.online-box h1{margin:0 0 6px;color:#ffd700;font-size:27px}.online-box p{color:#bbb;margin:6px 0 18px}.online-input{width:100%;box-sizing:border-box;padding:13px 14px;margin:7px 0;border-radius:10px;border:1px solid #4b704f;background:#08100a;color:#fff;font-size:16px}.online-btn{width:100%;padding:13px;margin-top:9px;border:0;border-radius:11px;background:linear-gradient(#ffd95a,#d39b00);font-weight:800;font-size:16px;cursor:pointer}.online-btn.alt{background:linear-gradient(#35a853,#19702e);color:#fff}.room-code{font-size:28px;letter-spacing:5px;color:#ffd700;font-weight:900;margin:12px}.online-status{margin-top:15px;padding:12px;border-radius:10px;background:#071008;color:#9cff9c;min-height:22px}.online-players{text-align:left;margin-top:15px}.online-player{padding:9px 12px;background:#18251a;border-radius:8px;margin:6px 0}.online-small{font-size:12px;color:#888;margin-top:12px}
 </style>
 <div id="onlineLobby">
-  <div class="jkrn-create-card">
-    <div class="jkrn-brand">🃏 <span>RUMMY JKRN</span></div>
-    <div class="jkrn-subbrand">REAL PLAYER POOL RUMMY</div>
-
-    <label class="jkrn-label">PROFILE NAME</label>
-    <input id="onlineName" class="jkrn-input" maxlength="18" placeholder="Enter profile name">
-
-    <label class="jkrn-label">POOL GAME</label>
-    <div class="jkrn-scroll-row" id="poolChoiceRow">
-      <button type="button" class="jkrn-choice active" data-pool="201" onclick="selectPoolType(201)">201 POOL</button>
-      <button type="button" class="jkrn-choice" data-pool="101" onclick="selectPoolType(101)">101 POOL</button>
-    </div>
-
-    <label class="jkrn-label">PLAYERS</label>
-    <div class="jkrn-scroll-row" id="playerChoiceRow">
-      <button type="button" class="jkrn-choice active" data-players="2" onclick="selectPlayerCount(2)">2</button>
-      <button type="button" class="jkrn-choice" data-players="4" onclick="selectPlayerCount(4)">4</button>
-      <button type="button" class="jkrn-choice" data-players="6" onclick="selectPlayerCount(6)">6</button>
-    </div>
-
-    <label class="jkrn-label">ENTRY AMOUNT</label>
-    <div class="jkrn-amount-line"><span>₹300</span><strong id="entryAmountDisplay">₹300</strong><span>₹10,000</span></div>
-    <input id="entryAmount" class="jkrn-range" type="range" min="300" max="10000" step="100" value="300" oninput="updateEntryAmount(this.value)">
-    <div class="jkrn-quick-amounts">
-      <button onclick="setEntryAmount(300)">₹300</button><button onclick="setEntryAmount(500)">₹500</button><button onclick="setEntryAmount(1000)">₹1K</button><button onclick="setEntryAmount(2500)">₹2.5K</button><button onclick="setEntryAmount(5000)">₹5K</button><button onclick="setEntryAmount(10000)">₹10K</button>
-    </div>
-
-    <input id="onlineRoom" class="jkrn-input" maxlength="6" placeholder="ROOM ID (for Join)">
-    <div class="jkrn-main-buttons">
-      <button class="jkrn-create-btn" onclick="createOnlineRoom()">CREATE ROOM</button>
-      <button class="jkrn-start-btn" id="startRoomBtn" onclick="startRoomNow()" disabled>START</button>
-    </div>
-    <button class="jkrn-join-btn" onclick="joinOnlineRoom()">JOIN ROOM</button>
-
-    <div id="onlineRoomCode" class="jkrn-room-code"></div>
-    <div id="onlineStatus" class="jkrn-status">Choose your game settings and create a room.</div>
-    <div id="onlinePlayers" class="jkrn-players"></div>
-    <div id="globalOnlineCount" class="jkrn-online-count">👥 Players Online: 0</div>
+ <div class="online-box">
+  <h1>🃏 RUMMY JKRN</h1><p>REAL PLAYERS • 201 POOL</p>
+  <input id="onlineName" class="online-input" maxlength="18" placeholder="Enter your player name">
+  <input id="onlineRoom" class="online-input" maxlength="6" placeholder="Room ID (for Join)">
+  <select id="onlineMaxPlayers" class="online-input"><option value="2">2 Players</option><option value="4">4 Players</option><option value="6" selected>6 Players</option></select>
+  <select id="onlinePoolLimit" class="online-input"><option value="101">101 Pool</option><option value="201" selected>201 Pool</option></select>
+  <button class="online-btn" onclick="createOnlineRoom()">CREATE ROOM</button>
+  <button class="online-btn alt" onclick="quickJoinOnline()">⚡ QUICK JOIN – ADD ONLINE PLAYER</button>
+  <button class="online-btn alt" onclick="joinOnlineRoom()">JOIN ROOM</button>
+  <div id="globalOnlineCount" class="online-small" style="color:#ffd700;font-size:14px;font-weight:800;margin-top:12px">👥 Players Online: 0</div>
+  <div id="onlineRoomCode" class="room-code"></div>
+  <div id="onlineStatus" class="online-status">Connecting...</div>
+  <div id="onlineHelp" class="online-small" style="display:none;color:#ffd700">
+    Please start the RUMMY JKRN server and open <b>http://localhost:3000</b>.
   </div>
+  <div id="onlinePlayers" class="online-players"></div>
+  <div class="online-small">Phase 5: 2–6 real players • QUICK JOIN • live online count • reconnect support</div>
+ </div>
 </div>
 
 <div id="lobbyScreen">
@@ -2134,19 +1887,9 @@ body{
     <div id="dealerTossCards"></div>
     <div id="dealerTossInfo"></div>
     <button id="dealerTossStart" onclick="startAfterToss()" style="display:none">DEAL CARDS</button>
-    <div id="onlineTossChoice" style="display:none; margin-top:14px; position:relative; z-index:20;"><button onclick="chooseOnlineDraw('open')" style="padding:12px 22px;margin:4px;border-radius:10px;border:2px solid #fff;background:#1976d2;color:#fff;font-weight:900;cursor:pointer;">OPEN CARD</button><button onclick="chooseOnlineDraw('closed')" style="padding:12px 22px;margin:4px;border-radius:10px;border:2px solid #fff;background:#2e7d32;color:#fff;font-weight:900;cursor:pointer;">CLOSED CARD</button></div>
 </div>
 
     <div class="deal-info" id="dealInfo">Deal: 1 | Cards: 13</div>
-    <div id="jkrnLiveStatusBar" aria-live="polite">
-        <span>POOL: <b id="livePool">201</b></span>
-        <span>ROUND: <b id="liveRound">1</b></span>
-        <span>TURN: <b id="liveTurn">-</b></span>
-        <span>TIME: <b id="liveTimer">30</b>s</span>
-        <span>JOKER: <b id="liveJoker">-</b></span>
-        <span>ROUND SCORE: <b id="liveRoundScore">0</b></span>
-        <span>TOTAL: <b id="liveTotalScore">0</b></span>
-    </div>
     <div class="info-overlay">
         <div id="status">Determining Dealer...</div>
     </div>
@@ -2161,7 +1904,6 @@ body{
         <div class="pile-container">
             <div class="pile-label">WILD JOKER</div>
             <div class="pile joker-pile" id="topJokerDisplay">-</div>
-            <div id="printedJokerLabel" style="font-size:9px;color:#ffd700;font-weight:900;margin-top:2px">PRINTED JOKER: 🃏</div>
         </div>
 
         <div class="pile-container">
@@ -2255,10 +1997,7 @@ var onlineSocket=null, onlineRoomId=null, onlinePlayerId=null, onlineSessionToke
 function onlineMsg(t){const e=document.getElementById('onlineStatus');if(e)e.innerHTML=t;}
 function saveOnlineSession(){try{localStorage.setItem('jkrnOnlineSession',JSON.stringify({roomId:onlineRoomId,sessionToken:onlineSessionToken,name:(document.getElementById('onlineName')||{}).value||'Player'}));}catch(e){}}
 function loadOnlineSession(){try{return JSON.parse(localStorage.getItem('jkrnOnlineSession')||'null')}catch(e){return null}}
-function renderOnlinePlayers(players,maxPlayers){const e=document.getElementById('onlinePlayers');const cap=Number(maxPlayers||window.__onlineMaxPlayers||2);window.__onlineMaxPlayers=cap; if(e)e.innerHTML='<b>ROOM PLAYERS ('+players.length+'/'+cap+')</b>'+players.map((p,i)=>`<div class="online-player">🪑 SEAT ${i+1}. ${p.name} ${p.connected===false?'🔴 OFFLINE':(p.ready?'✅ READY':'⏳ WAITING')} ${p.index===window.__onlineDealerIndex?'👑 DEALER':''}</div>`).join('');
-  window.__onlineRoomPlayers=players||[];
-  players.forEach(p=>{ if(p.index===0)return; const box=document.getElementById('opp'+(p.index+1)); if(!box)return; const name=box.querySelector('.opp-name'); if(name)name.innerHTML=`${p.name} <span id="dealer-tag-p${p.index+1}" class="dealer-badge" style="display:${p.index===window.__onlineDealerIndex?'inline-block':'none'}">DEALER</span><span id="elim-tag-p${p.index+1}" class="elim-badge" style="display:none">OUT</span>`; const avatar=box.querySelector('.opp-avatar'); if(avatar)avatar.textContent='👤'; box.style.display='flex'; });
-}
+function renderOnlinePlayers(players,maxPlayers){const e=document.getElementById('onlinePlayers');if(!e)return;const cap=Number(maxPlayers||window.__onlineMaxPlayers||2);window.__onlineMaxPlayers=cap;e.innerHTML='<b>ROOM PLAYERS ('+players.length+'/'+cap+')</b>'+players.map((p,i)=>`<div class="online-player">🪑 SEAT ${i+1}. ${p.name} ${p.connected===false?'🔴 OFFLINE':(p.ready?'✅ READY':'⏳ WAITING')} ${p.index===window.__onlineDealerIndex?'👑 DEALER':''}</div>`).join('');}
 function ensureOnlineSocket(){
 if(onlineSocket)return;
 if(location.protocol==='file:'){
@@ -2274,61 +2013,19 @@ if(typeof io!=='function'){
 onlineSocket=io();
 onlineSocket.on('connect_error',e=>{onlineMsg('⚠️ Server connection failed. Please refresh.');});
 onlineSocket.on('connect',()=>{const s=loadOnlineSession();if(s&&s.roomId&&s.sessionToken){onlineRoomId=s.roomId;onlineSessionToken=s.sessionToken;onlineSocket.emit('reconnectPlayer',s);}else onlineMsg('Connected. Create or join a room.');});
-onlineSocket.on('roomCreated',d=>{window.__onlineMaxPlayers=d.maxPlayers||jkrnSelectedPlayers;onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();document.getElementById('onlineRoom').value=d.roomId;document.getElementById('onlineRoomCode').textContent='ROOM: '+d.roomId;onlineMsg('Room created. Share Room ID. Waiting for '+window.__onlineMaxPlayers+' players...');updateStartButton();});
-onlineSocket.on('roomJoined',d=>{window.__onlineMaxPlayers=d.maxPlayers||jkrnSelectedPlayers;onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();document.getElementById('onlineRoomCode').textContent='ROOM: '+d.roomId;onlineMsg('Joined room. Waiting for all players...');updateStartButton();});
+onlineSocket.on('roomCreated',d=>{window.__onlineMaxPlayers=d.maxPlayers||2;window.__onlinePoolLimit=d.poolLimit||201;onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();document.getElementById('onlineRoom').value=d.roomId;document.getElementById('onlineRoomCode').textContent='ROOM: '+d.roomId;onlineMsg('Room created. Share the Room ID. Waiting for players...<br><button class="online-btn alt" onclick="toggleOnlineReady()">I AM READY</button>');});
+onlineSocket.on('roomJoined',d=>{window.__onlineMaxPlayers=d.maxPlayers||2;window.__onlinePoolLimit=d.poolLimit||201;onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();document.getElementById('onlineRoomCode').textContent='ROOM: '+d.roomId;onlineMsg('Joined room. Press READY when all players are present.<br><button class="online-btn alt" onclick="toggleOnlineReady()">I AM READY</button>');});
 onlineSocket.on('reconnected',d=>{window.__onlineMaxPlayers=d.maxPlayers||window.__onlineMaxPlayers||2;onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();onlineMsg('♻️ Reconnected to your seat.');});
-onlineSocket.on('roomUpdate',d=>{window.__onlineRoomPlayers=d.players||[];renderOnlinePlayers(d.players,d.maxPlayers);onlineMsg((d.players||[]).length>=(d.maxPlayers||jkrnSelectedPlayers)?'All players joined. Game is ready to START.':'Waiting for players: '+(d.players||[]).length+'/'+(d.maxPlayers||jkrnSelectedPlayers));updateStartButton();});
+onlineSocket.on('roomUpdate',d=>{renderOnlinePlayers(d.players,d.maxPlayers);});
 onlineSocket.on('onlineCount',d=>{const e=document.getElementById('globalOnlineCount');if(e)e.textContent='👥 Players Online: '+(d.count||0);});
-onlineSocket.on('quickMatchReady',d=>{onlineMsg('🎯 '+d.message);updateStartButton();});
-onlineSocket.on('readyAck',()=>{onlineMsg('Waiting for all players...');});
-onlineSocket.on('tossStarted',d=>{startOnlineTossUI(d);});
-onlineSocket.on('realGameStarted',d=>{startOnlineGameUI(d); if(d&&d.firstChoice)showFirstDrawChoice(d);});
+onlineSocket.on('quickMatchReady',d=>{onlineMsg('🎯 '+d.message+'<br><button class="online-btn alt" onclick="toggleOnlineReady()">I AM READY</button>');});
+onlineSocket.on('readyAck',()=>{onlineReady=true;onlineMsg('You are READY. Waiting for all players...');});
+onlineSocket.on('realGameStarted',d=>{window.__realRoomStarted=true;window.__realRoomPlayers=(d.players||[]).length;window.__onlineDealerIndex=d.dealerIndex;window.__onlinePoolLimit=d.poolLimit||window.__onlinePoolLimit||201;numPlayers=window.__realRoomPlayers;document.getElementById('onlineLobby')?.classList.add('hidden');document.getElementById('lobbyScreen')?.classList.add('hidden');document.getElementById('dealerTossStage')?.classList.remove('active');onlineMsg('');});
 onlineSocket.on('roomError',m=>onlineMsg('❌ '+m));}
-function startOnlineTossUI(d){
-  window.__realRoomStarted=false;
-  const ol=document.getElementById('onlineLobby'),lb=document.getElementById('lobbyScreen');if(ol)ol.classList.add('hidden');if(lb)lb.classList.add('hidden');
-  initializeGameLobby();
-  const stage=document.getElementById('dealerTossStage'),cardsBox=document.getElementById('dealerTossCards'),info=document.getElementById('dealerTossInfo'),choice=document.getElementById('onlineTossChoice');
-  if(!stage||!cardsBox)return; stage.classList.add('active'); cardsBox.innerHTML='';
-  let cd=3; if(info) info.innerHTML=`🃏 TOSS CARDS OPEN<br><b>STARTING IN ${cd} SECONDS</b>`;
-  clearInterval(window.__tossCountdownTimer);
-  window.__tossCardsVisible=true;
-  window.__tossCountdownTimer=setInterval(()=>{
-    cd--;
-    if(cd>0){ if(info) info.innerHTML=`🃏 HI / LO CARDS OPEN<br><b>DISAPPEARING IN ${cd} SECONDS</b>`; }
-    else {
-      clearInterval(window.__tossCountdownTimer);
-      window.__tossCardsVisible=false;
-      if(cardsBox) cardsBox.innerHTML='';
-      if(info) info.innerHTML=`🎴 HI / LO CARDS GONE<br><b>DEALING 13 CARDS...</b>`;
-    }
-  },1000);
-  const cards=d.cards||{}; const hi=Number(d.highestIndex),lo=Number(d.lowestIndex);
-  Object.keys(cards).forEach(pid=>{const idx=(window.__onlineRoomPlayers||[]).findIndex(x=>x.id===pid); const c=cards[pid]; if(idx<0)return; const el=document.createElement('div');el.className='toss-seat-card p'+idx+(idx===hi?' highest':'')+(idx===lo?' lowest':''); const positions=(window.__onlineRoomPlayers||[]).length===2 ? {0:'left:50%;bottom:170px;transform:translateX(-50%)',1:'left:50%;top:8%;transform:translateX(-50%)'} : {0:'left:50%;bottom:170px;transform:translateX(-50%)',1:'left:3%;top:43%',2:'left:18%;top:20%',3:'left:50%;top:9%;transform:translateX(-50%)',4:'right:18%;top:20%',5:'right:3%;top:43%'};el.style.cssText+=(positions[idx]||'');el.innerHTML=`<div class="toss-rank ${c.color}">${c.rank}</div><div class="toss-suit ${c.color}">${c.suit}</div><div class="toss-badge">${idx===hi?'HIGHEST • FIRST LIFT':idx===lo?'LOWEST • DEALER':'TOSS'}</div>`;cardsBox.appendChild(el);});
-  const highName=(window.__onlineRoomPlayers[hi]||{}).name||('Player '+(hi+1)); const lowName=(window.__onlineRoomPlayers[lo]||{}).name||('Player '+(lo+1));
-  if(info)info.innerHTML=`🃏 TOSS COMPLETE • ⬆️ <b>${highName}</b> = FIRST DRAW • ⬇️ <b>${lowName}</b> = DEALER`;
-  if(choice){choice.style.display='none';}
-}
-function chooseOnlineDraw(choice){if(window.onlineSocket)window.onlineSocket.emit('tossChoice',{choice});const c=document.getElementById('onlineTossChoice');if(c)c.style.display='none';const stage=document.getElementById('dealerTossStage');if(stage)stage.classList.remove('active');const cardsBox=document.getElementById('dealerTossCards');if(cardsBox)cardsBox.innerHTML='';const info=document.getElementById('dealerTossInfo');if(info)info.innerHTML='✅ '+(choice==='open'?'OPEN CARD':'CLOSED CARD')+' SELECTED • NOW DISCARD ONE CARD';}
-function showFirstDrawChoice(gameData){
-  const c=document.getElementById('onlineTossChoice');if(!c)return;
-  const my=Number(window.__onlineMyIndex);
-  const first=Number(gameData?.currentPlayer ?? window.__onlineState?.currentPlayer);
-  const isHighest=my===first;
-  c.style.display=isHighest?'block':'none';
-  const cardsBox=document.getElementById('dealerTossCards');
-  if(cardsBox) cardsBox.innerHTML='';
-  const info=document.getElementById('dealerTossInfo');
-  if(info)info.innerHTML=isHighest
-    ? '🎴 13 CARDS DEALT • WILD JOKER SET • OPEN CARD READY<br><b>HIGHEST CARD = FIRST LIFT • CHOOSE OPEN CARD OR CLOSED CARD</b>'
-    : '🎴 13 CARDS DEALT • WILD JOKER SET • OPEN CARD READY<br><b>HIGHEST CARD PLAYER IS CHOOSING OPEN / CLOSED</b>';
-  const stage=document.getElementById('dealerTossStage');if(stage)stage.classList.add('active');
-}
-function createOnlineRoom(){ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();if(!name)return onlineMsg('Enter PROFILE NAME first.');onlineSocket.emit('createRoom',{name,maxPlayers:jkrnSelectedPlayers,poolLimit:jkrnSelectedPool,entryFee:jkrnEntryAmount});}
-function quickJoinOnline(){ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();if(!name)return onlineMsg('Enter PROFILE NAME first.');onlineSocket.emit('quickJoin',{name,maxPlayers:jkrnSelectedPlayers,poolLimit:jkrnSelectedPool,entryFee:jkrnEntryAmount});}
+function createOnlineRoom(){ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();const maxPlayers=Number(document.getElementById('onlineMaxPlayers').value||6);const poolLimit=Number(document.getElementById('onlinePoolLimit')?.value||201);onlineSocket.emit('createRoom',{name,maxPlayers,poolLimit});}
+function quickJoinOnline(){ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();const maxPlayers=Number(document.getElementById('onlineMaxPlayers').value||6);const poolLimit=Number(document.getElementById('onlinePoolLimit')?.value||201);onlineSocket.emit('quickJoin',{name,maxPlayers,poolLimit});}
 function joinOnlineRoom(){ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();const room=(document.getElementById('onlineRoom').value||'').trim().toUpperCase();if(!room)return onlineMsg('Enter Room ID first.');onlineSocket.emit('joinRoom',{name,roomId:room});}
-function toggleOnlineReady(){startRoomNow();}
-function startRoomNow(){if(!onlineSocket||!onlineRoomId)return onlineMsg('Create a room or join a room first.');onlineSocket.emit('startRoom',{roomId:onlineRoomId});}
+function toggleOnlineReady(){if(!onlineSocket||!onlineRoomId)return onlineMsg('Create or join a room first.');onlineSocket.emit('ready',{roomId:onlineRoomId,playerId:onlinePlayerId});}
 function initOnline(){ensureOnlineSocket();}
 window.addEventListener('load',initOnline);
 </script>
@@ -2347,42 +2044,27 @@ let dealNumber = 1, hasLiftedThisDeal = false;
 
 let dragCardInfo = null;
 
-let jkrnSelectedPool = 201;
-let jkrnSelectedPlayers = 2;
-let jkrnEntryAmount = 300;
-function selectPoolType(v){ jkrnSelectedPool=Number(v)===101?101:201; document.querySelectorAll('#poolChoiceRow .jkrn-choice').forEach(b=>b.classList.toggle('active',Number(b.dataset.pool)===jkrnSelectedPool)); }
-function selectPlayerCount(v){ const n=Number(v); jkrnSelectedPlayers=(n===4||n===6)?n:2; document.querySelectorAll('#playerChoiceRow .jkrn-choice').forEach(b=>b.classList.toggle('active',Number(b.dataset.players)===jkrnSelectedPlayers)); }
-function updateEntryAmount(v){ jkrnEntryAmount=Math.max(300,Math.min(10000,Number(v)||300)); const e=document.getElementById('entryAmountDisplay'); if(e)e.textContent='₹'+jkrnEntryAmount.toLocaleString('en-IN'); const r=document.getElementById('entryAmount'); if(r&&Number(r.value)!==jkrnEntryAmount)r.value=jkrnEntryAmount; }
-function setEntryAmount(v){updateEntryAmount(v);}
-function updateStartButton(){const b=document.getElementById('startRoomBtn'); const cap=Number(window.__onlineMaxPlayers||jkrnSelectedPlayers); const count=(window.__onlineRoomPlayers||[]).filter(p=>p.connected!==false).length; if(b){b.disabled=!onlineRoomId || count<cap || !!window.__realRoomStarted; b.textContent=count>=cap?'START':'WAITING '+count+'/'+cap;}}
 function initAutoGame() {
-    numPlayers = 2; poolLimit = 201; jkrnSelectedPool=201; jkrnSelectedPlayers=2; jkrnEntryAmount=300;
+    numPlayers = 2;
+    poolLimit = 201;
     document.getElementById("poolTypeDisplay").innerText = "201";
     document.getElementById("poolLimitLabel").innerText = "201";
-    initializeGameLobby(); document.getElementById("lobbyScreen").classList.add("hidden");
-    const ol=document.getElementById("onlineLobby"); if(ol) ol.classList.remove("hidden"); updateEntryAmount(300); updateStartButton();
-}
-function openLobbyRules(){ alert("Pool Rummy:\n\n• Select 101 or 201 Pool.\n• Select 2–6 players.\n• Entry amount can be selected from ₹300 to ₹10,000.\n• When the selected number of players joins, the game starts automatically."); }
-function openLevelTable(level, entryFee){ if(!window.__realRoomStarted)return; document.getElementById("lobbyScreen").classList.add("hidden"); runLeastCardToss(); }
-function startOnlineGameUI(d){
-    window.__realRoomStarted=true; window.__realRoomPlayers=(d&&d.players||[]).length; window.__onlineDealerIndex=d&&d.dealerIndex;
-    numPlayers=window.__realRoomPlayers||jkrnSelectedPlayers; poolLimit=Number((d&&d.poolLimit)||jkrnSelectedPool);
-    document.getElementById("poolTypeDisplay").innerText=poolLimit; document.getElementById("poolLimitLabel").innerText=poolLimit;
-    const ol=document.getElementById("onlineLobby"), lb=document.getElementById("lobbyScreen"); if(ol)ol.classList.add("hidden"); if(lb)lb.classList.add("hidden");
     initializeGameLobby();
-    const ts=document.getElementById('dealerTossStage'); if(ts)ts.classList.remove('active'); const tc=document.getElementById('onlineTossChoice'); if(tc)tc.style.display='none';
-    // The server is authoritative: it already dealt the cards and started the turn.
-    // Wait for the gameState event instead of creating a second local deal/toss.
-    if(typeof updateUI==='function')updateUI();
+    document.getElementById("lobbyScreen").classList.add("hidden");
+    const ol=document.getElementById("onlineLobby"); if(ol) ol.classList.remove("hidden");
+}
+
+function openLobbyRules(){ alert("201 Pool Rummy:\n\n• 1st Life (Pure) మరియు 2nd Life తప్పనిసరి.\n• ఒకే కలర్/సింబల్ కార్డులు రిపీట్ అయితే అది SET కాదు (IMPURE).\n• వేర్వేరు సూట్లు ఉన్న కార్డులతో మాత్రమే SET ఏర్పడుతుంది."); }
+function openLevelTable(level, entryFee){
+    if(!window.__realRoomStarted){ return; }
+    document.getElementById("lobbyScreen").classList.add("hidden");
+    runLeastCardToss();
 }
 
 function initializeGameLobby() {
     for(let i=2; i<=6; i++) {
         let el = document.getElementById(`opp${i}`);
-        if(!el) continue;
-        el.style.display = (i <= numPlayers) ? "flex" : "none";
-        if(numPlayers===2 && i===2){ el.style.top="5%"; el.style.left="50%"; el.style.right="auto"; el.style.transform="translateX(-50%)"; }
-        if(numPlayers===6 && i===2){ el.style.top="35%"; el.style.left="3%"; el.style.right="auto"; el.style.transform="none"; }
+        if(el) el.style.display = (i <= numPlayers) ? "flex" : "none";
     }
 }
 
@@ -2565,7 +2247,8 @@ function isJoker(card) {
 
 function isPureSequence(group) {
     if (!Array.isArray(group) || group.length < 3) return false;
-    if (group.some(card => card.isPrintedJoker)) return false;
+    // PURE LIFE cannot contain a Printed Joker or the selected Wild Joker rank.
+    if (group.some(card => card.isPrintedJoker || isJoker(card))) return false;
 
     const suit = group[0].suit;
     if (group.some(card => card.suit !== suit)) return false;
@@ -3077,7 +2760,13 @@ function updateUI() {
     }
 
     const dropBtn = document.getElementById("dropButton");
-    if(dropBtn) dropBtn.disabled = isEliminated(0);
+    if(dropBtn) {
+        const myScore = Number(gameScores["Player 1"] || 0);
+        const dropAllowed = myScore <= 175;
+        dropBtn.disabled = isEliminated(0) || !dropAllowed;
+        dropBtn.style.opacity = dropAllowed && !isEliminated(0) ? "1" : "0.45";
+        dropBtn.title = dropAllowed ? "Drop (+25)" : "Drop not allowed at 176+ points";
+    }
 }
 
 function displayPlayer() {
@@ -3101,9 +2790,7 @@ function displayPlayer() {
             e.preventDefault();
             gDiv.classList.remove("drag-over");
             if (dragCardInfo !== null) {
-                const targetCard = e.target.closest('.card');
-                const toCIdx = targetCard ? Number(targetCard.dataset.cIdx) : null;
-                moveCardToGroup(dragCardInfo.gIdx, dragCardInfo.cIdx, gIdx, Number.isInteger(toCIdx) ? toCIdx : null);
+                moveCardToGroup(dragCardInfo.gIdx, dragCardInfo.cIdx, gIdx);
             }
         };
 
@@ -3112,16 +2799,12 @@ function displayPlayer() {
 
         group.forEach((card, cIdx) => {
             const cDiv = document.createElement("div");
-            const cardColor = (card && (card.suit === "♥" || card.suit === "♦")) ? "red" : "black";
-            cDiv.className = `card ${cardColor} ${selectedCards.some(s=>s.gIdx===gIdx&&s.cIdx===cIdx)?"selected":""}`;
-            cDiv.dataset.cIdx = cIdx;
-            cDiv.dataset.gIdx = gIdx;
-            cDiv.style.color = cardColor === "red" ? "#d32f2f" : "#111";
+            cDiv.className = `card ${card.color} ${selectedCards.some(s=>s.gIdx===gIdx&&s.cIdx===cIdx)?"selected":""}`;
             cDiv.draggable = true;
 
             let valDiv = card.isPrintedJoker 
                 ? `<div class="card-top"><span>JOKER</span><span>🃏</span></div><div class="card-center">🃏</div>`
-                : `<div class="card-top" style="color:${cardColor} !important"><span style="color:${cardColor} !important">${card.rank}</span><span style="color:${cardColor} !important">${card.suit}</span></div><div class="card-center" style="color:${cardColor} !important">${card.suit}</div>`;
+                : `<div class="card-top"><span>${card.rank}</span><span>${card.suit}</span></div><div class="card-center">${card.suit}</div>`;
             if (isJoker(card)) valDiv += `<div class="joker-badge">👑</div>`;
             cDiv.innerHTML = valDiv;
 
@@ -3182,20 +2865,11 @@ function displayPlayer() {
     });
 }
 
-function moveCardToGroup(fromGIdx, fromCIdx, toGIdx, toCIdx = null) {
-    if (!playerGroups[fromGIdx] || !playerGroups[fromGIdx][fromCIdx]) return;
+function moveCardToGroup(fromGIdx, fromCIdx, toGIdx) {
+    if (fromGIdx === toGIdx) return;
     playSound('group');
     const card = playerGroups[fromGIdx].splice(fromCIdx, 1)[0];
-    if (fromGIdx === toGIdx) {
-        let insertAt = Number.isInteger(toCIdx) ? toCIdx : playerGroups[toGIdx].length;
-        if (fromCIdx < insertAt) insertAt--;
-        insertAt = Math.max(0, Math.min(insertAt, playerGroups[toGIdx].length));
-        playerGroups[toGIdx].splice(insertAt, 0, card);
-    } else {
-        let insertAt = Number.isInteger(toCIdx) ? toCIdx : playerGroups[toGIdx].length;
-        insertAt = Math.max(0, Math.min(insertAt, playerGroups[toGIdx].length));
-        playerGroups[toGIdx].splice(insertAt, 0, card);
-    }
+    playerGroups[toGIdx].push(card);
     playerGroups = playerGroups.filter(g => g.length > 0);
     selectedCards = [];
     updateUI();
@@ -3476,10 +3150,10 @@ function nextTurn() {
 }
 
 function dropGame() {
-    if (currentPlayer !== 0 || isEliminated(0) || gameOver) return;
+    const myScore = Number(gameScores["Player 1"] || 0);
+    if (currentPlayer !== 0 || isEliminated(0) || gameOver || myScore >= 176) return;
 
-    // STRICT DROP RULE:
-    // Player drops before/after lifting -> fixed 25 points for this version.
+    // POOL DROP RULE: only 175 or less can drop. +25 is added to cumulative score.
     const dropPoints = 25;
 
     gameScores["Player 1"] += dropPoints;
@@ -3593,12 +3267,12 @@ function showDealResultModal(titleText) {
 
     for (let i = 0; i < numPlayers; i++) {
         const isMe = (i === 0);
-        const onlineName = (window.__onlineRoomPlayers||[])[i]?.name;
-        const name = onlineName ? (isMe ? onlineName+" (YOU)" : onlineName) : (isMe ? "Player 1 (YOU)" : `Player ${i+1}`);
+        const name = isMe ? "Player 1 (YOU)" : `Player ${i+1}`;
         const avatar = isMe ? "👤" : ["🧑‍🦱", "👩", "🧔", "👱‍♂️", "👨‍🦰"][i-1] || "🤖";
         const isDropped = droppedThisDeal[i];
-        const statusObj = playerDealStatus[i] || {result: isDropped ? "Drop" : "Lost", points: 0};
-        const isWinner = statusObj.result.toLowerCase().includes("win");
+        const serverRow = (window.__onlineLastResult && Array.isArray(window.__onlineLastResult.players)) ? window.__onlineLastResult.players[i] : null;
+        const statusObj = serverRow ? {result:serverRow.result,points:Number(serverRow.points||0),totalScore:Number(serverRow.totalScore||0)} : (playerDealStatus[i] || {result: isDropped ? "Drop" : "Lost", points: 0});
+        const isWinner = String(statusObj.result||"").toLowerCase().includes("win");
         const isElim = isEliminated(i);
 
         let resultClass = isElim ? "sb-res-elim" : (isWinner ? "sb-res-winner" : (isDropped ? "sb-res-drop" : "sb-res-lost"));
@@ -3652,7 +3326,7 @@ function showDealResultModal(titleText) {
             <td>${cardsHtml}</td>
             <td class="${resultClass}">${resultText}</td>
             <td class="sb-pts">(+${statusObj.points})</td>
-            <td class="sb-score" style="${isElim ? 'color:#ff5252; font-weight:bold;' : ''}">${gameScores[`Player ${i+1}`]}</td>
+            <td class="sb-score" style="${isElim ? 'color:#ff5252; font-weight:bold;' : ''}">${statusObj.totalScore ?? gameScores[`Player ${i+1}`]}</td>
         </tr>`;
     }
 
@@ -3664,11 +3338,7 @@ function showDealResultModal(titleText) {
 function closeResultModalAndStartNext() {
     clearInterval(window._sbCountdown);
     document.getElementById("resultModal").classList.remove("active");
-    if(window.__onlineLastResult && window.onlineSocket && window.onlineRoomId){
-        window.__onlineLastResult=null; gameOver=false;
-        window.onlineSocket.emit('nextDeal');
-        return;
-    }
+
     dealerIndex = getNextActivePlayer(dealerIndex);
     dealNumber++;
     startGamePlay();
@@ -3729,8 +3399,19 @@ function openGlobalScoreboardModal() {
         // points only. Total Score is the cumulative score from completed deals.
         let result = "Playing";
         let roundPoints = 0;
-
-        if (eliminated) {
+        let totalScore = Number(gameScores[`Player ${i + 1}`] || 0);
+        const pid = (window.__onlineState && window.__onlineState.players && window.__onlineState.players[i]) ? window.__onlineState.players[i].id : null;
+        const livePts = pid ? Number((window.__onlineDealPoints||{})[pid]||0) : 0;
+        const serverRow = (window.__onlineLastResult && Array.isArray(window.__onlineLastResult.players)) ? window.__onlineLastResult.players[i] : null;
+        if (window.__realRoomStarted) {
+            roundPoints = livePts;
+            totalScore = Number(gameScores[`Player ${i + 1}`] || 0);
+            result = livePts > 0 ? (dropped ? "Drop" : "Playing") : (eliminated ? "ELIMINATED" : "Playing");
+        } else if (serverRow) {
+            result = serverRow.result || "Playing";
+            roundPoints = Number(serverRow.points || 0);
+            totalScore = Number(serverRow.totalScore ?? totalScore);
+        } else if (eliminated) {
             result = "ELIMINATED";
         } else if (dropped) {
             result = "Drop";
@@ -3789,7 +3470,7 @@ function openGlobalScoreboardModal() {
           <td>${cardsHtml}</td>
           <td class="${resultClass}">${result}</td>
           <td class="sb-pts">+${roundPoints}</td>
-          <td class="sb-score">${gameScores[`Player ${i + 1}`]}</td>
+          <td class="sb-score">${totalScore}</td>
         </tr>`;
     }
 
@@ -4514,39 +4195,19 @@ button[onclick*="groupSelected"] {
     playerGroups=groups;
     allHands[0]=fresh;
   }
-  function renderOnlineWildJoker(card){
-    const el=document.getElementById('topJokerDisplay');
-    if(!el) return;
-    if(card){
-      const jc=(card && (card.suit==='♥'||card.suit==='♦'))?'red':'black'; el.className='pile joker-pile '+jc; el.style.color=jc==='red'?'#d32f2f':'#111';
-      el.innerHTML='<div class="card-top"><span>'+String(card.rank||'')+'</span><span>'+String(card.suit||'')+'</span></div><div class="card-center">'+String(card.suit||'🃏')+'</div><div style="font-size:11px;color:#ffd700;margin-top:2px">👑 WILD JOKER</div>';
-    } else {
-      el.className='pile joker-pile';
-      el.textContent='-';
-    }
-  }
   function applyOnlineState(st){
     if(!st)return;
     window.__onlineMyIndex=st.myIndex;
     window.__realRoomStarted=!!st.started;
     window.__onlineState=st;
+    window.__onlineDealPoints=st.dealPoints||{};
     numPlayers=(st.players||[]).length||2; gameStarted=!!st.started; gameOver=false;
-    const lp=document.getElementById('livePool'); if(lp)lp.textContent=st.poolLimit||201;
-    const lr=document.getElementById('liveRound'); if(lr)lr.textContent=st.roundNumber||1;
-    const lt=document.getElementById('liveTurn'); if(lt)lt.textContent=st.currentPlayerName||((st.currentPlayer!=null)?'Player '+(st.currentPlayer+1):'-');
-    const lj=document.getElementById('liveJoker'); if(lj)lj.textContent=st.wildJoker?(String(st.wildJoker.rank)+' '+String(st.wildJoker.suit)):'-';
-    const meId=st.players?.[st.myIndex]?.id; const rs=document.getElementById('liveRoundScore'); if(rs)rs.textContent=Number(st.currentRoundScores?.[meId]||0);
-    const ts=document.getElementById('liveTotalScore'); if(ts)ts.textContent=Number(st.scores?.[meId]||0);
     currentPlayer=st.currentPlayer;
     playerHasDrawn=!!st.playerHasDrawn;
     deck=Array(Math.max(0,st.deckCount)).fill(null);
     discardPile=st.discardTop?[st.discardTop]:[];
     wildJoker=st.wildJoker||null;
-    renderOnlineWildJoker(wildJoker);
     window.__onlineDealerIndex=st.dealerIndex; (st.players||[]).forEach(pl=>{const tag=document.getElementById('dealer-tag-p'+(pl.index+1));if(tag)tag.style.display=pl.index===st.dealerIndex?'inline-block':'none';});
-    window.__onlineEliminated=!!(st.eliminated&&st.myIndex!=null&&st.players[st.myIndex]&&st.eliminated[st.players[st.myIndex].id]); window.__onlineDropped=!!(st.dropped&&st.myIndex!=null&&st.players[st.myIndex]&&st.dropped[st.players[st.myIndex].id]);
-    if(st.scores){(st.players||[]).forEach(pl=>{if(st.scores[pl.id]!=null){gameScores['Player '+(pl.index+1)]=Number(st.scores[pl.id])||0;}});}
-    (st.players||[]).forEach(pl=>{const drop=!!st.dropped?.[pl.id],elim=!!st.eliminated?.[pl.id]; const a=document.getElementById('action-p'+(pl.index+1));if(a)a.textContent=elim?'ELIMINATED':drop?'DROP +'+(st.roundPoints?.[pl.id]||0):st.currentPlayer===pl.index?(st.turnPhase==='grace'?'15 MIN GRACE':'YOUR TURN'):'Waiting'; const tag=document.getElementById('elim-tag-p'+(pl.index+1));if(tag)tag.style.display=elim?'inline-block':'none';});
     if(st.scores){ Object.entries(st.scores).forEach(([pid,score])=>{ const pl=(st.players||[]).find(x=>x.id===pid); if(pl&&pl.index>=0){ const el=document.getElementById('score-p'+(pl.index+1)); if(el)el.textContent=score; } }); }
     const me=st.hands[st.myIndex];
     if(Array.isArray(me)) rebuildLocalGroups(me);
@@ -4562,9 +4223,13 @@ button[onclick*="groupSelected"] {
   }
   function onlineStartTurnTimer(endAt){
     if(window.__onlineTurnTimer)clearInterval(window.__onlineTurnTimer);
-    const phase=window.__onlineState?.turnPhase||'draw'; const grace=phase==='grace';
-    function tick(){const target=grace?(window.__onlineState?.graceEndsAt||0):(endAt||0);const left=Math.max(0,Math.ceil((target-Date.now())/1000));timeLeft=left;const el=document.getElementById('timeLeft');if(el)el.textContent=left>=60?`${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}`:left;const live=document.getElementById('liveTimer');if(live){live.textContent=left;live.classList.toggle('urgent',left<=5);}const pi=document.getElementById('playerInfoBox');if(pi)pi.classList.toggle('grace-timer',grace);if(typeof updateAllPlayerTimers==='function')updateAllPlayerTimers();if(left<=0)clearInterval(window.__onlineTurnTimer);}
-    tick();window.__onlineTurnTimer=setInterval(tick,250);
+    function tick(){
+      const left=Math.max(0,Math.ceil(((endAt||Date.now())-Date.now())/1000));
+      timeLeft=left;
+      if(typeof updateAllPlayerTimers==='function')updateAllPlayerTimers();
+      if(left<=0)clearInterval(window.__onlineTurnTimer);
+    }
+    tick(); window.__onlineTurnTimer=setInterval(tick,250);
   }
 
   function onlineDeclare(){
@@ -4581,11 +4246,32 @@ button[onclick*="groupSelected"] {
     ensureOnlineSocket();
     if(window.__realV2Hooked)return; window.__realV2Hooked=true;
     onlineSocket.on('gameState',applyOnlineState);
-    onlineSocket.on('realGameStarted',d=>{if(!window.__realRoomStarted)startOnlineGameUI(d); gameOver=false; gameStarted=true; if(d&&Number.isInteger(d.currentPlayer))currentPlayer=d.currentPlayer; if(d&&d.firstChoice)showFirstDrawChoice(d); if(typeof updateUI==='function')updateUI();});
+    onlineSocket.on('realGameStarted',d=>{window.__realRoomStarted=true; gameOver=false; gameStarted=true; if(d&&Number.isInteger(d.currentPlayer))currentPlayer=d.currentPlayer; if(typeof updateUI==='function')updateUI();});
     onlineSocket.on('onlineActionError',m=>{const st=document.getElementById('status');if(st)st.innerText='⚠️ '+((m&&m.message)||'Action not allowed');});
-    onlineSocket.on('onlineActionAck',m=>{const st=document.getElementById('status');if(st&&m&&m.action==='draw')st.innerText='Card received. Select one card to discard.';if(m&&m.action==='draw'){const stage=document.getElementById('dealerTossStage');if(stage)stage.classList.remove('active');}});
-    onlineSocket.on('dealResult',r=>{ window.__onlineRoomStarted=false; window.__realRoomStarted=false; window.__onlineLastResult=r; gameOver=true; if(r.scores){(window.__onlineRoomPlayers||[]).forEach(pl=>{if(r.scores[pl.id]!=null)gameScores['Player '+(pl.index+1)]=Number(r.scores[pl.id])||0;});} (window.__onlineRoomPlayers||[]).forEach(pl=>{const pts=Number(r.roundPoints?.[pl.id]||0); const dropped=pts>0 && r.valid && pl.id!==r.winnerId && !(r.penalties||[]).some(x=>x.playerId===pl.id); playerDealStatus[pl.index]={result:pl.id===r.winnerId?'Winner':(dropped?'Drop':'Lost'),points:pts}; droppedThisDeal[pl.index]=dropped;}); const msg=r.valid?('🏆 '+r.winnerName+' SHOW / ROUND COMPLETE'):('❌ INVALID DECLARATION — '+(r.reason||'Please arrange 13 cards correctly')); if(typeof showDealResultModal==='function')showDealResultModal(msg); const b=document.getElementById('nextDealBtn'); if(b){b.innerText=r.matchWinner?'MATCH FINISHED':'NEXT DEAL';b.onclick=r.matchWinner?(()=>location.reload()):onlineNextDeal;} });
-    onlineSocket.on('poolFinished',r=>{alert('🏆 Match finished!');location.reload();});
+    onlineSocket.on('onlineActionAck',m=>{const st=document.getElementById('status');if(st&&m&&m.action==='draw')st.innerText='Card received. Select one card to discard.';});
+  onlineSocket.on('dealResult',r=>{
+      window.__onlineRoomStarted=false; window.__onlineLastResult=r; gameOver=true; gameStarted=false;
+      if(r && r.scores){ Object.entries(r.scores).forEach(([pid,score])=>{
+        const pl=(r.players||[]).find(x=>x.playerId===pid) || ((window.__onlineState&&window.__onlineState.players)||[]).find(x=>x.id===pid);
+        const idx=pl&&Number.isInteger(pl.index)?pl.index:((window.__onlineState?.players||[]).findIndex(x=>x.id===pid));
+        if(idx>=0) gameScores['Player '+(idx+1)]=Number(score)||0;
+      }); }
+      (r.players||[]).forEach(x=>{ const idx=(window.__onlineState?.players||[]).findIndex(p=>p.id===x.playerId); if(idx>=0){ playerDealStatus[idx]={result:x.result,points:Number(x.points)||0}; droppedThisDeal[idx]=x.result==='Drop'; } });
+      const msg=r.drop ? ('🏆 '+(r.winnerName||'Winner')+' WON! Drop +25 points') : (r.valid ? ('🏆 '+r.winnerName+' WON!') : ('❌ WRONG SHOW! '+r.loserName+' +80 points'));
+      if(typeof showDealResultModal==='function')showDealResultModal(msg);
+      const b=document.getElementById('nextDealBtn'); if(b){b.innerText=r.matchWinner?'MATCH FINISHED':'NEXT DEAL';b.onclick=r.matchWinner?(()=>location.reload()):onlineNextDeal;}
+    });
+    onlineSocket.on('poolFinished',r=>{
+      window.__onlineRoomStarted=false; gameOver=true; gameStarted=false;
+      if(r&&r.scores){ Object.entries(r.scores).forEach(([pid,score])=>{ const idx=(window.__onlineState?.players||[]).findIndex(x=>x.id===pid); if(idx>=0) gameScores['Player '+(idx+1)]=Number(score)||0; }); }
+      const winnerName=r?.winnerName || r?.result?.matchWinner || '';
+      if(winnerName){
+        window.__onlineLastResult=window.__onlineLastResult||{};
+        window.__onlineLastResult.matchWinner=winnerName;
+        showDealResultModal('🏆 '+winnerName+' IS THE GAME WINNER!');
+      } else { showDealResultModal('🏁 POOL FINISHED'); }
+      const b=document.getElementById('nextDealBtn'); if(b){b.innerText='GAME FINISHED';b.disabled=true;b.onclick=null;}
+  });
   }
   const oldDraw=window.drawCard, oldDrawDiscard=window.drawFromDiscard, oldDiscard=window.discardCard, oldGroup=window.groupSelectedCards, oldDeclare=window.declareGame; window.__originalDeclareGame=oldDeclare;
   window.drawCard=function(){
@@ -4600,7 +4286,6 @@ button[onclick*="groupSelected"] {
     if(window.__realRoomStarted){ if(currentPlayer!==onlinePlayerIndex()||!playerHasDrawn)return; const id=cardIdFromSelection(); if(!id)return; onlineSocket.emit('discardCard',{cardId:id}); return; }
     return oldDiscard.apply(this,arguments);
   };
-  const oldDrop=window.dropGame; window.dropGame=function(){ if(window.__realRoomStarted){ if(currentPlayer!==onlinePlayerIndex()||playerHasDrawn)return; onlineSocket.emit('drop'); return; } return oldDrop.apply(this,arguments); };
   window.declareGame=function(){ if(window.__realRoomStarted){ onlineDeclare(); return; } return window.__originalDeclareGame ? window.__originalDeclareGame.apply(this,arguments) : undefined; };
   window.nextOnlineDeal=onlineNextDeal;
   window.groupSelectedCards=function(){
@@ -4656,109 +4341,198 @@ button[onclick*="groupSelected"] {
 })();
 </script>
 <script id="jkrn-v7-room-link">(function(){const q=new URLSearchParams(location.search);const r=q.get('room');if(r){setTimeout(()=>{const x=document.getElementById('onlineRoom');if(x)x.value=r;},500);}})();</script>
-<script id="JKRN_HAND_VERTICAL_CONTROL">
+<style id="JKRN_ONLINE_FINAL_FIX_STYLE">
+/* In a 2-player online room, the friend sits directly opposite YOU. */
+.table.online-2p #opp2 { top: 5% !important; left: 50% !important; right: auto !important; transform: translateX(-50%) !important; }
+.table.online-2p #opp3, .table.online-2p #opp4, .table.online-2p #opp5, .table.online-2p #opp6 { display:none !important; }
+.table.online-4p #opp2 { left: 3% !important; top: 35% !important; }
+.table.online-4p #opp3 { left: 18% !important; top: 8% !important; }
+.table.online-4p #opp4 { left: 82% !important; top: 8% !important; transform: translateX(-50%) !important; }
+.table.online-4p #opp5 { right: 3% !important; top: 35% !important; }
+.table.online-4p #opp6 { display:none !important; }
+</style>
+<script id="JKRN_ONLINE_FINAL_FIX">
 (function(){
- function install(){
-  const area=document.getElementById('playerArea'); if(!area||area.dataset.jkrnHandControl)return; area.dataset.jkrnHandControl='1';
-  const btn=document.createElement('button'); btn.className='jkrn-hand-lift-btn'; btn.textContent='↕ HAND'; btn.title='Move hand up/down';
-  btn.onclick=function(){area.classList.toggle('jkrn-hand-raised');}; area.style.position='relative'; area.appendChild(btn);
- }
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install); else install(); window.addEventListener('load',install);
+  const originalStartGamePlay = window.startGamePlay;
+  const originalOpenLevelTable = window.openLevelTable;
+  const originalStartAfterToss = window.startAfterToss;
+
+  function enterOnlineTable(){
+    document.getElementById('onlineLobby')?.classList.add('hidden');
+    document.getElementById('lobbyScreen')?.classList.add('hidden');
+    document.getElementById('dealerTossStage')?.classList.remove('active');
+    const table=document.querySelector('.table');
+    const n=Number(window.__onlineMaxPlayers||window.__realRoomPlayers||2);
+    if(table){ table.classList.toggle('online-2p',n===2); table.classList.toggle('online-4p',n===4); table.classList.toggle('online-6p',n===6); }
+    const pool=Number(window.__onlinePoolLimit||201);
+    const pt=document.getElementById('poolTypeDisplay'); if(pt)pt.innerText=pool;
+    const pl=document.getElementById('poolLimitLabel'); if(pl)pl.innerText=pool;
+    if(typeof initializeGameLobby==='function') initializeGameLobby();
+    if(typeof updateUI==='function') updateUI();
+  }
+
+  window.openLevelTable=function(level,entryFee){
+    if(window.__realRoomStarted){ enterOnlineTable(); return; }
+    return originalOpenLevelTable ? originalOpenLevelTable.apply(this,arguments) : undefined;
+  };
+  window.startAfterToss=function(){
+    if(window.__realRoomStarted) return enterOnlineTable();
+    return originalStartAfterToss ? originalStartAfterToss.apply(this,arguments) : undefined;
+  };
+  window.startGamePlay=function(){
+    if(window.__realRoomStarted){ enterOnlineTable(); return; }
+    return originalStartGamePlay ? originalStartGamePlay.apply(this,arguments) : undefined;
+  };
+
+  function syncSeatNames(st){
+    if(!st||!Array.isArray(st.players))return;
+    const table=document.querySelector('.table');
+    if(table){
+      const n=st.players.length;
+      table.classList.toggle('online-2p',n===2); table.classList.toggle('online-4p',n===4); table.classList.toggle('online-6p',n===6);
+    }
+    st.players.forEach(pl=>{
+      const nameEl=document.querySelector('#player-name-p'+(pl.index+1));
+      if(nameEl) nameEl.textContent=(pl.index===st.myIndex?'YOU':pl.name);
+      const opp=document.getElementById('opp'+(pl.index+1));
+      if(opp) opp.style.display=(pl.index===st.myIndex||pl.index>=st.players.length)?'none':'flex';
+      const timer=document.getElementById('timer-p'+(pl.index+1));
+      if(timer) timer.textContent=(st.currentPlayer===pl.index)?'⏳ '+Math.max(0,Math.ceil(((st.turnEndsAt||Date.now())-Date.now())/1000))+'s':'30s';
+    });
+    const me=st.players[st.myIndex];
+    const pinfo=document.getElementById('playerInfoBox');
+    if(pinfo&&me){
+      const first=pinfo.querySelector('span');
+      if(first) first.innerHTML='👤 '+(me.name||'YOU')+' <span id="dealer-tag-p1" class="dealer-badge" style="display:'+(me.index===st.dealerIndex?'inline-block':'none')+';">DEALER</span> | Score: <span id="score-p1" style="color:#00ff00;">'+((st.scores&&st.scores[me.id])||0)+'</span> / <span id="poolLimitLabel">'+(st.poolLimit||201)+'</span>';
+    }
+  }
+
+  // Block the local computer simulation whenever the room is online.
+  const originalRunComputerTurn=window.runComputerTurn;
+  window.runComputerTurn=function(){ if(window.__realRoomStarted)return; return originalRunComputerTurn?originalRunComputerTurn.apply(this,arguments):undefined; };
+
+  // Online Drop must go to the server; local Drop must never change the real room.
+  const originalDrop=window.dropGame;
+  window.dropGame=function(){
+    if(window.__realRoomStarted){
+      if(typeof onlinePlayerIndex==='function' && currentPlayer!==onlinePlayerIndex())return;
+      if(window.onlineSocket&&window.onlineRoomId)window.onlineSocket.emit('drop');
+      return;
+    }
+    return originalDrop?originalDrop.apply(this,arguments):undefined;
+  };
+
+  // Extra state listener runs after the existing one and only paints server state.
+  function hook(){
+    if(!window.onlineSocket || window.__onlineFinalStateHook)return;
+    window.__onlineFinalStateHook=true;
+    window.onlineSocket.on('gameState',st=>{
+      window.__onlinePoolLimit=st.poolLimit||window.__onlinePoolLimit||201;
+      enterOnlineTable();
+      syncSeatNames(st);
+    });
+    window.onlineSocket.on('realGameStarted',d=>{
+      window.__realRoomStarted=true; window.__onlinePoolLimit=d.poolLimit||window.__onlinePoolLimit||201;
+      enterOnlineTable();
+    });
+    window.onlineSocket.on('onlineActionAck',m=>{ if(m&&m.action==='draw'){ const st=document.getElementById('status'); if(st)st.innerText='14 CARDS — Select ONE card and DISCARD.'; } });
+  }
+  hook(); window.addEventListener('load',hook);
 })();
 </script>
+<style id="jkrn-hand-score-style">
+#jkrnHandScore{display:inline-flex;align-items:center;gap:5px;margin-left:8px;padding:3px 9px;border:1px solid #ffd54a;border-radius:12px;background:#07140a;color:#ffd54a;font-weight:900;font-size:12px;}
+#jkrnHandScore.low{color:#45ff7a;border-color:#45ff7a;}
+</style>
+<script id="jkrn-auto-sort-score-fix">
+(function(){
+  function cardPts(c){
+    if(!c || c.isPrintedJoker || (typeof isJoker==='function' && isJoker(c))) return 0;
+    if(['A','K','Q','J'].includes(String(c.rank).toUpperCase())) return 10;
+    const n=parseInt(c.rank,10); return Number.isFinite(n)?n:0;
+  }
+  function key(c){ return c ? `${c.id||''}|${c.rank}|${c.suit}|${c.isPrintedJoker?'PJ':''}` : ''; }
+  function calcBest(hand){
+    const cards=(hand||[]).filter(Boolean), n=cards.length;
+    if(!n) return {points:0,groups:[],remaining:[]};
+    const candidates=[];
+    const maxMask=1<<n;
+    for(let mask=1;mask<maxMask;mask++){
+      let count=0; const g=[];
+      for(let i=0;i<n;i++) if(mask&(1<<i)){count++;g.push(cards[i]);}
+      if(count<3) continue;
+      if(isPureSequence(g)) candidates.push({mask,g,type:'pure'});
+      else if(isSequence(g)) candidates.push({mask,g,type:'seq'});
+      else if(isValidSet(g)) candidates.push({mask,g,type:'set'});
+    }
+    // Longest/lower-point-friendly groups first, but final choice is score based.
+    candidates.sort((a,b)=>b.g.length-a.g.length);
+    let best={points:Infinity,groups:[],remaining:cards.slice(),valid:false,covered:0};
+    function evaluate(chosen,used){
+      let pure=0,seq=0,covered=0;
+      for(const c of chosen){ if(c.type==='pure') pure++; if(c.type==='seq') seq++; covered+=c.g.length; }
+      const validShowShape=(pure>=1 && (seq + pure)>=2);
+      let points=0,remaining=[];
+      for(let i=0;i<n;i++) if(!(used&(1<<i))){remaining.push(cards[i]);points+=cardPts(cards[i]);}
+      // Auto-sort always tries to create the legal 1st+2nd life first.
+      // If that is possible, minimize the remaining card points.
+      const score={valid:validShowShape,points,covered,pure,groups:chosen,remaining};
+      if(!best.valid && score.valid) best=score;
+      else if(best.valid===score.valid && (score.points<best.points || (score.points===best.points&&score.covered>best.covered))) best=score;
+    }
+    function dfs(start,used,chosen,pure,seq){
+      evaluate(chosen,used);
+      for(let j=start;j<candidates.length;j++){
+        const c=candidates[j];
+        if(used&c.mask) continue;
+        // Do not add duplicate-equivalent group partitions.
+        dfs(j+1,used|c.mask,chosen.concat(c),pure+(c.type==='pure'),seq+(c.type==='seq'));
+      }
+    }
+    dfs(0,0,[],0,0);
+    return {points:Math.min(80,best.points),groups:best.groups.map(x=>x.g.slice()),remaining:best.remaining,valid:best.valid};
+  }
+  function updateHandScore(){
+    const box=document.getElementById('playerInfoBox'); if(!box)return;
+    let el=document.getElementById('jkrnHandScore');
+    if(!el){el=document.createElement('span');el.id='jkrnHandScore';box.appendChild(el);}
+    const hand=playerGroups.flat().filter(Boolean);
+    const r=calcBest(hand);
+    el.textContent=`🧮 Hand Points: ${r.points}`;
+    el.classList.toggle('low',r.points<=5);
+    el.title=r.valid?'Best legal 1st + 2nd life arrangement':'No complete 1st + 2nd life arrangement yet';
+  }
+  window.jkrnCalculateBestHand=calcBest;
+  // AUTO SORT = visual arrangement only. It must NEVER create/lock Life or Set groups.
+  window.autoSortCards=function(){
+    if(typeof isEliminated==='function' && isEliminated(0)) return;
+    const all=(playerGroups||[]).flat().filter(Boolean);
+    if(!all.length)return;
+    const suitOrder={'♥':1,'♦':2,'♣':3,'♠':4};
+    const rankOrderLocal={'A':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'J':11,'Q':12,'K':13};
+    const isAnyJoker=c=>!!(c && (c.isPrintedJoker || (typeof isJoker==='function' && isJoker(c))));
+    all.sort((a,b)=>{
+      const aj=isAnyJoker(a), bj=isAnyJoker(b);
+      if(aj!==bj) return aj?1:-1;
+      if(aj && bj) return (a.isPrintedJoker?1:0)-(b.isPrintedJoker?1:0);
+      const sa=suitOrder[a.suit]||9, sb=suitOrder[b.suit]||9;
+      return sa-sb || (rankOrderLocal[a.rank]||99)-(rankOrderLocal[b.rank]||99);
+    });
+    // Keep one visual hand. GROUP/LIFE formation remains a manual player action.
+    playerGroups=[all];
+    selectedCards=[];
+    if(typeof playSound==='function')playSound('group');
+    if(typeof updateUI==='function')updateUI();
+    setTimeout(updateHandScore,0);
+  };
+  const oldUpdateUI=window.updateUI;
+  window.updateUI=function(){
+    if(typeof oldUpdateUI==='function')oldUpdateUI.apply(this,arguments);
+    setTimeout(updateHandScore,0);
+  };
+  window.addEventListener('load',()=>setTimeout(updateHandScore,100));
+})();
+</script>
+
 </body>
 </html>
-
-<style id="jkrn-draw-click-fix">
-/* After the toss, the visual overlay must NEVER block the actual card piles. */
-#dealerTossStage.active { pointer-events: none !important; }
-#onlineTossChoice { pointer-events: auto !important; }
-#onlineTossChoice button { pointer-events: auto !important; }
-/* Card piles stay clickable during the live game. */
-#centerArea, #centerArea .pile, #discardPile { pointer-events: auto !important; }
-</style>
-<script id="jkrn-draw-click-fix-js">
-(function(){
-  function unlockPiles(){
-    const stage=document.getElementById('dealerTossStage');
-    if(stage) stage.style.pointerEvents='none';
-    const center=document.getElementById('centerArea');
-    if(center) center.style.pointerEvents='auto';
-    document.querySelectorAll('#centerArea .pile').forEach(el=>el.style.pointerEvents='auto');
-    const dd=document.getElementById('discardPile');
-    if(dd) dd.style.pointerEvents='auto';
-  }
-  window.addEventListener('load',unlockPiles);
-  document.addEventListener('click',function(e){
-    if(e.target.closest('#onlineTossChoice')) return;
-    if(window.__realRoomStarted) unlockPiles();
-  },true);
-})();
-</script>
-
-<style id="jkrn-auto-sort-rules-v1">
-#playerGroupsContainer .card-group{min-height:72px;}
-#playerGroupsContainer .card{cursor:grab;user-select:none;-webkit-user-drag:element;}
-#playerGroupsContainer .card.dragging{opacity:.45;transform:translateY(-5px);}
-#playerGroupsContainer .card-group.drag-over{outline:2px dashed #ffd700;outline-offset:3px;}
-#playerGroupsContainer .card.jkrn-card-arrive{animation:jkrnCardArrive .22s ease-out;}
-@keyframes jkrnCardArrive{from{opacity:.2;transform:translateY(-14px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
-</style>
-<script id="jkrn-auto-sort-rules-v1-js">
-(function(){
-  // AUTO SORT is a visual arrangement only. It never declares or locks a life/group.
-  window.__autoSortEnabled = true;
-  const suitOrder={'♥':1,'♦':2,'♣':3,'♠':4};
-  const rankOrderLocal={'A':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'J':11,'Q':12,'K':13};
-  function visualSort(cards){
-    return (cards||[]).filter(Boolean).slice().sort((a,b)=>{
-      const aj=!!a.isPrintedJoker, bj=!!b.isPrintedJoker;
-      if(aj!==bj) return aj?1:-1;
-      if(aj&&bj) return 0;
-      const sa=suitOrder[a.suit]||99, sb=suitOrder[b.suit]||99;
-      if(sa!==sb)return sa-sb;
-      return (rankOrderLocal[a.rank]||99)-(rankOrderLocal[b.rank]||99);
-    });
-  }
-  window.jkrnVisualAutoSort=function(){
-    if(typeof playerGroups==='undefined')return;
-    const cards=playerGroups.flat().filter(Boolean);
-    if(!cards.length)return;
-    // One neutral visual container: no valid group is auto-created.
-    playerGroups=[visualSort(cards)];
-    selectedCards=[];
-    if(typeof updateUI==='function')updateUI();
-  };
-  window.autoSortPlayerCards=function(){ window.jkrnVisualAutoSort(); };
-  window.autoSortCards=function(){ playSound('group'); window.jkrnVisualAutoSort(); };
-
-  function sortAfterServerState(){
-    if(!window.__autoSortEnabled || !window.__onlineState || typeof playerGroups==='undefined')return;
-    const me=window.__onlineState.hands && window.__onlineState.hands[window.__onlineState.myIndex];
-    if(!Array.isArray(me))return;
-    playerGroups=[visualSort(me)];
-    selectedCards=[];
-    if(typeof updateUI==='function')updateUI();
-  }
-  function hookSocket(){
-    const sock=window.onlineSocket;
-    if(!sock || window.__jkrnAutoSortSocketHook)return;
-    window.__jkrnAutoSortSocketHook=true;
-    // Registered after the authoritative gameState handler, so newly drawn cards
-    // are placed into their suit/rank position immediately.
-    sock.on('gameState',()=>setTimeout(sortAfterServerState,0));
-    sock.on('realGameStarted',()=>setTimeout(sortAfterServerState,0));
-    sock.on('onlineActionAck',m=>{if(m&&m.action==='draw')setTimeout(sortAfterServerState,0);});
-  }
-  function boot(){
-    hookSocket();
-    if(typeof gameStarted!=='undefined' && gameStarted)setTimeout(sortAfterServerState,0);
-    // Keep default ON; the existing button remains a manual re-sort control.
-    const btn=document.getElementById('autoSortButton');
-    if(btn){btn.textContent='AUTO SORT';btn.disabled=false;btn.title='Visual sort only — no groups or declarations are locked';}
-  }
-  setInterval(hookSocket,300);
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
-  window.addEventListener('load',boot);
-})();
-</script>
