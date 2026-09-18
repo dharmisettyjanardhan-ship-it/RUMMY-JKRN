@@ -4575,61 +4575,173 @@ button[onclick*="groupSelected"] {
 #playerGroupsContainer .card.jkrn-card-arrive{animation:jkrnCardArrive .22s ease-out;}
 @keyframes jkrnCardArrive{from{opacity:.2;transform:translateY(-14px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
 </style>
-<script id="jkrn-auto-sort-rules-v1-js">
-(function(){
-  // AUTO SORT is a visual arrangement only. It never declares or locks a life/group.
-  window.__autoSortEnabled = true;
-  const suitOrder={'♥':1,'♦':2,'♣':3,'♠':4};
-  const rankOrderLocal={'A':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'J':11,'Q':12,'K':13};
-  function visualSort(cards){
-    return (cards||[]).filter(Boolean).slice().sort((a,b)=>{
-      const aj=!!a.isPrintedJoker, bj=!!b.isPrintedJoker;
-      if(aj!==bj) return aj?1:-1;
-      if(aj&&bj) return 0;
-      const sa=suitOrder[a.suit]||99, sb=suitOrder[b.suit]||99;
-      if(sa!==sb)return sa-sb;
-      return (rankOrderLocal[a.rank]||99)-(rankOrderLocal[b.rank]||99);
-    });
-  }
-  window.jkrnVisualAutoSort=function(){
-    if(typeof playerGroups==='undefined')return;
-    const cards=playerGroups.flat().filter(Boolean);
-    if(!cards.length)return;
-    // One neutral visual container: no valid group is auto-created.
-    playerGroups=[visualSort(cards)];
-    selectedCards=[];
-    if(typeof updateUI==='function')updateUI();
-  };
-  window.autoSortPlayerCards=function(){ window.jkrnVisualAutoSort(); };
-  window.autoSortCards=function(){ playSound('group'); window.jkrnVisualAutoSort(); };
+<script id="jkrn-auto-sort-rules-v1-js">/* superseded by V3 */</script>
 
-  function sortAfterServerState(){
-    if(!window.__autoSortEnabled || !window.__onlineState || typeof playerGroups==='undefined')return;
-    const me=window.__onlineState.hands && window.__onlineState.hands[window.__onlineState.myIndex];
-    if(!Array.isArray(me))return;
-    playerGroups=[visualSort(me)];
+
+<style id="jkrn-auto-sort-life-set-v3">
+/* AUTO SORT: arrange cards into detected LIFE / SET groups.
+   This is only an arrangement aid; DECLARE remains server validated. */
+#playerGroupsContainer .jkrn-auto-life-group{
+  border:2px solid #ffd700!important;
+  box-shadow:0 0 8px rgba(255,215,0,.28);
+}
+#playerGroupsContainer .jkrn-auto-life-label{
+  font-size:10px;font-weight:900;color:#ffd700;padding:2px 4px;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+</style>
+<script id="jkrn-auto-sort-life-set-v3-js">
+(function(){
+  const RO={A:1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":10,J:11,Q:12,K:13};
+  const SO={'♥':1,'♦':2,'♣':3,'♠':4};
+
+  function wild(c){
+    if(!c) return false;
+    if(c.isPrintedJoker) return true;
+    try{
+      if(typeof wildJoker!=='undefined' && wildJoker && c.rank===wildJoker.rank) return true;
+    }catch(e){}
+    return false;
+  }
+  function pure(g){
+    if(!g || g.length<3 || g.some(c=>!c || c.isPrintedJoker)) return false;
+    const s=g[0].suit;
+    if(!s || g.some(c=>c.suit!==s)) return false;
+    const v=g.map(c=>RO[c.rank]).sort((a,b)=>a-b);
+    if(new Set(v).size!==v.length) return false;
+    return v.every((x,i)=>i===0||x===v[i-1]+1) ||
+      (g.some(c=>c.rank==='A') && (()=> {
+        const h=g.map(c=>c.rank==='A'?14:RO[c.rank]).sort((a,b)=>a-b);
+        return h.every((x,i)=>i===0||x===h[i-1]+1);
+      })());
+  }
+  function impure(g){
+    if(!g || g.length<3) return false;
+    if(pure(g)) return false;
+    const nj=g.filter(c=>!wild(c)), j=g.length-nj.length;
+    if(!nj.length) return j>=3;
+    const s=nj[0].suit;
+    if(nj.some(c=>c.suit!==s)) return false;
+    const v=nj.map(c=>RO[c.rank]).sort((a,b)=>a-b);
+    if(new Set(v).size!==v.length) return false;
+    let gaps=0;
+    for(let i=1;i<v.length;i++) gaps+=v[i]-v[i-1]-1;
+    if(gaps<=j) return true;
+    const h=nj.map(c=>c.rank==='A'?14:RO[c.rank]).sort((a,b)=>a-b);
+    gaps=0;
+    for(let i=1;i<h.length;i++) gaps+=h[i]-h[i-1]-1;
+    return gaps<=j;
+  }
+  function setGroup(g){
+    if(!g || g.length<3 || g.length>4) return false;
+    const nj=g.filter(c=>!wild(c));
+    if(!nj.length) return true;
+    const r=nj[0].rank;
+    if(nj.some(c=>c.rank!==r)) return false;
+    const suits=new Set();
+    for(const c of nj){
+      if(suits.has(c.suit)) return false;
+      suits.add(c.suit);
+    }
+    return true;
+  }
+  function kind(g){
+    if(pure(g)) return 'PURE LIFE';
+    if(impure(g)) return '2ND LIFE';
+    if(setGroup(g)) return 'SET';
+    return null;
+  }
+
+  // Find the largest useful non-overlapping legal groups.
+  function smartGroups(cards){
+    const n=cards.length, candidates=[];
+    if(n<3) return [cards.slice()];
+
+    // Enumerate all subsets; 13 cards => only 8191 possibilities.
+    for(let mask=1;mask<(1<<n);mask++){
+      const cnt=mask.toString(2).replace(/0/g,'').length;
+      if(cnt<3 || cnt>n) continue;
+      const g=[];
+      for(let i=0;i<n;i++) if(mask&(1<<i)) g.push(cards[i]);
+      const type=kind(g);
+      if(type) candidates.push({mask,g,type,count:cnt,priority:type==='PURE LIFE'?3:type==='2ND LIFE'?2:1});
+    }
+
+    candidates.sort((a,b)=>{
+      if(b.count!==a.count) return b.count-a.count;
+      return b.priority-a.priority;
+    });
+
+    const chosen=[];
+    let used=0;
+
+    // First guarantee as many pure sequences as possible.
+    for(const c of candidates){
+      if(c.type!=='PURE LIFE') continue;
+      if(c.mask & used) continue;
+      chosen.push(c); used|=c.mask;
+    }
+    // Then impure sequences.
+    for(const c of candidates){
+      if(c.type!=='2ND LIFE') continue;
+      if(c.mask & used) continue;
+      chosen.push(c); used|=c.mask;
+    }
+    // Then sets.
+    for(const c of candidates){
+      if(c.type!=='SET') continue;
+      if(c.mask & used) continue;
+      chosen.push(c); used|=c.mask;
+    }
+
+    // Prefer keeping all remaining cards visible and easy to work with.
+    const rest=[];
+    for(let i=0;i<n;i++) if(!(used&(1<<i))) rest.push(cards[i]);
+
+    chosen.sort((a,b)=>{
+      if(a.type!==b.type) return b.priority-a.priority;
+      return b.count-a.count;
+    });
+
+    const groups=chosen.map(x=>x.g.slice());
+    if(rest.length){
+      rest.sort((a,b)=>{
+        const aj=!!a.isPrintedJoker,bj=!!b.isPrintedJoker;
+        if(aj!==bj) return aj?-1:1;
+        const sa=SO[a.suit]||99,sb=SO[b.suit]||99;
+        if(sa!==sb) return sa-sb;
+        return (RO[a.rank]||99)-(RO[b.rank]||99);
+      });
+      groups.push(rest);
+    }
+    return groups.length?groups:[cards.slice()];
+  }
+
+  window.jkrnAutoSortLifeSet=function(){
+    if(typeof playerGroups==='undefined') return;
+    const cards=playerGroups.flat().filter(Boolean);
+    if(cards.length<3) return;
+
+    const groups=smartGroups(cards);
+    playerGroups=groups;
     selectedCards=[];
-    if(typeof updateUI==='function')updateUI();
-  }
-  function hookSocket(){
-    const sock=window.onlineSocket;
-    if(!sock || window.__jkrnAutoSortSocketHook)return;
-    window.__jkrnAutoSortSocketHook=true;
-    // Registered after the authoritative gameState handler, so newly drawn cards
-    // are placed into their suit/rank position immediately.
-    sock.on('gameState',()=>setTimeout(sortAfterServerState,0));
-    sock.on('realGameStarted',()=>setTimeout(sortAfterServerState,0));
-    sock.on('onlineActionAck',m=>{if(m&&m.action==='draw')setTimeout(sortAfterServerState,0);});
-  }
-  function boot(){
-    hookSocket();
-    if(typeof gameStarted!=='undefined' && gameStarted)setTimeout(sortAfterServerState,0);
-    // Keep default ON; the existing button remains a manual re-sort control.
-    const btn=document.getElementById('autoSortButton');
-    if(btn){btn.textContent='AUTO SORT';btn.disabled=false;btn.title='Visual sort only — no groups or declarations are locked';}
-  }
-  setInterval(hookSocket,300);
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
-  window.addEventListener('load',boot);
+    if(typeof updateUI==='function') updateUI();
+
+    // Show what Auto Sort found, without declaring anything.
+    try{
+      const types=groups.map(kind).filter(Boolean);
+      const msg=types.length
+        ? 'AUTO SORT: '+types.join(' → ')
+        : 'AUTO SORT: Cards arranged';
+      const st=document.getElementById('status');
+      if(st) st.innerText=msg;
+    }catch(e){}
+  };
+
+  window.autoSortPlayerCards=window.jkrnAutoSortLifeSet;
+  window.autoSortCards=function(){
+    try{ if(typeof playSound==='function') playSound('group'); }catch(e){}
+    window.jkrnAutoSortLifeSet();
+  };
 })();
 </script>
