@@ -453,3 +453,62 @@ io.on('connection',socket=>{
 
 const PORT=process.env.PORT||3000;
 server.listen(PORT,()=>console.log(`RUMMY JKRN real-player server: http://localhost:${PORT}`));
+
+
+/* =========================================================
+   JKRN STRICT PURE-LIFE / WILD-JOKER FIX
+   A card whose rank matches the selected Wild Joker is a
+   joker for validation and therefore can NEVER be part of
+   a Pure Life. Printed Jokers are also never Pure.
+   ========================================================= */
+function jkrnIsWildForPureFix(room, card) {
+    if (!card) return false;
+    if (card.isPrintedJoker) return true;
+    return !!(room && room.wildJoker && card.rank === room.wildJoker.rank);
+}
+
+function pureSeq(group, room) {
+    if (!Array.isArray(group) || group.length < 3) return false;
+    if (group.some(c => jkrnIsWildForPureFix(room, c))) return false;
+
+    const suit = group[0] && group[0].suit;
+    if (!suit || group.some(c => !c || c.suit !== suit)) return false;
+
+    const low = {A:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13};
+    const high = {2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13,A:14};
+    const ranks = group.map(c => c.rank);
+    if (new Set(ranks).size !== ranks.length) return false;
+
+    const lv = ranks.map(r => low[r]).sort((a,b)=>a-b);
+    let ok = lv.every((v,i)=>i===0 || v===lv[i-1]+1);
+    if (ok) return true;
+
+    const hv = ranks.map(r => high[r]).sort((a,b)=>a-b);
+    return hv.every((v,i)=>i===0 || v===hv[i-1]+1);
+}
+
+
+
+/* JKRN V12 PURE LIFE RULE:
+   A Wild-Joker rank card MAY be used in Pure Life when it is a real card
+   of the same suit and the cards are consecutive. Printed Joker is not Pure. */
+function pureSeq(group, room) {
+    if (!Array.isArray(group) || group.length < 3) return false;
+    if (group.some(c => c && c.isPrintedJoker)) return false;
+
+    const suit = group[0] && group[0].suit;
+    if (!suit || group.some(c => !c || c.suit !== suit)) return false;
+
+    const low = {A:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13};
+    const high = {2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13,A:14};
+    const ranks = group.map(c => c.rank);
+    if (ranks.some(r => low[r] == null)) return false;
+    if (new Set(ranks).size !== ranks.length) return false;
+
+    const lv = ranks.map(r => low[r]).sort((a,b)=>a-b);
+    if (lv.every((v,i)=>i===0 || v===lv[i-1]+1)) return true;
+
+    const hv = ranks.map(r => high[r]).sort((a,b)=>a-b);
+    return hv.every((v,i)=>i===0 || v===hv[i-1]+1);
+}
+
