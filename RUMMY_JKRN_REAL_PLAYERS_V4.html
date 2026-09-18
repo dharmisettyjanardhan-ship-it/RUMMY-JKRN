@@ -4591,5 +4591,119 @@ button[onclick*="groupSelected"] {
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install); else install(); window.addEventListener('load',install);
 })();
 </script>
+
+<!-- JKRN FINAL FIX: RIGHT-SIDE DISCARD/DECLARE + ONLINE WILD JOKER -->
+<style id="JKRN_FINAL_DISCARD_DECLARE_JOKER_FIX">
+  /* Keep action buttons on the RIGHT side, close to the player's cards. */
+  .action-buttons{
+    position:fixed !important;
+    right:2% !important;
+    left:auto !important;
+    bottom:17% !important;
+    top:auto !important;
+    z-index:100000 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+    gap:8px !important;
+    width:155px !important;
+  }
+  .action-buttons button{
+    position:relative !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    width:155px !important;
+    min-width:155px !important;
+    height:58px !important;
+    min-height:58px !important;
+    margin:0 !important;
+    font-size:18px !important;
+    font-weight:900 !important;
+  }
+  /* The buttons stay visible; game logic enables/disables them. */
+  #discardButton,#declareButton{display:flex !important;visibility:visible !important;}
+  #discardButton:disabled,#declareButton:disabled{opacity:.45 !important;cursor:not-allowed !important;}
+  #topJokerDisplay{
+    overflow:hidden !important;
+    color:#111 !important;
+    background:#fff !important;
+  }
+  @media(max-width:900px){
+    .action-buttons{right:2% !important;bottom:15% !important;width:135px !important;}
+    .action-buttons button{width:135px !important;min-width:135px !important;height:52px !important;min-height:52px !important;font-size:16px !important;}
+  }
+</style>
+<script id="JKRN_FINAL_DISCARD_DECLARE_JOKER_FIX_JS">
+(function(){
+  function renderOnlineWildJoker(){
+    const el=document.getElementById('topJokerDisplay');
+    if(!el) return;
+    const w=window.__onlineState && window.__onlineState.wildJoker;
+    if(!w){
+      /* Do not overwrite a joker already rendered by the local game. */
+      if(!window.__realRoomStarted) return;
+      el.className='pile joker-pile';
+      el.innerHTML='<span style="font-size:24px;color:#555">WAIT...</span>';
+      return;
+    }
+    el.className='pile joker-pile '+(w.color||'black');
+    el.innerHTML='<div class="card-top"><span>'+String(w.rank||'')+'</span><span>'+String(w.suit||'')+'</span></div>'+
+      '<div class="card-center">'+String(w.suit||'🃏')+'</div>'+
+      '<div style="font-size:11px;color:#b8860b;margin-top:2px;font-weight:900">👑 WILD JOKER</div>';
+  }
+
+  function fixActionButtons(){
+    const wrap=document.querySelector('.action-buttons');
+    if(!wrap) return;
+    const discard=document.getElementById('discardButton');
+    const declare=document.getElementById('declareButton');
+    const online=!!window.__realRoomStarted;
+    const st=window.__onlineState||{};
+    const my=Number.isInteger(window.__onlineMyIndex)?window.__onlineMyIndex:0;
+    const myTurn=online ? st.currentPlayer===my : currentPlayer===0;
+    const eliminated=online ? !!window.__onlineEliminated : (typeof isEliminated==='function'&&isEliminated(0));
+    const drawn=!!playerHasDrawn;
+    const count=(playerGroups||[]).flat().filter(Boolean).length;
+    const canAct=!!gameStarted && !gameOver && myTurn && !eliminated;
+    const canDiscard=canAct && drawn && count===14 && selectedCards.length===1;
+    const canDeclare=canAct && drawn && count===14;
+
+    if(discard){
+      discard.style.setProperty('display','flex','important');
+      discard.style.setProperty('visibility','visible','important');
+      discard.disabled=!canDiscard;
+      discard.title=canDiscard?'Select one card and discard it':'Draw a card first, then select one card to discard';
+    }
+    if(declare){
+      declare.style.setProperty('display','flex','important');
+      declare.style.setProperty('visibility','visible','important');
+      declare.disabled=!canDeclare;
+      declare.title=canDeclare?'Declare your hand':'Declare becomes available after drawing (14 cards)';
+    }
+  }
+
+  /* Run after the existing updateUI so the final state wins over older CSS/JS. */
+  const oldUpdateUI=window.updateUI;
+  if(typeof oldUpdateUI==='function' && !window.__jkrnFinalUpdateWrapped){
+    window.__jkrnFinalUpdateWrapped=true;
+    window.updateUI=function(){
+      const r=oldUpdateUI.apply(this,arguments);
+      renderOnlineWildJoker();
+      fixActionButtons();
+      return r;
+    };
+  }
+
+  /* Existing updateUI may be declared with function hoisting after this script; retry safely. */
+  window.addEventListener('load',function(){
+    renderOnlineWildJoker(); fixActionButtons();
+    setTimeout(function(){renderOnlineWildJoker();fixActionButtons();},100);
+    setTimeout(function(){renderOnlineWildJoker();fixActionButtons();},500);
+  });
+  setInterval(function(){renderOnlineWildJoker();fixActionButtons();},250);
+})();
+</script>
+
 </body>
 </html>
