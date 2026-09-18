@@ -35,7 +35,7 @@ const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 
 function makeDeck(){
   const d=[];
-  for(let n=0;n<2;n++) suits.forEach(x=>ranks.forEach(r=>d.push({rank:r,suit:x.s,color:x.c,isPrintedJoker:false,id:''})));
+  for(let n=0;n<2;n++) suits.forEach(x=>ranks.forEach(r=>d.push({rank:r,suit:x.s,color:suitColor(x.s),isPrintedJoker:false,id:''})));
   d.push({rank:'PJ',suit:'🃏',color:'red',isPrintedJoker:true,id:''});
   d.push({rank:'PJ',suit:'🃏',color:'black',isPrintedJoker:true,id:''});
   d.forEach((c,i)=>c.id=`${Date.now().toString(36)}_${i}_${Math.random().toString(36).slice(2,8)}`);
@@ -45,7 +45,8 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 function code(){let s;do{s=Math.floor(100000+Math.random()*900000).toString();}while(rooms.has(s));return s;}
 function publicPlayers(room){return room.playersList.map(p=>({id:p.id,name:p.name,ready:p.ready,index:p.index,connected:!!p.connected}));}
 function roomCapacity(room){return room.maxPlayers||2;}
-function publicCard(c){return c?{rank:c.rank,suit:c.suit,color:c.color,isPrintedJoker:!!c.isPrintedJoker,id:c.id}:null;}
+function suitColor(suit){return (suit==='♥'||suit==='♦')?'red':'black';}
+function publicCard(c){return c?{rank:c.rank,suit:c.suit,color:suitColor(c.suit),isPrintedJoker:!!c.isPrintedJoker,id:c.id}:null;}
 
 const RANK={A:1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":10,J:11,Q:12,K:13};
 function isWild(room,c){return !!c && (c.isPrintedJoker || (!!room.wildJoker && c.rank===room.wildJoker.rank));}
@@ -198,7 +199,10 @@ function dealAfterToss(room,choice,firstOverride=null){
   if(firstOverride==null && !room.toss?.active)return;
   if(room.tossTimer){clearTimeout(room.tossTimer);room.tossTimer=null;}
   if(room.toss)room.toss.active=false; room.firstDrawChoice=choice==='open'?'open':'closed'; room.dealNumber=(room.dealNumber||0)+1;
-  room.deck=shuffle(makeDeck()); room.discard=[]; room.wildJoker=null; room.dropped={}; room.roundPoints={}; room.eliminated=room.eliminated||{};
+  room.deck=shuffle(makeDeck());
+  // Guarantee a complete 2-deck set: 26 red + 26 black cards before jokers.
+  if(room.deck.length!==106 || room.deck.filter(c=>c.suit==='♥'||c.suit==='♦').length!==52 || room.deck.filter(c=>c.suit==='♣'||c.suit==='♠').length!==52){ room.deck=shuffle(makeDeck()); }
+  room.discard=[]; room.wildJoker=null; room.dropped={}; room.roundPoints={}; room.eliminated=room.eliminated||{};
   room.playersList.forEach(p=>p.hand=[]);
   const n=room.playersList.length, first=(firstOverride!=null?firstOverride:room.highestTossIndex); room.firstPlayerIndex=first;
   for(let r=0;r<13;r++)for(let step=0;step<n;step++){const idx=(first+step)%n;const p=room.playersList[idx];if(p&&!room.eliminated[p.id])p.hand.push(room.deck.pop());}
