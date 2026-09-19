@@ -6022,3 +6022,244 @@ window.jkrnV15JokerRules={
   window.addEventListener('load',install);
 })();
 </script>
+<!-- V30: smart Auto Sort gives highest priority to 1st Pure Life + 2nd Life, then score -->
+<style id="jkrn-v29-smart-hand-tools">
+  /* Hand organization tools are NOT turn actions. */
+  #groupButton.jkrn-not-my-turn,
+  #groupButton:disabled { opacity:1 !important; filter:none !important; cursor:pointer !important; pointer-events:auto !important; }
+  #groupButton { display:inline-flex !important; visibility:visible !important; }
+  #playerGroupsContainer .card { touch-action:manipulation; }
+</style>
+<script id="jkrn-v29-smart-hand-tools-js">
+(function(){
+  const LO={A:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13};
+  const HI={2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13,A:14};
+  function wc(c){ return !!c && (c.isPrintedJoker===true || (typeof wildJoker!=='undefined' && wildJoker && c.rank===wildJoker.rank)); }
+  function pureLife(g){
+    if(!Array.isArray(g)||g.length<3) return false;
+    if(g.some(c=>!c || c.isPrintedJoker===true)) return false;
+    const s=g[0].suit; if(!s || g.some(c=>c.suit!==s)) return false;
+    const a=g.map(c=>LO[c.rank]); if(a.some(v=>v==null)||new Set(a).size!==a.length) return false;
+    a.sort((x,y)=>x-y); if(a.every((v,i)=>i===0||v===a[i-1]+1)) return true;
+    const b=g.map(c=>HI[c.rank]).sort((x,y)=>x-y);
+    return b.every((v,i)=>i===0||v===b[i-1]+1);
+  }
+  function impureLife(g){
+    if(!Array.isArray(g)||g.length<3) return false;
+    if(pureLife(g)) return true;
+    const n=g.filter(c=>!wc(c)), j=g.length-n.length;
+    if(!n.length) return j>=3;
+    const s=n[0].suit; if(!s || n.some(c=>c.suit!==s)) return false;
+    let a=n.map(c=>LO[c.rank]).sort((x,y)=>x-y); if(new Set(a).size!==a.length) return false;
+    let gap=0; for(let i=1;i<a.length;i++) gap+=Math.max(0,a[i]-a[i-1]-1); if(gap<=j) return true;
+    a=n.map(c=>HI[c.rank]).sort((x,y)=>x-y); gap=0; for(let i=1;i<a.length;i++) gap+=Math.max(0,a[i]-a[i-1]-1);
+    return gap<=j;
+  }
+  function setLife(g){
+    if(!Array.isArray(g)||g.length<3||g.length>4) return false;
+    const n=g.filter(c=>!wc(c)); if(!n.length) return true;
+    const r=n[0].rank; if(n.some(c=>c.rank!==r)) return false;
+    const ss=new Set(); for(const c of n){ if(ss.has(c.suit)) return false; ss.add(c.suit); }
+    return true;
+  }
+  function kind(g){ return pureLife(g)?'pure':impureLife(g)?'second':setLife(g)?'set':'invalid'; }
+  function points(c){
+    if(!c || wc(c)) return 0; const r=String(c.rank).toUpperCase();
+    return ['A','K','Q','J'].includes(r)?10:(parseInt(r,10)||0);
+  }
+  function order(g){
+    const k=kind(g), a=g.slice();
+    if(k==='pure'||k==='second'){
+      const natural=a.filter(c=>!wc(c)).sort((x,y)=>(LO[x.rank]||99)-(LO[y.rank]||99));
+      const jok=a.filter(wc);
+      if(!jok.length) return natural;
+      /* Place wilds into missing gaps where possible; keep sequence ascending. */
+      const out=[], rem=jok.slice();
+      for(let i=0;i<natural.length;i++){
+        out.push(natural[i]);
+        if(i<natural.length-1){
+          let need=Math.max(0,(LO[natural[i+1].rank]||0)-(LO[natural[i].rank]||0)-1);
+          while(need>0&&rem.length){out.push(rem.shift());need--;}
+        }
+      }
+      return out.concat(rem);
+    }
+    if(k==='set') return a.sort((x,y)=>(wc(x)-wc(y))||((LO[x.rank]||99)-(LO[y.rank]||99)));
+    return a.sort((x,y)=>(LO[x.rank]||99)-(LO[y.rank]||99));
+  }
+  function solve(cards){
+    const n=cards.length; if(n<3) return [cards.slice()];
+    const full=(1<<n)-1, cand=[];
+    for(let m=1;m<=full;m++){
+      const cnt=m.toString(2).replace(/0/g,'').length; if(cnt<3) continue;
+      const g=[]; for(let i=0;i<n;i++) if(m&(1<<i)) g.push(cards[i]);
+      const k=kind(g); if(k!=='invalid') cand.push({m,g,k,cnt,pts:g.reduce((s,c)=>s+points(c),0)});
+    }
+    const byBit=Array.from({length:n},()=>[]); cand.forEach(c=>{for(let i=0;i<n;i++)if(c.m&(1<<i))byBit[i].push(c);});
+    const memo=new Map();
+    function score(sol,mask){
+      const used=sol.reduce((m,c)=>m|c.m,0), dead=cards.reduce((s,c,i)=>s+((used&(1<<i))?0:points(c)),0);
+      const pure=sol.filter(c=>c.k==='pure').length;
+      const seq=sol.filter(c=>c.k==='pure'||c.k==='second').length;
+      const hasPure=pure>=1?1:0;
+      const hasSecond=seq>=2?1:0;
+      const groups=sol.length, covered=sol.reduce((s,c)=>s+c.cnt,0);
+      const valid13=(n===13&&used===full&&hasPure&&hasSecond);
+      const valid14=(n===14&&hasPure&&hasSecond&&dead<=10);
+      return {valid:(valid13||valid14)?1:0,hasPure,hasSecond,dead,pure,seq,groups,covered};
+    }
+    function better(a,b){
+      if(!b)return true;
+      const A=score(a),B=score(b);
+      if(A.valid!==B.valid)return A.valid>B.valid;
+      if(A.hasPure!==B.hasPure)return A.hasPure>B.hasPure;       // 1st Life / Pure Sequence has absolute priority
+      if(A.hasSecond!==B.hasSecond)return A.hasSecond>B.hasSecond; // 2nd Life (Joker/impure or another pure) comes next
+      if(A.pure!==B.pure)return A.pure>B.pure;
+      if(A.seq!==B.seq)return A.seq>B.seq;
+      if(A.dead!==B.dead)return A.dead<B.dead;       // after the first two lives, reduce round penalty
+      if(A.groups!==B.groups)return A.groups>B.groups;
+      if(A.covered!==B.covered)return A.covered>B.covered;
+      return false;
+    }
+    function key(mask){return mask;}
+    function dfs(mask){
+      if(!mask)return [];
+      if(memo.has(key(mask)))return memo.get(key(mask));
+      let bit=mask&-mask, idx=Math.log2(bit)|0;
+      let best=dfs(mask^bit); // leave this card ungrouped
+      for(const c of byBit[idx]){
+        if((c.m&mask)!==c.m)continue;
+        const rest=dfs(mask^c.m), test=rest.concat(c);
+        if(better(test,best))best=test;
+      }
+      memo.set(key(mask),best); return best;
+    }
+    const chosen=dfs(full), used=new Set(); chosen.forEach(c=>{for(let i=0;i<n;i++)if(c.m&(1<<i))used.add(i);});
+    const out=chosen.slice().sort((a,b)=>({pure:1,second:2,set:3}[a.k]-({pure:1,second:2,set:3}[b.k]))||b.cnt-a.cnt).map(c=>order(c.g));
+    const left=cards.filter((c,i)=>!used.has(i)); if(left.length) out.push(left.slice().sort((a,b)=>(LO[a.rank]||99)-(LO[b.rank]||99)));
+    return out.length?out:[cards.slice()];
+  }
+
+  function smartAuto(){
+    if(typeof isEliminated==='function' && isEliminated(0)) return;
+    const cards=(typeof playerGroups!=='undefined'?playerGroups.flat():[]).filter(Boolean);
+    if(!cards.length)return;
+    playerGroups=solve(cards);
+    selectedCards=[];
+    if(typeof updateUI==='function')updateUI();
+  }
+
+  /* Auto Sort must work on ANY turn. */
+  window.autoSortPlayerCards=smartAuto;
+  window.autoSortCards=function(){try{if(typeof playSound==='function')playSound('group');}catch(e){}smartAuto();};
+
+  /* Group must work on ANY turn. Keep it as a hand-only operation. */
+  window.groupSelectedCards=function(){
+    if(!Array.isArray(selectedCards)||selectedCards.length<2)return;
+    try{if(typeof playSound==='function')playSound('group');}catch(e){}
+    const picked=[], remaining=[], set=new Set(selectedCards.map(s=>`${s.gIdx}_${s.cIdx}`));
+    playerGroups.forEach((g,gi)=>{const rest=[];g.forEach((c,ci)=>set.has(`${gi}_${ci}`)?picked.push(c):rest.push(c));if(rest.length)remaining.push(rest);});
+    if(picked.length)remaining.push(picked);
+    playerGroups=remaining;selectedCards=[];if(typeof updateUI==='function')updateUI();
+  };
+
+  /* Card selection is also a hand-organizing action, so it must not be blocked by turn. */
+  window.selectCard=function(gIdx,cIdx){
+    const g=playerGroups&&playerGroups[gIdx]; if(!g||!g[cIdx])return;
+    const i=selectedCards.findIndex(s=>s.gIdx===gIdx&&s.cIdx===cIdx);
+    if(i>=0)selectedCards.splice(i,1); else selectedCards.push({gIdx,cIdx});
+    if(typeof displayPlayer==='function')displayPlayer();
+    if(typeof updateUI==='function')updateUI();
+  };
+
+  /* Force GROUP visible/enabled based only on selection, never on turn. */
+  function forceHandTools(){
+    const b=document.getElementById('groupButton');
+    if(b){b.classList.remove('jkrn-not-my-turn');const ok=Array.isArray(selectedCards)&&selectedCards.length>=2&&!isEliminated(0);b.disabled=!ok;b.style.setProperty('display','inline-flex','important');b.style.setProperty('visibility','visible','important');}
+    const a=document.querySelector('button[onclick*="autoSortCards"]');
+    if(a){a.classList.remove('jkrn-not-my-turn');a.disabled=false;a.style.setProperty('display','inline-flex','important');a.style.setProperty('visibility','visible','important');}
+  }
+  const oldUpdate=window.updateUI;
+  if(typeof oldUpdate==='function')window.updateUI=function(){const r=oldUpdate.apply(this,arguments);forceHandTools();return r;};
+  window.addEventListener('load',forceHandTools);
+})();
+</script>
+
+<!-- V31: responsive compact cards + easy grouping layout -->
+<style id="jkrn-v31-compact-group-layout">
+/* Compact responsive hand cards: smaller than V24/V25, with controlled overlap. */
+#playerGroupsContainer .card,
+#playerHand .card,#playerCards .card,
+.player-hand .card,.hand .card,.cards .card,.card-row .card{
+  width:clamp(58px,5vw,78px)!important;
+  min-width:clamp(58px,5vw,78px)!important;
+  height:clamp(87px,7.5vw,117px)!important;
+  flex:0 0 clamp(58px,5vw,78px)!important;
+  box-sizing:border-box!important;
+}
+/* Cards overlap only a little; every card still keeps a visible face area. */
+#playerGroupsContainer > .card,
+#playerGroupsContainer .cards-in-group > .card{
+  margin-left:-11px!important;
+  position:relative!important;
+}
+#playerGroupsContainer > .card:first-child,
+#playerGroupsContainer .cards-in-group > .card:first-child{
+  margin-left:0!important;
+}
+/* Keep separate groups visibly separated. */
+#playerGroupsContainer .card-group{
+  gap:0!important;
+  margin-left:12px!important;
+  margin-right:12px!important;
+  overflow:visible!important;
+  min-width:0!important;
+}
+#playerGroupsContainer .cards-in-group{
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  overflow:visible!important;
+}
+#playerGroupsContainer .cards-in-group .card{
+  flex:0 0 clamp(58px,5vw,78px)!important;
+  z-index:1;
+}
+#playerGroupsContainer .cards-in-group .card:hover,
+#playerGroupsContainer .cards-in-group .card.selected,
+#playerGroupsContainer .card.selected{
+  z-index:50!important;
+}
+/* Responsive desktop/tablet/mobile sizing. */
+@media (max-width:900px){
+  #playerGroupsContainer .card,
+  #playerHand .card,#playerCards .card,
+  .player-hand .card,.hand .card,.cards .card,.card-row .card{
+    width:clamp(52px,7vw,68px)!important;
+    min-width:clamp(52px,7vw,68px)!important;
+    height:clamp(78px,10.2vw,102px)!important;
+    flex-basis:clamp(52px,7vw,68px)!important;
+  }
+  #playerGroupsContainer > .card,
+  #playerGroupsContainer .cards-in-group > .card{margin-left:-9px!important;}
+  #playerGroupsContainer > .card:first-child,
+  #playerGroupsContainer .cards-in-group > .card:first-child{margin-left:0!important;}
+  #playerGroupsContainer .card-group{margin-left:7px!important;margin-right:7px!important;}
+}
+@media (max-width:600px){
+  #playerGroupsContainer .card,
+  #playerHand .card,#playerCards .card,
+  .player-hand .card,.hand .card,.cards .card,.card-row .card{
+    width:clamp(46px,12vw,60px)!important;
+    min-width:clamp(46px,12vw,60px)!important;
+    height:clamp(69px,17.8vw,90px)!important;
+    flex-basis:clamp(46px,12vw,60px)!important;
+  }
+  #playerGroupsContainer > .card,
+  #playerGroupsContainer .cards-in-group > .card{margin-left:-7px!important;}
+  #playerGroupsContainer > .card:first-child,
+  #playerGroupsContainer .cards-in-group > .card:first-child{margin-left:0!important;}
+  #playerGroupsContainer .card-group{margin-left:4px!important;margin-right:4px!important;}
+}
+</style>
