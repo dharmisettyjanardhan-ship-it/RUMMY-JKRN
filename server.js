@@ -133,7 +133,11 @@ function stateFor(room,socketId){
     roomId:room.id, players:publicPlayers(room), maxPlayers:room.maxPlayers,
     poolLimit:room.poolLimit||DEFAULT_POOL_LIMIT, entryFee:room.entryFee||300,
     myIndex:me.index, hands:room.playersList.map(p=>p.id===socketId ? p.hand.map(publicCard) : {count:p.hand.length}),
-    deckCount:room.deck.length, discardTop:publicCard(room.discard[room.discard.length-1]), wildJoker:publicCard(room.wildJoker),
+    deckCount:room.deck.length,
+    handCounts:room.playersList.map(p=>p.hand.length),
+    discardTop:publicCard(room.discard[room.discard.length-1]),
+    wildJoker:publicCard(room.wildJoker),
+    printedJokerCount:room.deck.filter(c=>c.isPrintedJoker).length,
     currentPlayer:room.currentPlayer, currentPlayerName:room.playersList[room.currentPlayer]?.name||null, playerHasDrawn:room.playerHasDrawn, turnEndsAt:room.turnEndsAt,
     roundNumber:room.dealNumber||1, currentRoundScores:room.roundPoints||{}, turnPhase:room.turnPhase||'draw', graceEndsAt:room.graceEndsAt||0, started:room.started, scores:room.scores||{},
     dealerIndex:room.dealerIndex, dealerName:room.playersList[room.dealerIndex]?.name||null,
@@ -239,7 +243,13 @@ function dealAfterToss(room,choice,firstOverride=null){
   room.started=true; room.currentPlayer=first; room.playerHasDrawn=false; room.turnPhase='firstChoice'; room.hasDrawnEver={};
   room.playersList.forEach(p=>room.hasDrawnEver[p.id]=false);
   room.turnEndsAt=Date.now()+30000;
-  io.to(room.id).emit('realGameStarted',{roomId:room.id,players:publicPlayers(room),dealerIndex:room.dealerIndex,currentPlayer:first,dealNumber:room.dealNumber,firstChoice:true});
+  io.to(room.id).emit('realGameStarted',{
+    roomId:room.id, players:publicPlayers(room), dealerIndex:room.dealerIndex,
+    currentPlayer:first, dealNumber:room.dealNumber, firstChoice:true,
+    poolLimit:room.poolLimit, entryFee:room.entryFee, handSize:13,
+    deckCount:room.deck.length, wildJoker:publicCard(room.wildJoker),
+    discardTop:publicCard(room.discard[room.discard.length-1])
+  });
   broadcastState(room);
 }
 function startRealGame(room){ startToss(room); }
