@@ -4941,6 +4941,85 @@ button[onclick*="groupSelectedCards"] {
 })();
 </script>
 
+
+<style id="jkrn-authoritative-hand-visible-fix">
+/* FINAL: never hide the player's live hand. */
+#playerGroupsContainer{
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  min-height:96px!important;
+  width:100%!important;
+  overflow-x:auto!important;
+  overflow-y:visible!important;
+  position:relative!important;
+  z-index:50!important;
+  align-items:flex-end!important;
+}
+#playerGroupsContainer .card-group{
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  flex:0 0 auto!important;
+}
+#playerGroupsContainer .cards-in-group{
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+#playerGroupsContainer .card{
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  flex:0 0 auto!important;
+  z-index:60!important;
+}
+</style>
+<script id="jkrn-authoritative-hand-visible-fix-js">
+(function(){
+  function getMyHand(st){
+    if(!st || !st.hands || !Number.isInteger(Number(st.myIndex))) return null;
+    const h=st.hands[Number(st.myIndex)];
+    return Array.isArray(h)?h:null;
+  }
+  function forceHand(st){
+    const hand=getMyHand(st);
+    if(!hand || !st.started) return;
+    // A fresh deal must always be exactly 13 cards in the UI.
+    if(hand.length===13 && typeof playerGroups!=='undefined'){
+      playerGroups=hand.map(function(c){return [Object.assign({},c)];});
+      if(typeof allHands!=='undefined') allHands[Number(st.myIndex)]=hand.map(function(c){return Object.assign({},c);});
+    } else if(typeof playerGroups!=='undefined' && hand.length>=13){
+      const ids=new Set(hand.map(c=>c&&c.id));
+      const flat=(playerGroups||[]).flat().filter(c=>c&&ids.has(c.id));
+      if(flat.length!==hand.length){
+        playerGroups=hand.map(function(c){return [Object.assign({},c)];});
+      }
+    }
+    const container=document.getElementById('playerGroupsContainer');
+    if(container){
+      container.style.setProperty('display','flex','important');
+      container.style.setProperty('visibility','visible','important');
+      container.style.setProperty('opacity','1','important');
+      container.style.setProperty('min-height','96px','important');
+    }
+    if(typeof displayPlayer==='function') displayPlayer();
+  }
+  window.jkrnForceVisibleHand=forceHand;
+  function retry(){
+    if(window.__onlineState && window.__realRoomStarted) forceHand(window.__onlineState);
+  }
+  window.addEventListener('load',function(){setTimeout(retry,150);setTimeout(retry,500);setTimeout(retry,1200);});
+  setInterval(function(){
+    if(window.__realRoomStarted && window.__onlineState){
+      const h=getMyHand(window.__onlineState);
+      const c=document.getElementById('playerGroupsContainer');
+      if(h && h.length===13 && c && c.querySelectorAll('.card').length!==13) forceHand(window.__onlineState);
+    }
+  },700);
+})();
+</script>
+
 </body>
 </html>
 
@@ -6487,7 +6566,7 @@ button[onclick*="groupSelectedCards"]{
 <script id="jkrn-group-icon-popup-v1-js">
 (function(){
   function selectedCount(){
-    return Array.isArray(window.selectedCards) ? window.selectedCards.length : 0;
+    return (typeof selectedCards !== 'undefined' && Array.isArray(selectedCards)) ? selectedCards.length : 0;
   }
   function sync(){
     const p=document.getElementById('jkrnGroupIconPopup');
