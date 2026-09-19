@@ -2170,6 +2170,44 @@ body{
 }
 </style>
 
+
+<style id="jkrn-normal-dp-six-player">
+.opp-box .opp-avatar-container{
+  width:34px!important;height:34px!important;min-width:34px!important;
+  border-radius:50%!important;overflow:visible!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  position:relative!important;
+}
+.opp-box .opp-avatar{
+  width:32px!important;height:32px!important;min-width:32px!important;
+  border-radius:50%!important;display:flex!important;align-items:center!important;
+  justify-content:center!important;font-size:12px!important;font-weight:900!important;
+  color:#fff!important;background:linear-gradient(145deg,#3b4655,#111820)!important;
+  border:2px solid #d9b24c!important;box-shadow:0 2px 7px rgba(0,0,0,.65)!important;
+}
+.opp-box.active-turn .opp-avatar{border-color:#00ff66!important;box-shadow:0 0 10px rgba(0,255,102,.65)!important;}
+.jkrn-live-pile{
+  position:relative!important;display:flex!important;visibility:visible!important;
+  opacity:1!important;z-index:80!important;align-items:center!important;justify-content:center!important;
+}
+#centerArea .pile-container{z-index:70!important;}
+#drawDeckPile{min-height:76px!important;}
+#topJokerDisplay{min-height:76px!important;}
+#discardPile{min-height:76px!important;}
+#drawDeckCount{
+  display:block!important;visibility:visible!important;opacity:1!important;
+  color:#ffd700!important;font-weight:900!important;text-align:center!important;
+}
+.jkrn-open-card-name{
+  font-size:10px;color:#fff;font-weight:900;text-align:center;margin-top:2px;
+}
+.jkrn-hand-count-badge{
+  position:absolute;right:-8px;top:-9px;z-index:90;
+  min-width:18px;height:18px;padding:0 4px;border-radius:10px;
+  background:#ffd700;color:#111;border:1px solid #fff;
+  font:900 9px/16px Arial,sans-serif;text-align:center;
+}
+
 </head>
 <body onload="initAutoGame()">
 
@@ -2292,8 +2330,8 @@ body{
 
         <div class="pile-container">
             <div class="pile-label">CLOSED DECK</div>
-            <div class="pile draw-pile" onclick="drawCard()"></div>
-            <div class="deck-count">SHUFFLED</span></div>
+            <div class="pile draw-pile" id="drawDeckPile" onclick="drawCard()"></div>
+            <div class="deck-count" id="drawDeckCount">CLOSED: 0</div>
         </div>
 
         <div class="pile-container">
@@ -2495,7 +2533,8 @@ function startOnlineGameUI(d){
     document.getElementById("poolTypeDisplay").innerText=poolLimit; document.getElementById("poolLimitLabel").innerText=poolLimit;
     const ol=document.getElementById("onlineLobby"), lb=document.getElementById("lobbyScreen"); if(ol)ol.classList.add("hidden"); if(lb)lb.classList.add("hidden");
     initializeGameLobby();
-    const ts=document.getElementById('dealerTossStage'); if(ts)ts.classList.remove('active'); const tc=document.getElementById('onlineTossChoice'); if(tc)tc.style.display='none';
+    const ts=document.getElementById('dealerTossStage'); if(ts){ts.classList.remove('active');ts.style.display='none';} const tc=document.getElementById('onlineTossChoice'); if(tc)tc.style.display='none';
+    const ca=document.getElementById('centerArea'); if(ca)ca.style.visibility='visible';
     // The server is authoritative: it already dealt the cards and started the turn.
     // Wait for the gameState event instead of creating a second local deal/toss.
     if(typeof updateUI==='function')updateUI();
@@ -4375,6 +4414,104 @@ button[onclick*="groupSelected"] {
 })();
 </script>
 
+
+<script id="jkrn-online-live-board-fix">
+(function(){
+  function safeText(v){ return v==null ? '' : String(v); }
+
+  window.jkrnRenderLivePiles = function(st){
+    const draw=document.getElementById('drawDeckPile');
+    const count=document.getElementById('drawDeckCount');
+    const open=document.getElementById('discardPile');
+    const joker=document.getElementById('topJokerDisplay');
+    const printed=document.getElementById('printedJokerLabel');
+
+    if(draw){
+      draw.classList.add('jkrn-live-pile');
+      draw.setAttribute('aria-label','Closed Deck');
+      draw.innerHTML='<div style="font-size:42px;line-height:1">🂠</div>';
+    }
+    if(count){
+      count.textContent='CLOSED: '+Math.max(0,Number(st?.deckCount||0));
+    }
+
+    if(open){
+      open.classList.add('jkrn-live-pile');
+      const c=st?.discardTop;
+      if(c){
+        const red=(c.suit==='♥'||c.suit==='♦');
+        open.innerHTML=
+          '<div style="width:100%;height:100%;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900;'+
+          'color:'+(red?'#d32f2f':'#111')+';background:#fff;border-radius:9px">'+
+          '<div style="position:absolute;top:6px;left:7px;font-size:15px">'+safeText(c.rank)+'</div>'+
+          '<div style="font-size:34px">'+safeText(c.suit)+'</div>'+
+          '<div class="jkrn-open-card-name">OPEN CARD</div></div>';
+      }else{
+        open.innerHTML='<span style="font-size:10px;color:#ddd">OPEN</span>';
+      }
+    }
+
+    if(joker){
+      joker.classList.add('jkrn-live-pile');
+      joker.style.display='flex';
+      joker.style.visibility='visible';
+      joker.style.opacity='1';
+    }
+    if(printed){
+      printed.style.display='block';
+      printed.style.visibility='visible';
+      printed.textContent='PRINTED JOKER 🃏';
+    }
+  };
+
+  window.jkrnRenderNormalDP = function(st){
+    (st?.players||[]).forEach(function(pl){
+      const idx=Number(pl.index)+1;
+      const box=document.getElementById('opp'+idx);
+      if(!box) return;
+      const av=box.querySelector('.opp-avatar');
+      if(av){
+        const name=safeText(pl.name||('Player '+idx)).trim();
+        const initials=(name.split(/\s+/).map(x=>x[0]).join('').slice(0,2)||'P'+idx).toUpperCase();
+        av.textContent=initials;
+        av.title=name;
+      }
+      const row=document.getElementById('oppCards-p'+idx);
+      const hand=st.hands?.[pl.index];
+      const n=Array.isArray(hand)?hand.length:Number(hand?.count||0);
+      if(row){
+        row.innerHTML='';
+        const show=Math.min(Math.max(n,0),13);
+        for(let i=0;i<show;i++){
+          const c=document.createElement('div');
+          c.className='opp-mini-back';
+          row.appendChild(c);
+        }
+        if(show){
+          const b=document.createElement('span');
+          b.className='opp-card-count';
+          b.textContent=String(n);
+          row.appendChild(b);
+        }
+      }
+    });
+  };
+
+  window.jkrnForceOnlineHand = function(st){
+    const idx=Number(st?.myIndex);
+    const hand=st?.hands?.[idx];
+    if(!Array.isArray(hand)) return false;
+    if(hand.length<13 && st?.started) return false;
+    rebuildLocalGroups(hand);
+    if(Array.isArray(playerGroups) && playerGroups.flat().length!==hand.length){
+      playerGroups=hand.map(c=>[Object.assign({},c)]);
+    }
+    allHands[idx]=hand.map(c=>Object.assign({},c));
+    return true;
+  };
+})();
+</script>
+
 <script id="jkrn-real-player-v2">
 /* REAL PLAYERS V2: authoritative server deck/hand/turn/draw/discard */
 (function(){
@@ -4434,11 +4571,23 @@ button[onclick*="groupSelected"] {
     if(st.scores){(st.players||[]).forEach(pl=>{if(st.scores[pl.id]!=null){gameScores['Player '+(pl.index+1)]=Number(st.scores[pl.id])||0;}});}
     (st.players||[]).forEach(pl=>{const drop=!!st.dropped?.[pl.id],elim=!!st.eliminated?.[pl.id]; const a=document.getElementById('action-p'+(pl.index+1));if(a)a.textContent=elim?'ELIMINATED':drop?'DROP +'+(Number(st.roundPoints?.[pl.id])||0):st.currentPlayer===pl.index?(st.turnPhase==='grace'?'15 MIN GRACE':'YOUR TURN'):'Waiting'; const tag=document.getElementById('elim-tag-p'+(pl.index+1));if(tag)tag.style.display=elim?'inline-block':'none';});
     if(st.scores){ Object.entries(st.scores).forEach(([pid,score])=>{ const pl=(st.players||[]).find(x=>x.id===pid); if(pl&&pl.index>=0){ const el=document.getElementById('score-p'+(pl.index+1)); if(el)el.textContent=score; } }); }
-    const me=st.hands[st.myIndex];
-    if(Array.isArray(me)) rebuildLocalGroups(me);
+    const me=st.hands?.[st.myIndex];
+    if(Array.isArray(me)){
+      rebuildLocalGroups(me);
+      // Hard guarantee: a fresh deal must display exactly 13 cards.
+      if(st.started && me.length===13 && playerGroups.flat().length!==13){
+        playerGroups=me.map(c=>[Object.assign({},c)]);
+      }
+      allHands[st.myIndex]=me.map(c=>Object.assign({},c));
+    }
     selectedCards=[];
+    if(typeof jkrnRenderLivePiles==='function') jkrnRenderLivePiles(st);
+    if(typeof jkrnRenderNormalDP==='function') jkrnRenderNormalDP(st);
     if(typeof updateUI==='function') updateUI();
+    // updateUI() renders the actual 13-card hand from playerGroups.
     onlineRenderOpponent(st);
+    if(typeof jkrnRenderLivePiles==='function') jkrnRenderLivePiles(st);
+    if(typeof jkrnRenderNormalDP==='function') jkrnRenderNormalDP(st);
     onlineStartTurnTimer(st.turnEndsAt);
   }
   function onlineRenderOpponent(st){
@@ -6239,5 +6388,134 @@ button[onclick*="groupSelectedCards"]{
   window.addEventListener('load',removeGroupUI);
   const observer=new MutationObserver(removeGroupUI);
   observer.observe(document.documentElement,{subtree:true,childList:true});
+})();
+</script>
+
+
+<style id="jkrn-live-board-final-visibility">
+#centerArea,#centerArea .pile-container,#centerArea .pile,#playerArea,#playerGroupsContainer{
+  visibility:visible!important;
+  opacity:1!important;
+}
+#playerGroupsContainer{
+  display:flex!important;
+}
+#dealerTossStage:not(.active){display:none!important;}
+</style>
+<script id="jkrn-live-board-final-visibility-js">
+(function(){
+  function finalBoard(){
+    if(!window.__realRoomStarted) return;
+    const st=window.__onlineState;
+    if(!st) return;
+    if(typeof jkrnRenderLivePiles==='function') jkrnRenderLivePiles(st);
+    if(typeof jkrnRenderNormalDP==='function') jkrnRenderNormalDP(st);
+    const hand=st.hands?.[st.myIndex];
+    if(Array.isArray(hand) && hand.length>=13){
+      if(playerGroups.flat().length!==hand.length){
+        playerGroups=hand.map(c=>[Object.assign({},c)]);
+      }
+      if(typeof displayPlayer==='function') displayPlayer();
+    }
+  }
+  window.addEventListener('load',finalBoard);
+  setTimeout(finalBoard,200);
+  setTimeout(finalBoard,700);
+  setInterval(finalBoard,1000);
+})();
+</script>
+
+<style id="jkrn-group-absolute-hide-v2">
+#groupButton,#finalGroupAnytimeBtn,button.btn-group,button[onclick*="groupSelectedCards"]{
+  display:none!important;visibility:hidden!important;opacity:0!important;
+  pointer-events:none!important;width:0!important;height:0!important;
+}
+</style>
+<script id="jkrn-group-absolute-hide-v2-js">
+(function(){
+  function kill(){
+    document.querySelectorAll('#groupButton,#finalGroupAnytimeBtn,button.btn-group,button[onclick*="groupSelectedCards"]').forEach(function(e){e.remove();});
+  }
+  kill(); window.addEventListener('load',kill);
+  new MutationObserver(kill).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
+
+<style id="jkrn-group-icon-popup-v1">
+#jkrnGroupIconPopup{
+  position:fixed!important;
+  left:50%!important;
+  bottom:118px!important;
+  transform:translateX(-50%) scale(.9)!important;
+  z-index:99999!important;
+  display:none!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:58px!important;height:58px!important;
+  border-radius:50%!important;
+  border:3px solid #ffd700!important;
+  background:linear-gradient(145deg,#176b3a,#082b19)!important;
+  box-shadow:0 0 18px rgba(255,215,0,.75),0 5px 15px rgba(0,0,0,.55)!important;
+  color:#ffd700!important;
+  font-size:29px!important;
+  cursor:pointer!important;
+  user-select:none!important;
+  transition:.16s ease!important;
+}
+#jkrnGroupIconPopup.jkrn-show{
+  display:flex!important;
+  transform:translateX(-50%) scale(1)!important;
+}
+#jkrnGroupIconPopup:active{transform:translateX(-50%) scale(.92)!important;}
+#jkrnGroupIconPopup .jkrn-group-count{
+  position:absolute!important;
+  right:-5px!important;top:-5px!important;
+  min-width:21px!important;height:21px!important;
+  padding:0 5px!important;border-radius:12px!important;
+  background:#ffd700!important;color:#111!important;
+  border:2px solid #fff!important;
+  font:900 10px/17px Arial,sans-serif!important;
+  text-align:center!important;
+}
+</style>
+
+<div id="jkrnGroupIconPopup" title="Group selected cards" aria-label="Group selected cards">
+  <span>🧩</span><span class="jkrn-group-count">0</span>
+</div>
+
+<script id="jkrn-group-icon-popup-v1-js">
+(function(){
+  function selectedCount(){
+    return Array.isArray(window.selectedCards) ? window.selectedCards.length : 0;
+  }
+  function sync(){
+    const p=document.getElementById('jkrnGroupIconPopup');
+    if(!p)return;
+    const n=selectedCount();
+    const count=p.querySelector('.jkrn-group-count');
+    if(count)count.textContent=n;
+    // Popup ONLY when 2 or more cards are selected.
+    p.classList.toggle('jkrn-show', n>=2);
+  }
+  function doGroup(){
+    if(selectedCount()<2)return;
+    if(typeof window.groupSelectedCards==='function'){
+      window.groupSelectedCards();
+    }
+    setTimeout(sync,30);
+  }
+  document.addEventListener('click',function(e){
+    if(e.target.closest('#jkrnGroupIconPopup'))return;
+    setTimeout(sync,20);
+  },true);
+  document.addEventListener('touchend',function(e){
+    if(e.target.closest('#jkrnGroupIconPopup'))return;
+    setTimeout(sync,20);
+  },true);
+  const p=document.getElementById('jkrnGroupIconPopup');
+  if(p)p.addEventListener('click',doGroup);
+  window.addEventListener('load',sync);
+  setInterval(sync,100);
 })();
 </script>
