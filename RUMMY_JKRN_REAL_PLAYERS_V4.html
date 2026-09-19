@@ -2087,6 +2087,89 @@ body{
  .left-controls button,.action-buttons button{width:92px;min-width:92px;height:36px;padding:6px 7px;font-size:9px}
 }
 </style>
+
+<style id="jkrn-six-player-hand-display">
+/* Opponent cards: visible beneath each player's seat, but card faces remain hidden. */
+.opp-box{
+  position:absolute !important;
+  z-index:40;
+}
+.opp-seat-content{
+  display:flex;
+  align-items:center;
+  width:100%;
+}
+.opp-card-row{
+  position:absolute;
+  top:calc(100% + 5px);
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:38px;
+  max-width:min(30vw,250px);
+  overflow:visible;
+  pointer-events:none;
+  white-space:nowrap;
+}
+.opp-mini-back{
+  width:24px;
+  height:35px;
+  min-width:24px;
+  border-radius:4px;
+  border:1px solid #d7b65a;
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.14) 25%,transparent 25%) 0 0/7px 7px,
+    linear-gradient(315deg,rgba(255,255,255,.10) 25%,transparent 25%) 0 0/7px 7px,
+    linear-gradient(145deg,#164c91,#071e4d);
+  box-shadow:0 2px 5px rgba(0,0,0,.65);
+  margin-left:-7px;
+  position:relative;
+}
+.opp-mini-back:first-child{margin-left:0;}
+.opp-mini-back::after{
+  content:'';
+  position:absolute;
+  inset:4px;
+  border:1px solid rgba(255,215,0,.55);
+  border-radius:2px;
+}
+.opp-card-count{
+  position:absolute;
+  right:-7px;
+  top:-8px;
+  min-width:17px;
+  height:17px;
+  padding:0 3px;
+  border-radius:9px;
+  background:#ffd700;
+  color:#111;
+  border:1px solid #fff;
+  font:900 9px/15px Arial,sans-serif;
+  z-index:20;
+}
+#playerGroupsContainer .cards-in-group > .card{
+  margin-left:-14px !important;
+}
+#playerGroupsContainer .cards-in-group > .card:first-child{
+  margin-left:0 !important;
+}
+@media(max-width:900px){
+  .opp-card-row{max-width:34vw;height:31px;top:calc(100% + 3px);}
+  .opp-mini-back{width:19px;height:29px;min-width:19px;margin-left:-6px;}
+  .opp-mini-back:first-child{margin-left:0;}
+  .opp-card-count{right:-6px;top:-7px;min-width:15px;height:15px;font-size:8px;line-height:13px;}
+  #playerGroupsContainer .cards-in-group > .card{margin-left:-11px !important;}
+  #playerGroupsContainer .cards-in-group > .card:first-child{margin-left:0 !important;}
+}
+@media(max-width:600px){
+  .opp-card-row{max-width:42vw;}
+  .opp-mini-back{width:16px;height:24px;min-width:16px;margin-left:-5px;}
+  .opp-mini-back:first-child{margin-left:0;}
+}
+</style>
+
 </head>
 <body onload="initAutoGame()">
 
@@ -2194,11 +2277,11 @@ body{
         <div id="status">Determining Dealer...</div>
     </div>
 
-    <div class="opp-box" id="opp2"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p2">30s</div></div><div class="opp-details"><p class="opp-name">Player 2 <span id="dealer-tag-p2" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p2" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p2">0</span></p><p class="opp-action" id="action-p2">Waiting...</p></div></div>
-    <div class="opp-box" id="opp3"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p3">30s</div></div><div class="opp-details"><p class="opp-name">Player 3 <span id="dealer-tag-p3" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p3" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p3">0</span></p><p class="opp-action" id="action-p3">Waiting...</p></div></div>
-    <div class="opp-box" id="opp4"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p4">30s</div></div><div class="opp-details"><p class="opp-name">Player 4 <span id="dealer-tag-p4" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p4" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p4">0</span></p><p class="opp-action" id="action-p4">Waiting...</p></div></div>
-    <div class="opp-box" id="opp5"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p5">30s</div></div><div class="opp-details"><p class="opp-name">Player 5 <span id="dealer-tag-p5" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p5" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p5">0</span></p><p class="opp-action" id="action-p5">Waiting...</p></div></div>
-    <div class="opp-box" id="opp6"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p6">30s</div></div><div class="opp-details"><p class="opp-name">Player 6 <span id="dealer-tag-p6" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p6" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p6">0</span></p><p class="opp-action" id="action-p6">Waiting...</p></div></div>
+    <div class="opp-box" id="opp2"><div class="opp-seat-content"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p2">30s</div></div><div class="opp-details"><p class="opp-name">Player 2 <span id="dealer-tag-p2" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p2" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p2">0</span></p><p class="opp-action" id="action-p2">Waiting...</p></div><div class="opp-card-row" id="oppCards-p2" aria-label="Player 2 cards"></div></div>
+    <div class="opp-box" id="opp3"><div class="opp-seat-content"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p3">30s</div></div><div class="opp-details"><p class="opp-name">Player 3 <span id="dealer-tag-p3" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p3" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p3">0</span></p><p class="opp-action" id="action-p3">Waiting...</p></div><div class="opp-card-row" id="oppCards-p3" aria-label="Player 3 cards"></div></div>
+    <div class="opp-box" id="opp4"><div class="opp-seat-content"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p4">30s</div></div><div class="opp-details"><p class="opp-name">Player 4 <span id="dealer-tag-p4" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p4" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p4">0</span></p><p class="opp-action" id="action-p4">Waiting...</p></div><div class="opp-card-row" id="oppCards-p4" aria-label="Player 4 cards"></div></div>
+    <div class="opp-box" id="opp5"><div class="opp-seat-content"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p5">30s</div></div><div class="opp-details"><p class="opp-name">Player 5 <span id="dealer-tag-p5" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p5" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p5">0</span></p><p class="opp-action" id="action-p5">Waiting...</p></div><div class="opp-card-row" id="oppCards-p5" aria-label="Player 5 cards"></div></div>
+    <div class="opp-box" id="opp6"><div class="opp-seat-content"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p6">30s</div></div><div class="opp-details"><p class="opp-name">Player 6 <span id="dealer-tag-p6" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p6" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p6">0</span></p><p class="opp-action" id="action-p6">Waiting...</p></div><div class="opp-card-row" id="oppCards-p6" aria-label="Player 6 cards"></div></div>
 
     <div class="center-area" id="centerArea">
         <div class="pile-container">
@@ -2233,7 +2316,6 @@ body{
     </div>
 
     <div class="action-buttons">
-        <button class="btn-group" id="groupButton" onclick="groupSelectedCards()">Group</button>
         <button class="btn-discard" id="discardButton" onclick="discardCard()">Discard</button>
         <button class="btn-declare" id="declareButton" onclick="declareGame()">Declare</button>
     </div>
@@ -4203,126 +4285,6 @@ button[onclick*="groupSelected"] {
 </style>
 
 
-<style id="FINAL_CARDS_AND_GROUP_ANYTIME">
-/* Cards: a little bigger */
-.card {
-  transform: scale(1.14) !important;
-  transform-origin: center bottom !important;
-}
-.player-hand,
-.hand,
-.my-cards {
-  gap: 8px !important;
-}
-
-/* GROUP visibility is controlled by selectedCards.length below. */
-
-/* The actual game button is controlled by updateUI; the final floating
-   GROUP button below is the reliable mobile/desktop fallback. */
-#finalGroupAnytimeBtn {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(to bottom, #fdd835, #fbc02d) !important;
-  color: #000 !important;
-  border: 2px solid #fff !important;
-  box-shadow: 0 0 14px rgba(255,215,0,.65) !important;
-  cursor: pointer !important;
-}
-
-/* Make a single GROUP button appear from the selected-card count. */
-#finalGroupAnytimeBtn {
-  position: fixed !important;
-  right: 2% !important;
-  bottom: 27% !important;
-  z-index: 10050 !important;
-  min-width: 155px !important;
-  width: 155px !important;
-  min-height: 62px !important;
-  height: 62px !important;
-  padding: 12px 18px !important;
-  font-size: 20px !important;
-  font-weight: 800 !important;
-  border-radius: 12px !important;
-  box-sizing: border-box !important;
-}
-
-@media (max-width: 900px) {
-  .card { transform: scale(1.10) !important; }
-  #finalGroupAnytimeBtn {
-    right: 2% !important;
-    bottom: 25% !important;
-    min-width: 135px !important;
-    width: 135px !important;
-    min-height: 54px !important;
-    height: 54px !important;
-    font-size: 17px !important;
-  }
-}
-</style>
-
-<script id="FINAL_GROUP_ANYTIME_SCRIPT">
-(function(){
-  function getSelectedCount(){
-    // Use the game's real selection state first. The cards do not need
-    // a CSS 'selected' class for the GROUP button to appear.
-    if (Array.isArray(window.selectedCards)) return window.selectedCards.length;
-    try {
-      if (typeof selectedCards !== 'undefined' && Array.isArray(selectedCards)) {
-        return selectedCards.length;
-      }
-    } catch(e) {}
-    const selectors = [
-      '.card.selected', '.card-select.selected',
-      '.selected-card', '.card.selected-card'
-    ];
-    let found = [];
-    for (const s of selectors) {
-      document.querySelectorAll(s).forEach(el => {
-        if (!found.includes(el)) found.push(el);
-      });
-    }
-    return found.length;
-  }
-
-  function ensureGroupButton(){
-    let btn = document.getElementById('finalGroupAnytimeBtn');
-    if (!btn) {
-      btn = document.createElement('button');
-      btn.id = 'finalGroupAnytimeBtn';
-      btn.type = 'button';
-      btn.textContent = 'GROUP';
-      btn.onclick = function(){
-        if (typeof groupSelectedCards === 'function') {
-          groupSelectedCards();
-        } else if (typeof groupSelected === 'function') {
-          groupSelected();
-        } else if (typeof groupCards === 'function') {
-          groupCards();
-        }
-      };
-      document.body.appendChild(btn);
-    }
-    btn.style.display = getSelectedCount() >= 2 ? 'block' : 'none';
-  }
-
-  // Observe selection changes so GROUP can be used at any time.
-  const obs = new MutationObserver(ensureGroupButton);
-  obs.observe(document.body, {subtree:true, attributes:true, attributeFilter:['class']});
-
-  document.addEventListener('click', function(){
-    setTimeout(ensureGroupButton, 30);
-  }, true);
-  document.addEventListener('touchend', function(){
-    setTimeout(ensureGroupButton, 30);
-  }, true);
-
-  setInterval(ensureGroupButton, 250);
-  window.addEventListener('load', ensureGroupButton);
-})();
-</script>
-
-
 <style id="FINAL_SCOREBOARD_CARDS_VISIBLE">
 /* Score Board: make the displayed cards clearly visible */
 .sb-table-wrap {
@@ -4383,67 +4345,35 @@ button[onclick*="groupSelected"] {
 </style>
 
 
-<style id="GROUP_BUTTON_FINAL_FIX">
-#groupButton {
-  display: none !important;
-  position: fixed !important;
-  right: 2% !important;
-  bottom: 27% !important;
-  z-index: 10060 !important;
-  min-width: 155px !important;
-  width: 155px !important;
-  min-height: 62px !important;
-  height: 62px !important;
-  padding: 12px 18px !important;
-  font-size: 20px !important;
-  font-weight: 900 !important;
-  border-radius: 12px !important;
-  background: linear-gradient(to bottom, #fdd835, #fbc02d) !important;
-  color: #000 !important;
-}
-@media (max-width:900px) {
-  #groupButton {
-    right: 2% !important;
-    bottom: 25% !important;
-    min-width: 135px !important;
-    width: 135px !important;
-    min-height: 54px !important;
-    height: 54px !important;
-    font-size: 17px !important;
-  }
-}
-</style>
-<script id="GROUP_BUTTON_FINAL_STATE_FIX">
-(function(){
-  function syncGroupButton(){
-    let count = 0;
-    try {
-      if (typeof selectedCards !== 'undefined' && Array.isArray(selectedCards)) {
-        count = selectedCards.length;
-      }
-    } catch(e) {}
-    const btn = document.getElementById('groupButton');
-    if (btn) {
-      const show = count >= 2;
-      btn.style.setProperty('display', show ? 'inline-flex' : 'none', 'important');
-      btn.style.setProperty('visibility', show ? 'visible' : 'hidden', 'important');
-      btn.disabled = !show;
-      btn.textContent = show ? 'GROUP ' + count + ' CARDS' : 'GROUP';
-    }
-    const backup = document.getElementById('finalGroupAnytimeBtn');
-    if (backup) {
-      backup.style.display = count >= 2 ? 'block' : 'none';
-    }
-  }
 
-  document.addEventListener('click', function(){ setTimeout(syncGroupButton, 20); }, true);
-  document.addEventListener('touchend', function(){ setTimeout(syncGroupButton, 20); }, true);
-  setInterval(syncGroupButton, 100);
-  window.addEventListener('load', syncGroupButton);
+<script id="jkrn-six-player-card-backs">
+(function(){
+  function renderOpponentCardBacks(st){
+    const players = st && Array.isArray(st.players) ? st.players : [];
+    players.forEach(function(pl){
+      if(!pl || pl.index === st.myIndex) return;
+      const row = document.getElementById('oppCards-p' + (pl.index + 1));
+      if(!row) return;
+      const h = st.hands ? st.hands[pl.index] : null;
+      const count = Array.isArray(h) ? h.length : Number(h && h.count || 0);
+      row.innerHTML = '';
+      const show = Math.min(Math.max(count,0),13);
+      for(let i=0;i<show;i++){
+        const c=document.createElement('div');
+        c.className='opp-mini-back';
+        row.appendChild(c);
+      }
+      if(show){
+        const badge=document.createElement('span');
+        badge.className='opp-card-count';
+        badge.textContent=String(count);
+        row.appendChild(badge);
+      }
+    });
+  }
+  window.jkrnRenderOpponentCardBacks = renderOpponentCardBacks;
 })();
 </script>
-
-
 
 <script id="jkrn-real-player-v2">
 /* REAL PLAYERS V2: authoritative server deck/hand/turn/draw/discard */
@@ -4512,6 +4442,7 @@ button[onclick*="groupSelected"] {
     onlineStartTurnTimer(st.turnEndsAt);
   }
   function onlineRenderOpponent(st){
+    if(window.jkrnRenderOpponentCardBacks) window.jkrnRenderOpponentCardBacks(st);
     const meName=(st.players[st.myIndex]||{}).name||'YOU';
     (st.players||[]).forEach(pl=>{ const h=st.hands[pl.index]; const count=Array.isArray(h)?h.length:(h&&h.count)||0; const el=document.getElementById('action-p'+(pl.index+1)); if(el)el.textContent=(st.currentPlayer===pl.index?'Playing':'Waiting')+' • '+count+' cards'; const nameEl=document.querySelector('#player-name-p'+(pl.index+1)); if(nameEl)nameEl.textContent=pl.index===st.myIndex?'YOU':pl.name; const scoreEl=document.getElementById('score-p'+(pl.index+1)); if(scoreEl&&st.scores&&st.scores[pl.id]!=null)scoreEl.textContent=st.scores[pl.id]; const box=document.getElementById('opp'+(pl.index+1)); if(box)box.classList.toggle('active-turn',st.currentPlayer===pl.index); });
     document.title='POOL RUMMY • '+meName+' • '+(st.players||[]).length+' PLAYERS';
@@ -4836,8 +4767,6 @@ button[onclick*="groupSelectedCards"] {
   justify-content:center !important;
   z-index:10030 !important;
 }
-/* Keep GROUP available regardless of whose turn it is; it becomes disabled only
-   when fewer than two cards are selected. */
 @media (max-width:900px){
   .left-controls .btn-auto-sort,
   button.btn-auto-sort,
@@ -4856,8 +4785,6 @@ button[onclick*="groupSelectedCards"] {
   function fixHandTools(){
     const auto=document.querySelector('.left-controls .btn-auto-sort, button.btn-auto-sort, button[onclick*="autoSortCards"]');
     if(auto){auto.style.setProperty('display','flex','important');auto.style.setProperty('visibility','visible','important');auto.style.setProperty('opacity','1','important');auto.style.setProperty('pointer-events','auto','important');}
-    let group=document.getElementById('groupButton') || document.querySelector('button.btn-group, button[onclick*="groupSelectedCards"]');
-    if(group){group.style.setProperty('display','flex','important');group.style.setProperty('visibility','visible','important');group.style.setProperty('opacity','1','important');group.style.setProperty('pointer-events','auto','important');}
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',fixHandTools);else fixHandTools();
   window.addEventListener('load',fixHandTools);
@@ -6280,49 +6207,37 @@ window.jkrnV15JokerRules={
 </style>
 
 <!-- V33: GROUP appears only after selecting 2+ cards, regardless of turn -->
-<style id="jkrn-v33-group-selection-popup">
-  #groupButton.jkrn-v33-hidden{display:none!important;visibility:hidden!important;pointer-events:none!important;}
-  #groupButton.jkrn-v33-show{display:inline-flex!important;visibility:visible!important;pointer-events:auto!important;}
+
+
+<style id="jkrn-no-group-final">
+#groupButton,
+#finalGroupAnytimeBtn,
+button.btn-group,
+button[onclick*="groupSelectedCards"]{
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+  width:0 !important;
+  height:0 !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  padding:0 !important;
+  margin:0 !important;
+  border:0 !important;
+}
 </style>
-<script id="jkrn-v33-group-selection-popup-js">
+<script id="jkrn-no-group-final-js">
 (function(){
-  function selectedCount(){
-    return Array.isArray(window.selectedCards) ? window.selectedCards.length : 0;
+  function removeGroupUI(){
+    document.querySelectorAll('#groupButton,#finalGroupAnytimeBtn,button.btn-group,button[onclick*="groupSelectedCards"]').forEach(function(el){
+      el.remove();
+    });
   }
-  function syncGroupPopup(){
-    const b=document.getElementById('groupButton');
-    if(!b)return;
-    const show=selectedCount()>=2 && !(typeof isEliminated==='function' && isEliminated(0));
-    b.classList.toggle('jkrn-v33-hidden',!show);
-    b.classList.toggle('jkrn-v33-show',show);
-    b.disabled=!show;
-    if(show){
-      b.removeAttribute('aria-hidden');
-      b.title='Group selected cards';
-    }else{
-      b.setAttribute('aria-hidden','true');
-    }
-  }
-  const oldSelect=window.selectCard;
-  window.selectCard=function(gIdx,cIdx){
-    const r=oldSelect?oldSelect.apply(this,arguments):undefined;
-    setTimeout(syncGroupPopup,0);
-    return r;
-  };
-  const oldGroup=window.groupSelectedCards;
-  window.groupSelectedCards=function(){
-    if(selectedCount()<2){syncGroupPopup();return;}
-    const r=oldGroup?oldGroup.apply(this,arguments):undefined;
-    setTimeout(syncGroupPopup,0);
-    return r;
-  };
-  const oldUpdate=window.updateUI;
-  if(oldUpdate)window.updateUI=function(){const r=oldUpdate.apply(this,arguments);syncGroupPopup();return r;};
-  document.addEventListener('click',function(){setTimeout(syncGroupPopup,0);},true);
-  document.addEventListener('touchend',function(){setTimeout(syncGroupPopup,0);},true);
-  window.addEventListener('load',syncGroupPopup);
-  window.addEventListener('resize',syncGroupPopup);
-  setInterval(syncGroupPopup,250);
-  syncGroupPopup();
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',removeGroupUI);
+  else removeGroupUI();
+  window.addEventListener('load',removeGroupUI);
+  const observer=new MutationObserver(removeGroupUI);
+  observer.observe(document.documentElement,{subtree:true,childList:true});
 })();
 </script>
