@@ -192,7 +192,7 @@ h1 { margin: 0; color: #ffd700; font-size: 18px; }
     padding: 12px 18px; border: none; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.6); text-transform: uppercase; 
 }
 .btn-group { background: linear-gradient(to bottom, #fdd835, #fbc02d); color: #000; display: none; }
-.btn-discard { background: linear-gradient(to bottom, #2196f3, #0d47a1); color: white; display: none; }
+.btn-discard { background: linear-gradient(to bottom, #2196f3, #0d47a1); color: white; display: inline-flex !important; visibility: visible !important; }
 .btn-discard[style*="display: inline-flex"] { visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; }
 .btn-discard:disabled { opacity: .55 !important; cursor: not-allowed !important; }
 .btn-declare { background: linear-gradient(to bottom, #ff9800, #e65100); color: white; }
@@ -3099,9 +3099,12 @@ function updateUI() {
     const discardBtn = document.getElementById("discardButton");
     if (discardBtn) {
         const handCount = playerGroups.flat().length;
-        const showDiscard = onlineMyTurn && playerHasDrawn && handCount === 14 && !onlineEliminated;
-        discardBtn.style.setProperty("display", showDiscard ? "inline-flex" : "none", "important");
-        discardBtn.disabled = !(showDiscard && selectedCards.length === 1);
+        const canDiscard = onlineMyTurn && playerHasDrawn && handCount === 14 && !onlineEliminated;
+        // DISCARD stays visible; it is enabled only when the current player has 14 cards
+        // and exactly one card is selected. This prevents the option from disappearing.
+        discardBtn.style.setProperty("display", "inline-flex", "important");
+        discardBtn.style.setProperty("visibility", "visible", "important");
+        discardBtn.disabled = !(canDiscard && selectedCards.length === 1);
     }
     const declareBtn = document.getElementById("declareButton");
     if (declareBtn) {
@@ -4561,7 +4564,19 @@ button[onclick*="groupSelected"] {
     return oldDrawDiscard.apply(this,arguments);
   };
   window.discardCard=function(){
-    if(window.__realRoomStarted){ if(currentPlayer!==onlinePlayerIndex()||!playerHasDrawn)return; const id=cardIdFromSelection(); if(!id)return; onlineSocket.emit('discardCard',{cardId:id}); return; }
+    if(window.__realRoomStarted){
+      if(currentPlayer!==onlinePlayerIndex()){
+        const st=document.getElementById('status'); if(st)st.innerText='⚠️ Wait for your turn to DISCARD.'; return;
+      }
+      if(!playerHasDrawn){
+        const st=document.getElementById('status'); if(st)st.innerText='⚠️ Draw a card first, then select one card to DISCARD.'; return;
+      }
+      const id=cardIdFromSelection();
+      if(!id){
+        const st=document.getElementById('status'); if(st)st.innerText='⚠️ Select exactly one card to DISCARD.'; return;
+      }
+      onlineSocket.emit('discardCard',{cardId:id}); return;
+    }
     return oldDiscard.apply(this,arguments);
   };
   const oldDrop=window.dropGame; window.dropGame=function(){ if(window.__realRoomStarted){ if(currentPlayer!==onlinePlayerIndex()||playerHasDrawn)return; onlineSocket.emit('drop'); return; } return oldDrop.apply(this,arguments); };
@@ -6263,3 +6278,51 @@ window.jkrnV15JokerRules={
   #playerGroupsContainer .card-group{margin-left:4px!important;margin-right:4px!important;}
 }
 </style>
+
+<!-- V33: GROUP appears only after selecting 2+ cards, regardless of turn -->
+<style id="jkrn-v33-group-selection-popup">
+  #groupButton.jkrn-v33-hidden{display:none!important;visibility:hidden!important;pointer-events:none!important;}
+  #groupButton.jkrn-v33-show{display:inline-flex!important;visibility:visible!important;pointer-events:auto!important;}
+</style>
+<script id="jkrn-v33-group-selection-popup-js">
+(function(){
+  function selectedCount(){
+    return Array.isArray(window.selectedCards) ? window.selectedCards.length : 0;
+  }
+  function syncGroupPopup(){
+    const b=document.getElementById('groupButton');
+    if(!b)return;
+    const show=selectedCount()>=2 && !(typeof isEliminated==='function' && isEliminated(0));
+    b.classList.toggle('jkrn-v33-hidden',!show);
+    b.classList.toggle('jkrn-v33-show',show);
+    b.disabled=!show;
+    if(show){
+      b.removeAttribute('aria-hidden');
+      b.title='Group selected cards';
+    }else{
+      b.setAttribute('aria-hidden','true');
+    }
+  }
+  const oldSelect=window.selectCard;
+  window.selectCard=function(gIdx,cIdx){
+    const r=oldSelect?oldSelect.apply(this,arguments):undefined;
+    setTimeout(syncGroupPopup,0);
+    return r;
+  };
+  const oldGroup=window.groupSelectedCards;
+  window.groupSelectedCards=function(){
+    if(selectedCount()<2){syncGroupPopup();return;}
+    const r=oldGroup?oldGroup.apply(this,arguments):undefined;
+    setTimeout(syncGroupPopup,0);
+    return r;
+  };
+  const oldUpdate=window.updateUI;
+  if(oldUpdate)window.updateUI=function(){const r=oldUpdate.apply(this,arguments);syncGroupPopup();return r;};
+  document.addEventListener('click',function(){setTimeout(syncGroupPopup,0);},true);
+  document.addEventListener('touchend',function(){setTimeout(syncGroupPopup,0);},true);
+  window.addEventListener('load',syncGroupPopup);
+  window.addEventListener('resize',syncGroupPopup);
+  setInterval(syncGroupPopup,250);
+  syncGroupPopup();
+})();
+</script>
