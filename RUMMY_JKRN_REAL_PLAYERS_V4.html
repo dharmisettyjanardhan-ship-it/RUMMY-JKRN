@@ -6598,3 +6598,88 @@ button[onclick*="groupSelectedCards"]{
   setInterval(sync,100);
 })();
 </script>
+
+
+<style id="jkrn-private-hand-no-opponent-cards">
+/* PRIVATE HAND RULE: never display any opponent card faces/backs/count rows.
+   Only the connected player's own 13 cards are rendered in #playerGroupsContainer. */
+.opp-card-row,
+.opp-card-backs,
+.opp-seat-label{display:none!important;visibility:hidden!important;height:0!important;min-height:0!important;overflow:hidden!important;}
+
+/* 30-second countdown: show only the active player's timer prominently. */
+.opp-timer,
+.player-timer{
+  font-weight:1000!important;
+  font-variant-numeric:tabular-nums;
+  transition:all .15s ease;
+}
+.opp-box:not(.active-turn) .opp-timer{
+  opacity:.45!important;
+  transform:none!important;
+  box-shadow:none!important;
+}
+.opp-box.active-turn .opp-timer{
+  opacity:1!important;
+  color:#fff!important;
+  background:#149447!important;
+  border:2px solid #7cff8a!important;
+  border-radius:999px!important;
+  min-width:48px!important;
+  padding:5px 9px!important;
+  text-align:center!important;
+  box-shadow:0 0 0 2px rgba(124,255,138,.22),0 0 18px rgba(0,255,90,.85)!important;
+  animation:jkrnTimerPulse .8s ease-in-out infinite alternate;
+}
+#playerInfoBox.active-turn .player-timer{
+  opacity:1!important;
+  color:#fff!important;
+  background:#149447!important;
+  border:2px solid #7cff8a!important;
+  border-radius:999px!important;
+  padding:4px 10px!important;
+  box-shadow:0 0 0 2px rgba(124,255,138,.22),0 0 18px rgba(0,255,90,.85)!important;
+  animation:jkrnTimerPulse .8s ease-in-out infinite alternate;
+}
+.opp-box.active-turn .opp-timer.urgent,
+#playerInfoBox.active-turn .player-timer.urgent{
+  background:#c62828!important;
+  border-color:#ff8a80!important;
+  box-shadow:0 0 0 2px rgba(255,90,80,.25),0 0 22px rgba(255,50,40,.95)!important;
+}
+@keyframes jkrnTimerPulse{from{transform:scale(1)}to{transform:scale(1.08)}}
+@media(prefers-reduced-motion:reduce){.opp-box.active-turn .opp-timer,#playerInfoBox.active-turn .player-timer{animation:none!important;}}
+</style>
+<script id="jkrn-private-hand-timer-fix">
+(function(){
+  function syncPrivateTimers(){
+    const active=Number(window.__onlineState?.currentPlayer ?? window.currentPlayer ?? currentPlayer ?? 0);
+    const left=Math.max(0,Number(window.timeLeft ?? timeLeft ?? 30));
+    for(let i=0;i<6;i++){
+      const box=document.getElementById('opp'+(i+1));
+      const t=document.getElementById('timer-p'+(i+1));
+      if(t){
+        t.textContent=(i===active)?('⏳ '+left+'s'):'30s';
+        t.classList.toggle('urgent',i===active && left<=5);
+      }
+      if(box)box.classList.toggle('active-turn',i===active);
+    }
+    const me=document.getElementById('playerInfoBox');
+    const myIdx=Number(window.__onlineMyIndex ?? 0);
+    if(me){
+      const mine=myIdx===active;
+      me.classList.toggle('active-turn',mine);
+      const t=document.getElementById('timer-p1');
+      if(t){t.textContent=mine?('⏳ '+left+'s'):'30s';t.classList.toggle('urgent',mine&&left<=5);}
+    }
+  }
+  const old=window.updateAllPlayerTimers;
+  window.updateAllPlayerTimers=function(){
+    if(typeof old==='function') old.apply(this,arguments);
+    syncPrivateTimers();
+  };
+  window.__jkrnSyncPrivateTimers=syncPrivateTimers;
+  setInterval(syncPrivateTimers,250);
+})();
+</script>
+
