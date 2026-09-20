@@ -5020,6 +5020,82 @@ button[onclick*="groupSelectedCards"] {
 })();
 </script>
 
+
+
+<!-- JKRN FINAL BOARD VISIBILITY / REAL-PLAYER HAND RECOVERY -->
+<style id="jkrn-final-board-visibility">
+#centerArea{
+  position:absolute!important; left:50%!important; top:39%!important; right:auto!important;
+  transform:translate(-50%,-50%)!important; display:flex!important; visibility:visible!important;
+  opacity:1!important; z-index:5000!important; pointer-events:auto!important;
+  align-items:center!important; justify-content:center!important; gap:18px!important;
+}
+#centerArea .pile-container{display:flex!important;visibility:visible!important;opacity:1!important;flex-direction:column!important;align-items:center!important;z-index:5001!important;}
+#centerArea .pile{display:flex!important;visibility:visible!important;opacity:1!important;z-index:5002!important;}
+#playerArea{
+  position:absolute!important; left:50%!important; right:auto!important; top:auto!important;
+  bottom:-168px!important; transform:translateX(-50%)!important; display:flex!important;
+  visibility:visible!important; opacity:1!important; z-index:5000!important;
+  width:min(96vw,1220px)!important;
+}
+#playerInfoBox{display:flex!important;visibility:visible!important;opacity:1!important;z-index:5005!important;}
+#playerGroupsContainer{display:flex!important;visibility:visible!important;opacity:1!important;z-index:5004!important;min-height:120px!important;}
+#playerGroupsContainer .card-group,#playerGroupsContainer .cards-in-group,#playerGroupsContainer .card{
+  visibility:visible!important;opacity:1!important;display:flex!important;
+}
+#playerGroupsContainer .card{flex:0 0 auto!important;z-index:5010!important;}
+#drawDeckPile,#discardPile,#topJokerDisplay{visibility:visible!important;opacity:1!important;display:flex!important;}
+@media(max-width:700px){
+ #centerArea{top:43%!important;gap:7px!important;}
+ #centerArea .pile{width:62px!important;height:90px!important;}
+ #playerArea{bottom:-145px!important;width:99vw!important;}
+ #playerGroupsContainer{max-width:99vw!important;min-height:105px!important;overflow-x:auto!important;}
+ #playerGroupsContainer .card{width:58px!important;min-width:58px!important;height:88px!important;}
+}
+</style>
+<script id="jkrn-final-board-recovery">
+(function(){
+  let lastHandSig='';
+  function onlineStarted(){return !!window.__realRoomStarted && !!window.__onlineState && window.__onlineState.started;}
+  function forcePiles(){
+    const st=window.__onlineState; if(!st) return;
+    if(typeof window.jkrnRenderLivePiles==='function') window.jkrnRenderLivePiles(st);
+    if(typeof window.jkrnRenderNormalDP==='function') window.jkrnRenderNormalDP(st);
+    const ca=document.getElementById('centerArea'); if(ca){ca.style.display='flex';ca.style.visibility='visible';ca.style.opacity='1';}
+  }
+  function forceHand(){
+    const st=window.__onlineState;
+    if(!st || !st.started || !Array.isArray(st.hands) || !Number.isInteger(Number(st.myIndex))) return;
+    const hand=st.hands[Number(st.myIndex)]; if(!Array.isArray(hand) || hand.length<13) return;
+    const sig=hand.map(c=>c&&c.id).join('|');
+    if(sig!==lastHandSig || !document.querySelector('#playerGroupsContainer .card')){
+      if(typeof window.rebuildLocalGroups==='function') window.rebuildLocalGroups(hand);
+      else {
+        window.playerGroups=hand.map(c=>[Object.assign({},c)]);
+        if(typeof allHands!=='undefined') allHands[Number(st.myIndex)]=hand.map(c=>Object.assign({},c));
+      }
+      if(typeof window.displayPlayer==='function'){
+        const scores=window.gameScores;
+        const key='Player 1';
+        const old=scores ? scores[key] : undefined;
+        const mustShow=!window.__onlineEliminated;
+        if(mustShow && scores) scores[key]=0;
+        try{window.displayPlayer();}catch(e){console.warn('JKRN hand render:',e);}
+        if(scores && old!==undefined) scores[key]=old;
+      }
+      lastHandSig=sig;
+    }
+    const area=document.getElementById('playerArea'); if(area){area.style.display='flex';area.style.visibility='visible';area.style.opacity='1';}
+    const c=document.getElementById('playerGroupsContainer'); if(c){c.style.display='flex';c.style.visibility='visible';c.style.opacity='1';}
+  }
+  function recover(){
+    if(!onlineStarted()) return;
+    forcePiles(); forceHand();
+  }
+  window.addEventListener('load',()=>{setTimeout(recover,100);setTimeout(recover,500);setTimeout(recover,1200);});
+  setInterval(recover,700);
+})();
+</script>
 </body>
 </html>
 
