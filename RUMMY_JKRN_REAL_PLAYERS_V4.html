@@ -6759,3 +6759,73 @@ button[onclick*="groupSelectedCards"]{
 })();
 </script>
 
+
+<!-- JKRN V4 HARD BOARD FIX: keep live piles + private hand inside the visible game viewport -->
+<style id="jkrn-v4-hard-board-fix">
+html,body{min-height:100%;overflow-x:hidden!important;overflow-y:auto!important}
+.table{position:relative!important;overflow:visible!important}
+/* Always keep the three live piles in the visible centre of the table. */
+#centerArea.center-area{position:absolute!important;left:50%!important;top:39%!important;transform:translate(-50%,-50%)!important;display:flex!important;visibility:visible!important;opacity:1!important;z-index:800!important;gap:18px!important;pointer-events:auto!important}
+#centerArea .pile-container{display:flex!important;flex-direction:column!important;align-items:center!important;visibility:visible!important;opacity:1!important;z-index:801!important}
+#centerArea .pile{display:flex!important;visibility:visible!important;opacity:1!important;width:88px!important;height:124px!important;min-width:88px!important;min-height:124px!important;z-index:802!important}
+#drawDeckPile{background:#174a9c!important;color:#fff!important;align-items:center!important;justify-content:center!important}
+#drawDeckPile:after{content:none!important}
+#discardPile{background:#fff!important;color:#111!important;align-items:center!important;justify-content:center!important}
+#topJokerDisplay{background:#fff!important;align-items:flex-start!important;justify-content:flex-start!important}
+#drawDeckCount{display:block!important;visibility:visible!important;opacity:1!important}
+/* Keep YOUR private 13-card hand on-screen at the bottom of the table/viewport. */
+#playerArea.player-area{position:fixed!important;left:50%!important;bottom:8px!important;transform:translateX(-50%)!important;width:min(96vw,1250px)!important;z-index:5000!important;display:flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
+#playerGroupsContainer.groups-container{display:flex!important;visibility:visible!important;opacity:1!important;overflow-x:auto!important;overflow-y:visible!important;min-height:125px!important;height:150px!important;align-items:flex-end!important;justify-content:center!important;padding:4px 12px!important;background:rgba(0,0,0,.12)!important;border-radius:12px!important}
+#playerGroupsContainer .card{visibility:visible!important;opacity:1!important;width:64px!important;min-width:64px!important;height:96px!important;display:flex!important;z-index:5100!important}
+#playerGroupsContainer .cards-in-group{display:flex!important;visibility:visible!important;opacity:1!important}
+#playerGroupsContainer .card-group{display:flex!important;visibility:visible!important;opacity:1!important}
+/* Action buttons stay above the hand. */
+.action-buttons{z-index:5200!important}
+.left-controls{z-index:5200!important}
+@media(max-width:700px){
+ #centerArea.center-area{top:38%!important;gap:7px!important}
+ #centerArea .pile{width:58px!important;min-width:58px!important;height:84px!important;min-height:84px!important}
+ #playerArea.player-area{bottom:2px!important;width:100%!important}
+ #playerGroupsContainer.groups-container{height:105px!important;min-height:105px!important;padding:2px 4px!important}
+ #playerGroupsContainer .card{width:48px!important;min-width:48px!important;height:72px!important}
+}
+</style>
+<script id="jkrn-v4-hard-board-fix-js">
+(function(){
+  function cardHTML(c){
+    if(!c)return '<span style="font-size:10px">-</span>';
+    const red=c.suit==='♥'||c.suit==='♦'; const col=red?'#d32f2f':'#111';
+    if(c.isPrintedJoker)return '<div style="font-weight:900;font-size:14px">JOKER</div><div style="font-size:32px">🃏</div>';
+    return '<div style="font-weight:900;font-size:17px;color:'+col+'">'+String(c.rank||'')+'</div><div style="font-size:36px;color:'+col+'">'+String(c.suit||'')+'</div>';
+  }
+  function hardRender(){
+    const st=window.__onlineState;
+    const started=!!window.__realRoomStarted;
+    if(!started && !window.gameStarted)return;
+    const state=st||{};
+    const draw=document.getElementById('drawDeckPile');
+    const cnt=document.getElementById('drawDeckCount');
+    const open=document.getElementById('discardPile');
+    const joker=document.getElementById('topJokerDisplay');
+    const handBox=document.getElementById('playerGroupsContainer');
+    if(draw){draw.style.display='flex';draw.style.visibility='visible';draw.innerHTML='<div style="font-size:48px">🂠</div>'}
+    if(cnt)cnt.textContent='CLOSED: '+String(Number(state.deckCount||window.deck?.length||0));
+    if(open){open.style.display='flex';open.style.visibility='visible';const c=state.discardTop||(window.discardPile&&window.discardPile[window.discardPile.length-1]);open.innerHTML=c?('<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;border-radius:7px">'+cardHTML(c)+'<div style="font-size:9px;font-weight:900">OPEN CARD</div></div>'):'<span>OPEN</span>'}
+    if(joker){joker.style.display='flex';joker.style.visibility='visible';const c=state.wildJoker||window.wildJoker;joker.innerHTML=c?(cardHTML(c)+'<div style="font-size:9px;color:#a87900;font-weight:900">WILD JOKER</div>'):'<span>-</span>'}
+    if(handBox){
+      handBox.style.display='flex';handBox.style.visibility='visible';
+      const hand=Array.isArray(state.hands?.[state.myIndex])?state.hands[state.myIndex]:(window.playerGroups||[]).flat();
+      if(Array.isArray(hand)&&hand.length>=13){
+        /* If the existing renderer has not painted cards, paint a guaranteed private hand. */
+        if(!handBox.querySelector('.card')){
+          handBox.innerHTML='';
+          hand.forEach((c,i)=>{const d=document.createElement('div');d.className='card '+((c.suit==='♥'||c.suit==='♦')?'red':'black');d.dataset.cIdx=i;d.style.flexShrink='0';d.innerHTML=cardHTML(c);handBox.appendChild(d);});
+        }
+      }
+    }
+  }
+  window.addEventListener('load',hardRender);
+  setTimeout(hardRender,250);setTimeout(hardRender,1000);setTimeout(hardRender,2000);
+  setInterval(hardRender,500);
+})();
+</script>
