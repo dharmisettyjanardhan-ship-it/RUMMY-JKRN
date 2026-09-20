@@ -28,7 +28,25 @@ function addPlayerToRoom(room, socket, name){
 }
 
 app.use(express.static(__dirname));
-app.get('/', (req,res)=>res.sendFile(path.join(__dirname,'index.html')));
+const GAME_HTML_PATHS = [
+  path.join(__dirname,'index.html'),
+  path.join(__dirname,'RUMMY_JKRN_REAL_PLAYERS_V4.html'),
+  path.join(process.cwd(),'index.html'),
+  path.join(process.cwd(),'RUMMY_JKRN_REAL_PLAYERS_V4.html')
+];
+function findGameHtml(){
+  const fs = require('fs');
+  return GAME_HTML_PATHS.find(p=>{try{return fs.statSync(p).isFile();}catch(e){return false;}}) || null;
+}
+app.get('/health',(req,res)=>{
+  const html=findGameHtml();
+  res.json({ok:true,service:'RUMMY-JKRN',htmlFile:html?path.basename(html):null,dir:__dirname,files:GAME_HTML_PATHS.map(p=>({file:path.basename(p),exists:!!html && p===html}))});
+});
+app.get('/', (req,res)=>{
+  const html=findGameHtml();
+  if(!html) return res.status(500).send('<h2>RUMMY JKRN server is running, but game HTML is missing.</h2><p>Upload index.html or RUMMY_JKRN_REAL_PLAYERS_V4.html into the same folder as server.js.</p>');
+  res.sendFile(html);
+});
 
 const suits = [
   {s:'♥',c:'red'}, {s:'♦',c:'red'}, {s:'♣',c:'black'}, {s:'♠',c:'black'}
