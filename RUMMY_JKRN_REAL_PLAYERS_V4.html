@@ -5096,6 +5096,136 @@ button[onclick*="groupSelectedCards"] {
   setInterval(recover,700);
 })();
 </script>
+
+
+<!-- JKRN REFERENCE TABLE / CARD / AVATAR TIMER PACK -->
+<style id="jkrn-reference-table-pack">
+:root{--jkrn-teal:#10a8a3;--jkrn-teal2:#087e80;--jkrn-gold:#ffd52e;--jkrn-panel:#11182d;--jkrn-purple:#5b4aa8;}
+html,body{background:#070a18!important;overflow-x:hidden!important;}
+body{background:radial-gradient(circle at 50% 12%,#243a78 0%,#11152f 38%,#050713 100%)!important;}
+.top-bar{background:linear-gradient(180deg,rgba(10,13,35,.96),rgba(8,10,24,.9))!important;border-bottom:1px solid rgba(255,215,0,.25)!important;}
+.table{
+  width:min(94vw,1280px)!important;height:60vh!important;min-height:430px!important;
+  margin:18px auto 205px!important;border:9px solid #22283b!important;border-radius:50% / 42%!important;
+  background:radial-gradient(ellipse at 50% 48%,#22b9b1 0%,#0b9292 42%,#075c68 76%,#063541 100%)!important;
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.08),inset 0 0 65px rgba(0,0,0,.58),0 14px 45px rgba(0,0,0,.65)!important;
+}
+.table:before{border:2px solid rgba(255,255,255,.09)!important;box-shadow:inset 0 0 35px rgba(255,255,255,.03)!important;}
+.table:after{opacity:.05!important;}
+.center-area{top:39%!important;gap:28px!important;z-index:40!important;}
+.pile-container{min-width:100px!important;}
+.pile-label{font-size:11px!important;letter-spacing:.8px!important;text-shadow:0 1px 3px #000!important;}
+.pile{width:88px!important;height:122px!important;border-radius:9px!important;border:2px solid rgba(255,255,255,.85)!important;box-shadow:0 7px 18px rgba(0,0,0,.5)!important;}
+.draw-pile{background:linear-gradient(135deg,#6048a6,#302567)!important;border-color:#d9d1ff!important;}
+.draw-pile::after{font-size:47px!important;opacity:.95;}
+#discardPile{background:#fff!important;}
+#topJokerDisplay{background:#fff!important;}
+
+/* Opponent seats: compact casino-style player panels. */
+.opp-box{width:190px!important;min-height:56px!important;background:rgba(9,14,31,.92)!important;border:1px solid rgba(255,255,255,.22)!important;border-radius:32px!important;padding:4px 10px 4px 4px!important;backdrop-filter:blur(5px);z-index:60!important;}
+.opp-box.active-turn{border:2px solid #ffe52f!important;box-shadow:0 0 18px rgba(255,229,47,.75)!important;}
+.opp-avatar-container{width:44px!important;height:44px!important;flex:0 0 44px!important;}
+.opp-avatar{width:44px!important;height:44px!important;background:radial-gradient(circle at 35% 25%,#fff,#cfd5e7 55%,#737b98)!important;border:2px solid #fff!important;box-shadow:0 2px 8px rgba(0,0,0,.45)!important;font-size:22px!important;}
+.opp-timer{display:flex!important;align-items:center!important;justify-content:center!important;bottom:-3px!important;right:-5px!important;width:25px!important;height:25px!important;padding:0!important;border-radius:50%!important;border:2px solid #ffe52f!important;background:#11182d!important;color:#ffe52f!important;font-size:8px!important;z-index:8!important;box-shadow:0 0 8px rgba(255,229,47,.35)!important;}
+.opp-box:not(.active-turn) .opp-timer{opacity:.35!important;}
+.opp-box.active-turn .opp-timer{opacity:1!important;animation:jkrnTimerPulse 1s infinite!important;}
+.opp-details{margin-left:7px!important;}
+.opp-name{font-size:11px!important;font-weight:800!important;}.opp-score{font-size:10px!important;}.opp-action{font-size:8px!important;color:#c9ff9b!important;}
+
+/* Your seat gets the same profile treatment, with the countdown sitting on the avatar. */
+#playerArea{bottom:12%!important;z-index:2000!important;}
+#playerInfoBox{display:flex!important;position:relative!important;background:rgba(8,13,30,.94)!important;border:1px solid rgba(255,255,255,.25)!important;border-radius:28px!important;padding:5px 12px 5px 5px!important;min-height:52px!important;margin-bottom:7px!important;gap:8px!important;}
+#jkrnMyAvatarWrap{position:relative;width:42px;height:42px;flex:0 0 42px;display:flex;align-items:center;justify-content:center;}
+#jkrnMyAvatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 35% 25%,#fff,#d8deef 55%,#747d99);border:2px solid #fff;box-shadow:0 2px 9px rgba(0,0,0,.45);font-size:21px;}
+#jkrnMyTimer{position:absolute;right:-6px;bottom:-4px;width:27px;height:27px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#11182d;border:2px solid #ffe52f;color:#ffe52f;font-size:8px;font-weight:900;z-index:9;box-shadow:0 0 9px rgba(255,229,47,.45);}
+#playerInfoBox.active-turn #jkrnMyTimer{animation:jkrnTimerPulse 1s infinite;}
+#playerInfoBox.active-turn{border:2px solid #ffe52f!important;box-shadow:0 0 18px rgba(255,229,47,.55)!important;}
+@keyframes jkrnTimerPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08);box-shadow:0 0 14px rgba(255,229,47,.85)}}
+
+/* Reference-style hand: compact cards with visible rank/suit and overlap. */
+#playerGroupsContainer{gap:8px!important;height:150px!important;overflow-x:auto!important;overflow-y:visible!important;align-items:flex-end!important;padding:3px 12px 0!important;}
+#playerGroupsContainer .card-group{background:rgba(0,0,0,.14)!important;border:0!important;padding:0 0 3px!important;min-width:0!important;border-radius:7px!important;}
+#playerGroupsContainer .cards-in-group{min-height:104px!important;align-items:flex-end!important;}
+#playerGroupsContainer .cards-in-group>.card{
+ width:66px!important;min-width:66px!important;height:96px!important;padding:5px 5px 12px!important;border-radius:5px!important;border:1px solid #c8c8c8!important;
+ box-shadow:-2px 0 5px rgba(0,0,0,.45)!important;margin-left:-12px!important;background:#f8f8f8!important;
+}
+#playerGroupsContainer .cards-in-group>.card:first-child{margin-left:0!important;}
+#playerGroupsContainer .cards-in-group>.card:hover{transform:translateY(-8px)!important;}
+#playerGroupsContainer .cards-in-group>.card.selected{transform:translateY(-13px)!important;border:2px solid #ff9d00!important;}
+#playerGroupsContainer .card .card-top{font-size:18px!important;line-height:.95!important;font-weight:900!important;}
+#playerGroupsContainer .card .card-center{font-size:28px!important;}
+#playerGroupsContainer .group-status-badge{width:100%!important;min-width:72px!important;margin-top:2px!important;padding:4px 7px!important;border-radius:4px!important;font-size:10px!important;font-weight:900!important;}
+#playerGroupsContainer .badge-pure{background:#00d66b!important;color:#042a18!important;}
+#playerGroupsContainer .badge-second{background:#11c9c9!important;color:#042b2c!important;}
+#playerGroupsContainer .badge-set{background:#21d9e7!important;color:#06343a!important;}
+#playerGroupsContainer .badge-impure{background:#ff3434!important;color:#fff!important;}
+#playerGroupsContainer .badge-invalid{background:#555!important;color:#fff!important;}
+
+/* Reference-like controls. */
+.left-controls{left:28px!important;bottom:28px!important;z-index:2200!important;}
+.action-buttons{right:28px!important;bottom:28px!important;z-index:2200!important;flex-direction:row!important;gap:10px!important;}
+.left-controls button,.action-buttons button{min-width:130px!important;height:50px!important;border-radius:12px!important;font-size:14px!important;}
+.btn-drop{background:linear-gradient(#ffb52e,#ee7b00)!important;border:2px solid #ffd77c!important;}
+.btn-auto-sort{background:linear-gradient(#18d6a2,#078e83)!important;border:2px solid #8affde!important;}
+.btn-discard{background:linear-gradient(#6873a9,#4b547f)!important;border:2px solid #b8bde0!important;}
+.btn-declare{background:linear-gradient(#ff9f22,#e96b00)!important;border:2px solid #ffd27b!important;}
+
+/* Hide the old text timer inside the info bar; the avatar timer is the source of truth. */
+#playerInfoBox>.player-timer{display:none!important;}
+
+@media(max-width:800px){
+ .table{width:97vw!important;height:61vh!important;min-height:370px!important;margin-bottom:185px!important;}
+ .center-area{top:41%!important;gap:9px!important;}
+ .pile{width:62px!important;height:88px!important;}.draw-pile::after{font-size:34px!important;}
+ .opp-box{width:125px!important;min-height:45px!important;padding:3px 5px 3px 3px!important;}
+ .opp-avatar-container,.opp-avatar{width:32px!important;height:32px!important;flex-basis:32px!important;}.opp-avatar{font-size:16px!important;}
+ .opp-timer{width:21px!important;height:21px!important;font-size:7px!important;}
+ #playerArea{bottom:10%!important;}.left-controls{left:7px!important;bottom:10px!important}.action-buttons{right:7px!important;bottom:10px!important;}
+ .left-controls button,.action-buttons button{min-width:78px!important;height:40px!important;padding:7px!important;font-size:10px!important;}
+ #playerGroupsContainer .cards-in-group>.card{width:52px!important;min-width:52px!important;height:78px!important;margin-left:-10px!important;}
+ #playerGroupsContainer .card .card-top{font-size:14px!important}.#playerGroupsContainer .card .card-center{font-size:22px!important;}
+}
+</style>
+
+<script id="jkrn-reference-table-pack-js">
+(function(){
+  function ensureMyAvatar(){
+    const box=document.getElementById('playerInfoBox');
+    if(!box || document.getElementById('jkrnMyAvatarWrap')) return;
+    const oldTimer=document.getElementById('timer-p1');
+    const wrap=document.createElement('span'); wrap.id='jkrnMyAvatarWrap';
+    wrap.innerHTML='<span id="jkrnMyAvatar">👤</span><span id="jkrnMyTimer">30</span>';
+    box.insertBefore(wrap,box.firstChild);
+    if(oldTimer) oldTimer.style.display='none';
+  }
+  function timerText(v){
+    v=Math.max(0,Number(v)||0); if(v>=60)return Math.floor(v/60)+':'+String(v%60).padStart(2,'0'); return String(v);
+  }
+  function updateAvatarTimer(){
+    ensureMyAvatar();
+    const v=Math.max(0,Number(window.timeLeft)||0);
+    const t=document.getElementById('jkrnMyTimer'); if(t)t.textContent=timerText(v);
+    const active=typeof currentPlayer!=='undefined' && typeof onlinePlayerIndex==='function' && window.__realRoomStarted ? currentPlayer===onlinePlayerIndex() : (typeof currentPlayer!=='undefined' && currentPlayer===0);
+    const wrap=document.getElementById('jkrnMyAvatarWrap'); if(wrap)wrap.style.opacity=active?'1':'.65';
+    const box=document.getElementById('playerInfoBox'); if(box)box.classList.toggle('active-turn',!!active);
+  }
+  const oldTimers=window.updateAllPlayerTimers;
+  window.updateAllPlayerTimers=function(){
+    if(typeof oldTimers==='function') oldTimers.apply(this,arguments);
+    updateAvatarTimer();
+    for(let i=2;i<=6;i++){
+      const el=document.getElementById('timer-p'+i); if(!el)continue;
+      const active=(typeof currentPlayer!=='undefined' && currentPlayer===i-1);
+      el.textContent=active?timerText(window.timeLeft):'30';
+    }
+  };
+  const oldDisplay=window.displayPlayer;
+  if(typeof oldDisplay==='function')window.displayPlayer=function(){const r=oldDisplay.apply(this,arguments);ensureMyAvatar();updateAvatarTimer();return r;};
+  window.addEventListener('load',function(){ensureMyAvatar();updateAvatarTimer();});
+  setInterval(updateAvatarTimer,250);
+})();
+</script>
 </body>
 </html>
 
