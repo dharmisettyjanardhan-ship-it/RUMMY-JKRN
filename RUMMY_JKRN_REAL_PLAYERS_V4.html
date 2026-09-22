@@ -4200,124 +4200,9 @@ button[onclick*="groupSelected"] {
 </style>
 
 
-<style id="FINAL_CARDS_AND_GROUP_ANYTIME">
-/* Cards: a little bigger */
-.card {
-  transform: scale(1.14) !important;
-  transform-origin: center bottom !important;
-}
-.player-hand,
-.hand,
-.my-cards {
-  gap: 8px !important;
-}
 
-/* GROUP visibility is controlled by selectedCards.length below. */
 
-/* The actual game button is controlled by updateUI; the final floating
-   GROUP button below is the reliable mobile/desktop fallback. */
-#finalGroupAnytimeBtn {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(to bottom, #fdd835, #fbc02d) !important;
-  color: #000 !important;
-  border: 2px solid #fff !important;
-  box-shadow: 0 0 14px rgba(255,215,0,.65) !important;
-  cursor: pointer !important;
-}
 
-/* Make a single GROUP button appear from the selected-card count. */
-#finalGroupAnytimeBtn {
-  position: fixed !important;
-  right: 2% !important;
-  bottom: 27% !important;
-  z-index: 10050 !important;
-  min-width: 155px !important;
-  width: 155px !important;
-  min-height: 62px !important;
-  height: 62px !important;
-  padding: 12px 18px !important;
-  font-size: 20px !important;
-  font-weight: 800 !important;
-  border-radius: 12px !important;
-  box-sizing: border-box !important;
-}
-
-@media (max-width: 900px) {
-  .card { transform: scale(1.10) !important; }
-  #finalGroupAnytimeBtn {
-    right: 2% !important;
-    bottom: 25% !important;
-    min-width: 135px !important;
-    width: 135px !important;
-    min-height: 54px !important;
-    height: 54px !important;
-    font-size: 17px !important;
-  }
-}
-</style>
-
-<script id="FINAL_GROUP_ANYTIME_SCRIPT">
-(function(){
-  function getSelectedCount(){
-    // Use the game's real selection state first. The cards do not need
-    // a CSS 'selected' class for the GROUP button to appear.
-    if (Array.isArray(window.selectedCards)) return window.selectedCards.length;
-    try {
-      if (typeof selectedCards !== 'undefined' && Array.isArray(selectedCards)) {
-        return selectedCards.length;
-      }
-    } catch(e) {}
-    const selectors = [
-      '.card.selected', '.card-select.selected',
-      '.selected-card', '.card.selected-card'
-    ];
-    let found = [];
-    for (const s of selectors) {
-      document.querySelectorAll(s).forEach(el => {
-        if (!found.includes(el)) found.push(el);
-      });
-    }
-    return found.length;
-  }
-
-  function ensureGroupButton(){
-    let btn = document.getElementById('finalGroupAnytimeBtn');
-    if (!btn) {
-      btn = document.createElement('button');
-      btn.id = 'finalGroupAnytimeBtn';
-      btn.type = 'button';
-      btn.textContent = 'GROUP';
-      btn.onclick = function(){
-        if (typeof groupSelectedCards === 'function') {
-          groupSelectedCards();
-        } else if (typeof groupSelected === 'function') {
-          groupSelected();
-        } else if (typeof groupCards === 'function') {
-          groupCards();
-        }
-      };
-      document.body.appendChild(btn);
-    }
-    btn.style.display = getSelectedCount() >= 2 ? 'block' : 'none';
-  }
-
-  // Observe selection changes so GROUP can be used at any time.
-  const obs = new MutationObserver(ensureGroupButton);
-  obs.observe(document.body, {subtree:true, attributes:true, attributeFilter:['class']});
-
-  document.addEventListener('click', function(){
-    setTimeout(ensureGroupButton, 30);
-  }, true);
-  document.addEventListener('touchend', function(){
-    setTimeout(ensureGroupButton, 30);
-  }, true);
-
-  setInterval(ensureGroupButton, 250);
-  window.addEventListener('load', ensureGroupButton);
-})();
-</script>
 
 
 <style id="FINAL_SCOREBOARD_CARDS_VISIBLE">
@@ -4380,65 +4265,8 @@ button[onclick*="groupSelected"] {
 </style>
 
 
-<style id="GROUP_BUTTON_FINAL_FIX">
-#groupButton {
-  display: none !important;
-  position: fixed !important;
-  right: 2% !important;
-  bottom: 27% !important;
-  z-index: 10060 !important;
-  min-width: 155px !important;
-  width: 155px !important;
-  min-height: 62px !important;
-  height: 62px !important;
-  padding: 12px 18px !important;
-  font-size: 20px !important;
-  font-weight: 900 !important;
-  border-radius: 12px !important;
-  background: linear-gradient(to bottom, #fdd835, #fbc02d) !important;
-  color: #000 !important;
-}
-@media (max-width:900px) {
-  #groupButton {
-    right: 2% !important;
-    bottom: 25% !important;
-    min-width: 135px !important;
-    width: 135px !important;
-    min-height: 54px !important;
-    height: 54px !important;
-    font-size: 17px !important;
-  }
-}
-</style>
-<script id="GROUP_BUTTON_FINAL_STATE_FIX">
-(function(){
-  function syncGroupButton(){
-    let count = 0;
-    try {
-      if (typeof selectedCards !== 'undefined' && Array.isArray(selectedCards)) {
-        count = selectedCards.length;
-      }
-    } catch(e) {}
-    const btn = document.getElementById('groupButton');
-    if (btn) {
-      const show = count >= 2;
-      btn.style.setProperty('display', show ? 'inline-flex' : 'none', 'important');
-      btn.style.setProperty('visibility', show ? 'visible' : 'hidden', 'important');
-      btn.disabled = !show;
-      btn.textContent = show ? 'GROUP ' + count + ' CARDS' : 'GROUP';
-    }
-    const backup = document.getElementById('finalGroupAnytimeBtn');
-    if (backup) {
-      backup.style.display = count >= 2 ? 'block' : 'none';
-    }
-  }
 
-  document.addEventListener('click', function(){ setTimeout(syncGroupButton, 20); }, true);
-  document.addEventListener('touchend', function(){ setTimeout(syncGroupButton, 20); }, true);
-  setInterval(syncGroupButton, 100);
-  window.addEventListener('load', syncGroupButton);
-})();
-</script>
+
 
 
 
@@ -4787,68 +4615,8 @@ button[onclick*="groupSelected"] {
 </script>
 
 
-<style id="jkrn-v27-hand-tools-visible">
-/* V27: Hand tools must always be visible for the local player. */
-.left-controls, .action-buttons {
-  display:flex !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  pointer-events:auto !important;
-  z-index:10020 !important;
-}
-.left-controls .btn-auto-sort,
-button.btn-auto-sort,
-button[onclick*="autoSortCards"] {
-  display:flex !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  pointer-events:auto !important;
-  min-width:150px !important;
-  min-height:58px !important;
-  align-items:center !important;
-  justify-content:center !important;
-}
-#groupButton,
-button.btn-group,
-button[onclick*="groupSelectedCards"] {
-  display:flex !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  pointer-events:auto !important;
-  min-width:150px !important;
-  min-height:58px !important;
-  align-items:center !important;
-  justify-content:center !important;
-  z-index:10030 !important;
-}
-/* Keep GROUP available regardless of whose turn it is; it becomes disabled only
-   when fewer than two cards are selected. */
-@media (max-width:900px){
-  .left-controls .btn-auto-sort,
-  button.btn-auto-sort,
-  button[onclick*="autoSortCards"],
-  #groupButton,
-  button.btn-group,
-  button[onclick*="groupSelectedCards"]{
-    min-width:125px !important;
-    min-height:50px !important;
-    font-size:16px !important;
-  }
-}
-</style>
-<script id="jkrn-v27-hand-tools-visible-js">
-(function(){
-  function fixHandTools(){
-    const auto=document.querySelector('.left-controls .btn-auto-sort, button.btn-auto-sort, button[onclick*="autoSortCards"]');
-    if(auto){auto.style.setProperty('display','flex','important');auto.style.setProperty('visibility','visible','important');auto.style.setProperty('opacity','1','important');auto.style.setProperty('pointer-events','auto','important');}
-    let group=document.getElementById('groupButton') || document.querySelector('button.btn-group, button[onclick*="groupSelectedCards"]');
-    if(group){group.style.setProperty('display','flex','important');group.style.setProperty('visibility','visible','important');group.style.setProperty('opacity','1','important');group.style.setProperty('pointer-events','auto','important');}
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',fixHandTools);else fixHandTools();
-  window.addEventListener('load',fixHandTools);
-  setInterval(fixHandTools,500);
-})();
-</script>
+
+
 
 </body>
 </html>
@@ -6198,245 +5966,41 @@ window.jkrnV15JokerRules={
 })();
 </script>
 
-<!-- JKRN V31: CLEAN GROUP TOOLBAR + ALWAYS-VISIBLE DISCARD CONTROL -->
-<style id="jkrn-v31-group-discard-clean">
-  /* GROUP is a hand-management control: keep it above the player's cards,
-     never floating over the card faces or at the right edge. */
-  #jkrnHandToolsBar{
-    width:100%; min-height:44px; display:flex; align-items:center; justify-content:center;
-    gap:8px; margin:0 0 3px; position:relative; z-index:3000; pointer-events:none;
-  }
-  #jkrnHandToolsBar #groupButton{
-    position:relative !important; inset:auto !important; transform:none !important;
-    display:none !important; margin:0 !important; pointer-events:auto !important;
-    z-index:3001 !important; white-space:nowrap;
-  }
-  #jkrnHandToolsBar #groupButton.jkrn-show{
-    display:inline-flex !important; visibility:visible !important;
-  }
-  /* DISCARD remains in the normal right-side action area and is NOT hidden
-     after a draw. It is disabled until exactly one card is selected. */
-  #discardButton{
-    display:inline-flex !important; visibility:visible !important; opacity:1 !important;
-    position:relative !important; z-index:10003 !important;
-  }
-  #discardButton:disabled{opacity:.45 !important; cursor:not-allowed !important;}
-  .action-buttons{z-index:10001 !important;}
-  @media(max-width:700px){
-    #jkrnHandToolsBar{min-height:38px;margin-bottom:2px;}
-    #jkrnHandToolsBar #groupButton{padding:8px 12px;font-size:10px;}
-    #discardButton{padding:8px 12px !important;font-size:10px !important;}
-  }
-</style>
-<script id="jkrn-v31-group-discard-clean-js">
-(function(){
-  function myIndex(){
-    return window.__realRoomStarted && Number.isInteger(window.__onlineMyIndex)
-      ? Number(window.__onlineMyIndex) : 0;
-  }
-  function myTurn(){
-    const i=myIndex();
-    return currentPlayer===i && !gameOver &&
-      !(window.__realRoomStarted && window.__onlineEliminated) &&
-      !(typeof droppedThisDeal!=='undefined' && droppedThisDeal[i]);
-  }
-  function installToolbar(){
-    const playerArea=document.getElementById('playerArea');
-    const groups=document.getElementById('playerGroupsContainer');
-    const group=document.getElementById('groupButton');
-    if(!playerArea||!groups||!group)return false;
-    let bar=document.getElementById('jkrnHandToolsBar');
-    if(!bar){
-      bar=document.createElement('div');
-      bar.id='jkrnHandToolsBar';
-      playerArea.insertBefore(bar,groups);
-    }
-    if(group.parentElement!==bar)bar.appendChild(group);
-    return true;
-  }
-  function sync(){
-    if(!installToolbar())return;
-    const group=document.getElementById('groupButton');
-    const discard=document.getElementById('discardButton');
-    const hand=(typeof playerGroups!=='undefined'&&Array.isArray(playerGroups))
-      ? playerGroups.flat().filter(Boolean) : [];
-    const selected=(typeof selectedCards!=='undefined'&&Array.isArray(selectedCards))
-      ? selectedCards : [];
-    const eliminated=window.__realRoomStarted ? !!window.__onlineEliminated :
-      (typeof isEliminated==='function' ? isEliminated(myIndex()) : false);
-    const turn=myTurn() && !eliminated;
 
-    if(group){
-      const show=selected.length>=2 && !eliminated;
-      group.classList.toggle('jkrn-show',show);
-      group.disabled=!show;
-      group.textContent=show ? 'GROUP '+selected.length+' CARDS' : 'GROUP';
-    }
-    if(discard){
-      /* Never hide it. This removes the intermittent "button missing" bug. */
-      discard.style.setProperty('display','inline-flex','important');
-      discard.style.setProperty('visibility','visible','important');
-      const ready=turn && !!playerHasDrawn && hand.length===14 && selected.length===1;
-      discard.disabled=!ready;
-      discard.title=ready ? 'Discard selected card' :
-        (!playerHasDrawn ? 'Draw a card first' : hand.length!==14 ? 'You need 14 cards' : 'Select exactly 1 card');
-    }
-  }
-  const oldUpdate=window.updateUI;
-  if(typeof oldUpdate==='function'){
-    window.updateUI=function(){
-      const r=oldUpdate.apply(this,arguments);
-      setTimeout(sync,0);
-      return r;
-    };
-  }
-  document.addEventListener('click',()=>setTimeout(sync,0),true);
-  document.addEventListener('touchend',()=>setTimeout(sync,0),true);
-  window.addEventListener('load',sync);
-  setInterval(sync,250);
-  window.jkrnV31Sync=sync;
+<!-- JKRN V34: SINGLE STABLE ACTION-CONTROL SYSTEM - NO BLINK / NO POLLING -->
+<style id="jkrn-v34-stable-controls">
+.left-controls{z-index:50000!important;pointer-events:auto!important}
+.left-controls #groupButton{position:static!important;display:inline-flex!important;visibility:visible!important;transform:none!important;opacity:1!important;margin:0!important;pointer-events:auto!important;z-index:50001!important;min-width:120px!important;background:linear-gradient(to bottom,#fdd835,#f57f17)!important;color:#000!important;border:2px solid #fff!important}
+.left-controls #groupButton:disabled{opacity:.42!important;cursor:not-allowed!important;box-shadow:none!important}
+.left-controls #groupButton.jkrn-v34-ready{opacity:1!important;box-shadow:0 0 14px rgba(255,215,0,.9)!important}
+.action-buttons{z-index:50000!important;pointer-events:auto!important}
+.action-buttons #discardButton{position:static!important;display:inline-flex!important;visibility:visible!important;pointer-events:auto!important;min-width:120px!important}
+.action-buttons #discardButton:not(.jkrn-v34-ready){opacity:.42!important}
+.action-buttons #discardButton.jkrn-v34-ready{opacity:1!important;border-color:#fff!important;box-shadow:0 0 18px rgba(33,150,243,.95),0 0 5px #fff!important;animation:none!important}
+.action-buttons #dropButton{pointer-events:auto!important;z-index:50002!important}
+#jkrnHandToolsBar,#leftGroupButtonSlot,#finalGroupAnytimeBtn{display:none!important}
+#playerGroupsContainer{gap:5px!important;max-width:99%!important}
+#playerGroupsContainer .card-group{margin:0!important;padding:3px!important}
+#playerGroupsContainer .cards-in-group{gap:0!important}
+#playerGroupsContainer .cards-in-group .card + .card{margin-left:-46px!important}
+@media(max-width:900px){.left-controls #groupButton{min-width:92px!important}.action-buttons #discardButton{min-width:92px!important}#playerGroupsContainer .cards-in-group .card + .card{margin-left:-34px!important}}
+</style>
+<script id="jkrn-v34-stable-controls-js">
+(function(){'use strict';var installed=false;
+function hand(){return Array.isArray(window.playerGroups)?window.playerGroups.flat().filter(Boolean):[]}
+function online(){return !!window.__realRoomStarted}
+function seat(){return online()&&Number.isInteger(window.__onlineMyIndex)?Number(window.__onlineMyIndex):0}
+function eliminated(){if(online()&&typeof window.__onlineEliminated==='boolean')return window.__onlineEliminated;return typeof window.isEliminated==='function'?!!window.isEliminated(seat()):false}
+function turn(){return !window.gameOver&&!eliminated()&&window.currentPlayer===seat()&&!(Array.isArray(window.droppedThisDeal)&&window.droppedThisDeal[seat()])}
+function selectedCount(){return Array.isArray(window.selectedCards)?window.selectedCards.length:0}
+function selectedCard(){var s=Array.isArray(window.selectedCards)?window.selectedCards[0]:null;if(!s)return null;if(s.id){var c=hand().find(function(x){return x&&x.id===s.id});if(c)return c}var g=window.playerGroups&&window.playerGroups[s.gIdx];return g&&g[s.cIdx]||null}
+function install(){if(installed)return true;var left=document.querySelector('.left-controls'),group=document.getElementById('groupButton');if(!left||!group)return false;if(group.parentElement!==left)left.appendChild(group);group.style.removeProperty('left');group.style.removeProperty('right');group.style.removeProperty('top');group.style.removeProperty('bottom');installed=true;return true}
+function sync(){if(!install())return;var group=document.getElementById('groupButton'),discard=document.getElementById('discardButton'),drop=document.getElementById('dropButton'),hc=hand().length,sc=selectedCount(),t=turn(),drawn=!!window.playerHasDrawn,elim=eliminated();if(group){var gr=sc>=2&&!elim;group.classList.toggle('jkrn-v34-ready',gr);group.disabled=!gr;group.textContent=gr?'GROUP '+sc+' CARDS':'GROUP'}if(discard){var dr=t&&drawn&&hc===14&&sc===1&&!elim;discard.classList.toggle('jkrn-v34-ready',dr);discard.disabled=!dr;discard.style.setProperty('display','inline-flex','important');discard.style.setProperty('visibility','visible','important')}if(drop){var dp=t&&!drawn&&!elim;drop.disabled=!dp;drop.style.setProperty('pointer-events','auto','important')}}
+window.selectCard=function(gIdx,cIdx){var g=window.playerGroups&&window.playerGroups[gIdx],card=g&&g[cIdx];if(!card)return;var id=card.id||('local_'+gIdx+'_'+cIdx),arr=Array.isArray(window.selectedCards)?window.selectedCards:[],i=arr.findIndex(function(x){return x&&((x.id&&x.id===id)||(x.gIdx===gIdx&&x.cIdx===cIdx))});if(i>=0)arr.splice(i,1);else arr.push({gIdx:gIdx,cIdx:cIdx,id:id});window.selectedCards=arr;if(typeof window.updateUI==='function')window.updateUI();else sync()}
+window.discardCard=function(){var card=selectedCard();if(!card||selectedCount()!==1||!turn()||!window.playerHasDrawn)return;if(online()){if(window.onlineSocket&&card.id)window.onlineSocket.emit('discardCard',{cardId:card.id});return}if(hand().length!==14||window.currentPlayer!==0)return;var gi=-1,ci=-1;window.playerGroups.forEach(function(g,a){g.forEach(function(c,b){if(gi<0&&c===card){gi=a;ci=b}})});if(gi<0)return;window.playerGroups[gi].splice(ci,1);if(Array.isArray(window.discardPile))window.discardPile.push(card);window.playerGroups=window.playerGroups.filter(function(g){return g.length});window.selectedCards=[];window.playerHasDrawn=false;try{if(window.playSound)window.playSound('discard')}catch(e){}if(typeof window.updateUI==='function')window.updateUI();if(typeof window.nextTurn==='function')window.nextTurn()}
+var prev=window.updateUI;if(typeof prev==='function'&&!prev.__jkrnV34){function wrapped(){var r=prev.apply(this,arguments);sync();return r}wrapped.__jkrnV34=true;window.updateUI=wrapped}
+function boot(){install();sync()}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();window.addEventListener('load',boot,{once:true});window.jkrnV34Sync=sync
 })();
 </script>
-
-<!-- JKRN FINAL STABLE ACTION CONTROLS v32 -->
-<style id="jkrn-final-stable-controls">
-/* Keep all action buttons in their original control zones. Never overlay the hand. */
-.left-controls{z-index:20000!important;pointer-events:auto!important;}
-.action-buttons{z-index:20000!important;pointer-events:auto!important;}
-#leftGroupButtonSlot{display:flex;flex-direction:column;gap:10px;pointer-events:auto;}
-#leftGroupButtonSlot #groupButton{
-  position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;
-  transform:none!important;display:none!important;visibility:hidden!important;opacity:1!important;
-  pointer-events:auto!important;z-index:20001!important;margin:0!important;
-  background:linear-gradient(to bottom,#fdd835,#f57f17)!important;color:#000!important;
-  border:2px solid #fff!important;
-}
-#leftGroupButtonSlot #groupButton.jkrn-ready{
-  display:inline-flex!important;visibility:visible!important;opacity:1!important;
-  box-shadow:0 0 12px rgba(255,215,0,.9)!important;
-}
-/* Discard is always present. It becomes strongly highlighted only when legal. */
-#discardButton{
-  position:relative!important;z-index:20002!important;pointer-events:auto!important;
-  display:inline-flex!important;visibility:visible!important;
-  min-width:110px!important;
-  background:linear-gradient(to bottom,#2196f3,#0d47a1)!important;color:#fff!important;
-  border:2px solid rgba(255,255,255,.7)!important;
-}
-#discardButton.jkrn-ready{
-  opacity:1!important;filter:none!important;
-  box-shadow:0 0 16px rgba(33,150,243,.95),0 0 4px #fff!important;
-  border-color:#fff!important;
-  animation:none!important;
-}
-#discardButton:not(.jkrn-ready){opacity:.48!important;}
-/* Drop must never be covered by another element. */
-#dropButton{position:relative!important;z-index:20003!important;pointer-events:auto!important;}
-/* Remove any old V31 floating toolbar if one exists. */
-#jkrnHandToolsBar{display:none!important;pointer-events:none!important;}
-@media(max-width:700px){
-  #leftGroupButtonSlot{gap:7px}
-  #discardButton{min-width:88px!important}
-}
-</style>
-<script id="jkrn-final-stable-controls-js">
-(function(){
-  'use strict';
-  var syncing=false;
-
-  function online(){ return !!window.__realRoomStarted; }
-  function seat(){ return online() && Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : 0; }
-  function eliminated(){
-    if(online() && typeof window.__onlineEliminated==='boolean') return window.__onlineEliminated;
-    return typeof isEliminated==='function' ? !!isEliminated(0) : false;
-  }
-  function myTurn(){
-    return !gameOver && !eliminated() && currentPlayer===seat() && !(typeof droppedThisDeal!=='undefined' && droppedThisDeal[seat()]);
-  }
-  function handCount(){
-    return (typeof playerGroups!=='undefined' && Array.isArray(playerGroups)) ? playerGroups.flat().filter(Boolean).length : 0;
-  }
-  function selectedCount(){ return (typeof selectedCards!=='undefined' && Array.isArray(selectedCards)) ? selectedCards.length : 0; }
-
-  function placeGroup(){
-    var left=document.querySelector('.left-controls');
-    var group=document.getElementById('groupButton');
-    if(!left || !group) return false;
-    var slot=document.getElementById('leftGroupButtonSlot');
-    if(!slot){
-      slot=document.createElement('div'); slot.id='leftGroupButtonSlot';
-      left.appendChild(slot);
-    }
-    if(group.parentElement!==slot) slot.appendChild(group);
-    return true;
-  }
-
-  function sync(){
-    if(syncing)return;
-    syncing=true;
-    try{
-      if(!placeGroup()) return;
-      var group=document.getElementById('groupButton');
-      var discard=document.getElementById('discardButton');
-      var drop=document.getElementById('dropButton');
-      var turn=myTurn();
-      var sc=selectedCount();
-      var hc=handCount();
-
-      /* GROUP is a stable hand tool. No turn requirement. */
-      if(group){
-        var groupReady=sc>=2 && !eliminated();
-        group.classList.toggle('jkrn-ready',groupReady);
-        group.disabled=!groupReady;
-        group.style.removeProperty('left'); group.style.removeProperty('right');
-        group.style.removeProperty('top'); group.style.removeProperty('bottom');
-      }
-
-      /* DISCARD: legal only after draw, exactly 14 cards, exactly 1 selected. */
-      if(discard){
-        var discardReady=turn && !!playerHasDrawn && hc===14 && sc===1;
-        discard.classList.toggle('jkrn-ready',discardReady);
-        discard.disabled=!discardReady;
-        discard.style.setProperty('display','inline-flex','important');
-        discard.style.setProperty('visibility','visible','important');
-        discard.title=discardReady?'DISCARD selected card':(!turn?'Not your turn':!playerHasDrawn?'Draw a card first':hc!==14?'You need 14 cards':'Select exactly 1 card');
-      }
-
-      /* DROP: available before drawing on your turn. */
-      if(drop){
-        var dropReady=turn && !playerHasDrawn;
-        drop.disabled=!dropReady;
-        drop.style.setProperty('pointer-events','auto','important');
-      }
-    }finally{syncing=false;}
-  }
-
-  /* Final authoritative wrapper: run the existing UI renderer, then apply only
-     the stable control state. No interval, no blinking. */
-  var prev=window.updateUI;
-  if(typeof prev==='function'){
-    window.updateUI=function(){
-      var r=prev.apply(this,arguments);
-      sync();
-      return r;
-    };
-  }
-
-  /* Card selection / draw / discard / drop all call updateUI in the existing game.
-     These listeners only resync after a user action; they never move the buttons. */
-  document.addEventListener('click',function(e){
-    if(e.target.closest('#playerGroupsContainer .card,#drawPile,#discardPile,#dropButton,#groupButton,#discardButton')){
-      setTimeout(sync,0);
-    }
-  },true);
-  document.addEventListener('touchend',function(e){
-    if(e.target.closest('#playerGroupsContainer .card,#drawPile,#discardPile,#dropButton,#groupButton,#discardButton')){
-      setTimeout(sync,0);
-    }
-  },true);
-
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',sync); else sync();
-  window.addEventListener('load',sync);
-  window.jkrnFinalSync=sync;
-})();
-</script>
+</body>
+</html>
