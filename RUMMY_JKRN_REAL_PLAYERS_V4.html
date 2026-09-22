@@ -4731,6 +4731,144 @@ button[onclick*="groupSelected"] {
 })();
 </script>
 
+
+<style id="jkrn-v37-discard-final">
+/* V37 FINAL: DISCARD must become available immediately after 14th card.
+   Selection is required only when the user actually presses DISCARD. */
+#discardButton{
+  display:inline-flex!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+  transition:none!important;
+  animation:none!important;
+}
+#discardButton.jkrn-v37-ready{
+  opacity:1!important;
+  filter:none!important;
+  background:linear-gradient(#2196f3,#0d47a1)!important;
+  color:#fff!important;
+  border:2px solid #d9efff!important;
+  box-shadow:0 0 18px rgba(33,150,243,.9),0 5px 12px rgba(0,0,0,.65)!important;
+  cursor:pointer!important;
+}
+#discardButton.jkrn-v37-selected{
+  background:linear-gradient(#00bcd4,#006064)!important;
+  box-shadow:0 0 20px rgba(0,229,255,.95),0 5px 12px rgba(0,0,0,.65)!important;
+}
+#discardButton.jkrn-v37-disabled{
+  opacity:.45!important;
+  filter:saturate(.55)!important;
+  cursor:not-allowed!important;
+}
+</style>
+<script id="jkrn-v37-discard-final-js">
+(function(){
+  'use strict';
+  function online(){ return !!window.__realRoomStarted; }
+  function seat(){ return Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : 0; }
+  function myTurn(){
+    if (typeof gameOver!=='undefined' && gameOver) return false;
+    return currentPlayer===seat() && !(Array.isArray(droppedThisDeal)&&droppedThisDeal[seat()]);
+  }
+  function eliminated(){
+    if(online() && typeof window.__onlineEliminated==='boolean') return window.__onlineEliminated;
+    return typeof isEliminated==='function' ? !!isEliminated(0) : false;
+  }
+  function count(){ return Array.isArray(playerGroups) ? playerGroups.flat().filter(Boolean).length : 0; }
+  function selected(){
+    if(!Array.isArray(selectedCards)||selectedCards.length!==1) return null;
+    const x=selectedCards[0];
+    if(x.id){ const c=playerGroups.flat().find(v=>v&&v.id===x.id); if(c)return c; }
+    const g=playerGroups[x.gIdx];
+    return g&&g[x.cIdx]?g[x.cIdx]:null;
+  }
+  function sync(){
+    const b=document.getElementById('discardButton'); if(!b)return;
+    const available=myTurn() && !!playerHasDrawn && count()===14 && !eliminated();
+    const hasOne=Array.isArray(selectedCards)&&selectedCards.length===1&&!!selected();
+    b.disabled=!available;
+    b.classList.toggle('jkrn-v37-ready',available);
+    b.classList.toggle('jkrn-v37-selected',available&&hasOne);
+    b.classList.toggle('jkrn-v37-disabled',!available);
+    b.style.setProperty('display','inline-flex','important');
+    b.style.setProperty('visibility','visible','important');
+    b.style.setProperty('pointer-events','auto','important');
+  }
+  window.discardCard=function(){
+    const b=document.getElementById('discardButton');
+    if(!myTurn() || !playerHasDrawn || count()!==14 || eliminated()) return;
+    const c=selected();
+    if(!c){
+      const st=document.getElementById('status');
+      if(st) st.innerText='⚠️ 14 cards vachchayi. Discard cheyyadaniki oka card select cheyyandi.';
+      return;
+    }
+    if(online()){
+      if(!window.onlineSocket || !c.id)return;
+      window.onlineSocket.emit('discardCard',{cardId:c.id});
+      return;
+    }
+    let removed=null;
+    for(let gi=0;gi<playerGroups.length&&!removed;gi++){
+      const idx=playerGroups[gi].findIndex(v=>v&&(v.id===c.id||v===c));
+      if(idx>=0) removed=playerGroups[gi].splice(idx,1)[0];
+    }
+    if(!removed)return;
+    if(Array.isArray(discardPile))discardPile.push(removed);
+    playerGroups=playerGroups.filter(g=>g&&g.length);
+    selectedCards=[];
+    playerHasDrawn=false;
+    try{if(typeof playSound==='function')playSound('discard');}catch(e){}
+    if(typeof updateUI==='function')updateUI();
+    if(typeof nextTurn==='function')nextTurn();
+  };
+  const oldUpdate=window.updateUI;
+  if(typeof oldUpdate==='function' && !oldUpdate.__jkrnV37){
+    function wrapped(){const r=oldUpdate.apply(this,arguments);sync();return r;}
+    wrapped.__jkrnV37=true;
+    window.updateUI=wrapped;
+  }
+  function boot(){sync();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+  window.addEventListener('load',boot,{once:true});
+  window.jkrnV37SyncDiscard=sync;
+})();
+</script>
+
+
+<style id="jkrn-v38-discard-hardfix">
+#discardButton{display:inline-flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;animation:none!important;transition:none!important;}
+#discardButton.jkrn-v38-available{background:linear-gradient(180deg,#42a5f5,#1565c0)!important;border:2px solid #fff!important;box-shadow:0 0 16px rgba(33,150,243,.95),0 4px 10px rgba(0,0,0,.7)!important;color:#fff!important;cursor:pointer!important;}
+#discardButton.jkrn-v38-disabled{opacity:.42!important;filter:saturate(.5)!important;cursor:not-allowed!important;box-shadow:none!important;}
+</style>
+<script id="jkrn-v38-discard-hardfix-js">
+(function(){
+'use strict';
+function seat(){return Number.isInteger(window.__onlineMyIndex)?Number(window.__onlineMyIndex):0;}
+function online(){return !!window.__realRoomStarted;}
+function turn(){return !gameOver && currentPlayer===seat() && !(Array.isArray(droppedThisDeal)&&droppedThisDeal[seat()]);}
+function elim(){return online()&&typeof window.__onlineEliminated==='boolean'?window.__onlineEliminated:(typeof isEliminated==='function'?!!isEliminated(0):false);}
+function count(){return Array.isArray(playerGroups)?playerGroups.flat().filter(Boolean).length:0;}
+function syncV38(){
+ const b=document.getElementById('discardButton');if(!b)return;
+ const available=turn()&&!!playerHasDrawn&&count()===14&&!elim();
+ b.disabled=!available;
+ b.classList.toggle('jkrn-v38-available',available);
+ b.classList.toggle('jkrn-v38-disabled',!available);
+ b.style.setProperty('display','inline-flex','important');
+ b.style.setProperty('visibility','visible','important');
+ b.style.setProperty('pointer-events','auto','important');
+}
+window.jkrnV38SyncDiscard=syncV38;
+const prev=window.updateUI;
+if(typeof prev==='function'&&!prev.__jkrnV38){
+ function wrapped(){const r=prev.apply(this,arguments);syncV38();return r;}
+ wrapped.__jkrnV38=true;window.updateUI=wrapped;
+}
+window.addEventListener('load',syncV38,{once:true});
+})();
+</script>
+
 </body>
 </html>
 
@@ -6290,5 +6428,143 @@ window.jkrnV15JokerRules={
  .player-area{bottom:66px!important;}
 }
 </style>
+
+<style id="jkrn-v37-discard-final">
+/* V37 FINAL: DISCARD must become available immediately after 14th card.
+   Selection is required only when the user actually presses DISCARD. */
+#discardButton{
+  display:inline-flex!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+  transition:none!important;
+  animation:none!important;
+}
+#discardButton.jkrn-v37-ready{
+  opacity:1!important;
+  filter:none!important;
+  background:linear-gradient(#2196f3,#0d47a1)!important;
+  color:#fff!important;
+  border:2px solid #d9efff!important;
+  box-shadow:0 0 18px rgba(33,150,243,.9),0 5px 12px rgba(0,0,0,.65)!important;
+  cursor:pointer!important;
+}
+#discardButton.jkrn-v37-selected{
+  background:linear-gradient(#00bcd4,#006064)!important;
+  box-shadow:0 0 20px rgba(0,229,255,.95),0 5px 12px rgba(0,0,0,.65)!important;
+}
+#discardButton.jkrn-v37-disabled{
+  opacity:.45!important;
+  filter:saturate(.55)!important;
+  cursor:not-allowed!important;
+}
+</style>
+<script id="jkrn-v37-discard-final-js">
+(function(){
+  'use strict';
+  function online(){ return !!window.__realRoomStarted; }
+  function seat(){ return Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : 0; }
+  function myTurn(){
+    if (typeof gameOver!=='undefined' && gameOver) return false;
+    return currentPlayer===seat() && !(Array.isArray(droppedThisDeal)&&droppedThisDeal[seat()]);
+  }
+  function eliminated(){
+    if(online() && typeof window.__onlineEliminated==='boolean') return window.__onlineEliminated;
+    return typeof isEliminated==='function' ? !!isEliminated(0) : false;
+  }
+  function count(){ return Array.isArray(playerGroups) ? playerGroups.flat().filter(Boolean).length : 0; }
+  function selected(){
+    if(!Array.isArray(selectedCards)||selectedCards.length!==1) return null;
+    const x=selectedCards[0];
+    if(x.id){ const c=playerGroups.flat().find(v=>v&&v.id===x.id); if(c)return c; }
+    const g=playerGroups[x.gIdx];
+    return g&&g[x.cIdx]?g[x.cIdx]:null;
+  }
+  function sync(){
+    const b=document.getElementById('discardButton'); if(!b)return;
+    const available=myTurn() && !!playerHasDrawn && count()===14 && !eliminated();
+    const hasOne=Array.isArray(selectedCards)&&selectedCards.length===1&&!!selected();
+    b.disabled=!available;
+    b.classList.toggle('jkrn-v37-ready',available);
+    b.classList.toggle('jkrn-v37-selected',available&&hasOne);
+    b.classList.toggle('jkrn-v37-disabled',!available);
+    b.style.setProperty('display','inline-flex','important');
+    b.style.setProperty('visibility','visible','important');
+    b.style.setProperty('pointer-events','auto','important');
+  }
+  window.discardCard=function(){
+    const b=document.getElementById('discardButton');
+    if(!myTurn() || !playerHasDrawn || count()!==14 || eliminated()) return;
+    const c=selected();
+    if(!c){
+      const st=document.getElementById('status');
+      if(st) st.innerText='⚠️ 14 cards vachchayi. Discard cheyyadaniki oka card select cheyyandi.';
+      return;
+    }
+    if(online()){
+      if(!window.onlineSocket || !c.id)return;
+      window.onlineSocket.emit('discardCard',{cardId:c.id});
+      return;
+    }
+    let removed=null;
+    for(let gi=0;gi<playerGroups.length&&!removed;gi++){
+      const idx=playerGroups[gi].findIndex(v=>v&&(v.id===c.id||v===c));
+      if(idx>=0) removed=playerGroups[gi].splice(idx,1)[0];
+    }
+    if(!removed)return;
+    if(Array.isArray(discardPile))discardPile.push(removed);
+    playerGroups=playerGroups.filter(g=>g&&g.length);
+    selectedCards=[];
+    playerHasDrawn=false;
+    try{if(typeof playSound==='function')playSound('discard');}catch(e){}
+    if(typeof updateUI==='function')updateUI();
+    if(typeof nextTurn==='function')nextTurn();
+  };
+  const oldUpdate=window.updateUI;
+  if(typeof oldUpdate==='function' && !oldUpdate.__jkrnV37){
+    function wrapped(){const r=oldUpdate.apply(this,arguments);sync();return r;}
+    wrapped.__jkrnV37=true;
+    window.updateUI=wrapped;
+  }
+  function boot(){sync();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+  window.addEventListener('load',boot,{once:true});
+  window.jkrnV37SyncDiscard=sync;
+})();
+</script>
+
+
+<style id="jkrn-v38-discard-hardfix">
+#discardButton{display:inline-flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;animation:none!important;transition:none!important;}
+#discardButton.jkrn-v38-available{background:linear-gradient(180deg,#42a5f5,#1565c0)!important;border:2px solid #fff!important;box-shadow:0 0 16px rgba(33,150,243,.95),0 4px 10px rgba(0,0,0,.7)!important;color:#fff!important;cursor:pointer!important;}
+#discardButton.jkrn-v38-disabled{opacity:.42!important;filter:saturate(.5)!important;cursor:not-allowed!important;box-shadow:none!important;}
+</style>
+<script id="jkrn-v38-discard-hardfix-js">
+(function(){
+'use strict';
+function seat(){return Number.isInteger(window.__onlineMyIndex)?Number(window.__onlineMyIndex):0;}
+function online(){return !!window.__realRoomStarted;}
+function turn(){return !gameOver && currentPlayer===seat() && !(Array.isArray(droppedThisDeal)&&droppedThisDeal[seat()]);}
+function elim(){return online()&&typeof window.__onlineEliminated==='boolean'?window.__onlineEliminated:(typeof isEliminated==='function'?!!isEliminated(0):false);}
+function count(){return Array.isArray(playerGroups)?playerGroups.flat().filter(Boolean).length:0;}
+function syncV38(){
+ const b=document.getElementById('discardButton');if(!b)return;
+ const available=turn()&&!!playerHasDrawn&&count()===14&&!elim();
+ b.disabled=!available;
+ b.classList.toggle('jkrn-v38-available',available);
+ b.classList.toggle('jkrn-v38-disabled',!available);
+ b.style.setProperty('display','inline-flex','important');
+ b.style.setProperty('visibility','visible','important');
+ b.style.setProperty('pointer-events','auto','important');
+}
+window.jkrnV38SyncDiscard=syncV38;
+const prev=window.updateUI;
+if(typeof prev==='function'&&!prev.__jkrnV38){
+ function wrapped(){const r=prev.apply(this,arguments);syncV38();return r;}
+ wrapped.__jkrnV38=true;window.updateUI=wrapped;
+}
+window.addEventListener('load',syncV38,{once:true});
+})();
+</script>
+
 </body>
 </html>
