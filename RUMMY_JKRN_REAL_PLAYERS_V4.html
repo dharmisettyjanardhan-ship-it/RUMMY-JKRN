@@ -6297,3 +6297,146 @@ window.jkrnV15JokerRules={
   window.jkrnV31Sync=sync;
 })();
 </script>
+
+<!-- JKRN FINAL STABLE ACTION CONTROLS v32 -->
+<style id="jkrn-final-stable-controls">
+/* Keep all action buttons in their original control zones. Never overlay the hand. */
+.left-controls{z-index:20000!important;pointer-events:auto!important;}
+.action-buttons{z-index:20000!important;pointer-events:auto!important;}
+#leftGroupButtonSlot{display:flex;flex-direction:column;gap:10px;pointer-events:auto;}
+#leftGroupButtonSlot #groupButton{
+  position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;
+  transform:none!important;display:none!important;visibility:hidden!important;opacity:1!important;
+  pointer-events:auto!important;z-index:20001!important;margin:0!important;
+  background:linear-gradient(to bottom,#fdd835,#f57f17)!important;color:#000!important;
+  border:2px solid #fff!important;
+}
+#leftGroupButtonSlot #groupButton.jkrn-ready{
+  display:inline-flex!important;visibility:visible!important;opacity:1!important;
+  box-shadow:0 0 12px rgba(255,215,0,.9)!important;
+}
+/* Discard is always present. It becomes strongly highlighted only when legal. */
+#discardButton{
+  position:relative!important;z-index:20002!important;pointer-events:auto!important;
+  display:inline-flex!important;visibility:visible!important;
+  min-width:110px!important;
+  background:linear-gradient(to bottom,#2196f3,#0d47a1)!important;color:#fff!important;
+  border:2px solid rgba(255,255,255,.7)!important;
+}
+#discardButton.jkrn-ready{
+  opacity:1!important;filter:none!important;
+  box-shadow:0 0 16px rgba(33,150,243,.95),0 0 4px #fff!important;
+  border-color:#fff!important;
+  animation:none!important;
+}
+#discardButton:not(.jkrn-ready){opacity:.48!important;}
+/* Drop must never be covered by another element. */
+#dropButton{position:relative!important;z-index:20003!important;pointer-events:auto!important;}
+/* Remove any old V31 floating toolbar if one exists. */
+#jkrnHandToolsBar{display:none!important;pointer-events:none!important;}
+@media(max-width:700px){
+  #leftGroupButtonSlot{gap:7px}
+  #discardButton{min-width:88px!important}
+}
+</style>
+<script id="jkrn-final-stable-controls-js">
+(function(){
+  'use strict';
+  var syncing=false;
+
+  function online(){ return !!window.__realRoomStarted; }
+  function seat(){ return online() && Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : 0; }
+  function eliminated(){
+    if(online() && typeof window.__onlineEliminated==='boolean') return window.__onlineEliminated;
+    return typeof isEliminated==='function' ? !!isEliminated(0) : false;
+  }
+  function myTurn(){
+    return !gameOver && !eliminated() && currentPlayer===seat() && !(typeof droppedThisDeal!=='undefined' && droppedThisDeal[seat()]);
+  }
+  function handCount(){
+    return (typeof playerGroups!=='undefined' && Array.isArray(playerGroups)) ? playerGroups.flat().filter(Boolean).length : 0;
+  }
+  function selectedCount(){ return (typeof selectedCards!=='undefined' && Array.isArray(selectedCards)) ? selectedCards.length : 0; }
+
+  function placeGroup(){
+    var left=document.querySelector('.left-controls');
+    var group=document.getElementById('groupButton');
+    if(!left || !group) return false;
+    var slot=document.getElementById('leftGroupButtonSlot');
+    if(!slot){
+      slot=document.createElement('div'); slot.id='leftGroupButtonSlot';
+      left.appendChild(slot);
+    }
+    if(group.parentElement!==slot) slot.appendChild(group);
+    return true;
+  }
+
+  function sync(){
+    if(syncing)return;
+    syncing=true;
+    try{
+      if(!placeGroup()) return;
+      var group=document.getElementById('groupButton');
+      var discard=document.getElementById('discardButton');
+      var drop=document.getElementById('dropButton');
+      var turn=myTurn();
+      var sc=selectedCount();
+      var hc=handCount();
+
+      /* GROUP is a stable hand tool. No turn requirement. */
+      if(group){
+        var groupReady=sc>=2 && !eliminated();
+        group.classList.toggle('jkrn-ready',groupReady);
+        group.disabled=!groupReady;
+        group.style.removeProperty('left'); group.style.removeProperty('right');
+        group.style.removeProperty('top'); group.style.removeProperty('bottom');
+      }
+
+      /* DISCARD: legal only after draw, exactly 14 cards, exactly 1 selected. */
+      if(discard){
+        var discardReady=turn && !!playerHasDrawn && hc===14 && sc===1;
+        discard.classList.toggle('jkrn-ready',discardReady);
+        discard.disabled=!discardReady;
+        discard.style.setProperty('display','inline-flex','important');
+        discard.style.setProperty('visibility','visible','important');
+        discard.title=discardReady?'DISCARD selected card':(!turn?'Not your turn':!playerHasDrawn?'Draw a card first':hc!==14?'You need 14 cards':'Select exactly 1 card');
+      }
+
+      /* DROP: available before drawing on your turn. */
+      if(drop){
+        var dropReady=turn && !playerHasDrawn;
+        drop.disabled=!dropReady;
+        drop.style.setProperty('pointer-events','auto','important');
+      }
+    }finally{syncing=false;}
+  }
+
+  /* Final authoritative wrapper: run the existing UI renderer, then apply only
+     the stable control state. No interval, no blinking. */
+  var prev=window.updateUI;
+  if(typeof prev==='function'){
+    window.updateUI=function(){
+      var r=prev.apply(this,arguments);
+      sync();
+      return r;
+    };
+  }
+
+  /* Card selection / draw / discard / drop all call updateUI in the existing game.
+     These listeners only resync after a user action; they never move the buttons. */
+  document.addEventListener('click',function(e){
+    if(e.target.closest('#playerGroupsContainer .card,#drawPile,#discardPile,#dropButton,#groupButton,#discardButton')){
+      setTimeout(sync,0);
+    }
+  },true);
+  document.addEventListener('touchend',function(e){
+    if(e.target.closest('#playerGroupsContainer .card,#drawPile,#discardPile,#dropButton,#groupButton,#discardButton')){
+      setTimeout(sync,0);
+    }
+  },true);
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',sync); else sync();
+  window.addEventListener('load',sync);
+  window.jkrnFinalSync=sync;
+})();
+</script>
