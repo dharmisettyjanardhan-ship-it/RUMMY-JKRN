@@ -6198,116 +6198,102 @@ window.jkrnV15JokerRules={
 })();
 </script>
 
-<style id="jkrn-final-group-discard-v2">
-/* FINAL V2: action buttons never sit over the hand/cards */
-#playerArea .action-buttons{
-  position:absolute !important;
-  right:25px !important;
-  bottom:25px !important;
-  left:auto !important;
-  top:auto !important;
-  transform:none !important;
-  z-index:20000 !important;
-  pointer-events:auto !important;
-}
-#playerArea .action-buttons #groupButton,
-#playerArea .action-buttons #discardButton,
-#playerArea .action-buttons #declareButton{
-  position:relative !important;
-  left:auto !important; right:auto !important; top:auto !important; bottom:auto !important;
-  transform:none !important;
-  z-index:20001 !important;
-  pointer-events:auto !important;
-}
-#playerGroupsContainer .card{ pointer-events:auto !important; }
-</style>
-<script id="jkrn-final-group-discard-v2-js">
-(function(){
-  function selectedCardId(){
-    if(!Array.isArray(window.selectedCards) || window.selectedCards.length!==1) return null;
-    const x=window.selectedCards[0];
-    const groups=window.playerGroups||[];
-    const g=groups[x.gIdx];
-    const c=g && g[x.cIdx];
-    return c && c.id ? c.id : null;
+<!-- JKRN V31: CLEAN GROUP TOOLBAR + ALWAYS-VISIBLE DISCARD CONTROL -->
+<style id="jkrn-v31-group-discard-clean">
+  /* GROUP is a hand-management control: keep it above the player's cards,
+     never floating over the card faces or at the right edge. */
+  #jkrnHandToolsBar{
+    width:100%; min-height:44px; display:flex; align-items:center; justify-content:center;
+    gap:8px; margin:0 0 3px; position:relative; z-index:3000; pointer-events:none;
   }
-
-  function syncTools(){
+  #jkrnHandToolsBar #groupButton{
+    position:relative !important; inset:auto !important; transform:none !important;
+    display:none !important; margin:0 !important; pointer-events:auto !important;
+    z-index:3001 !important; white-space:nowrap;
+  }
+  #jkrnHandToolsBar #groupButton.jkrn-show{
+    display:inline-flex !important; visibility:visible !important;
+  }
+  /* DISCARD remains in the normal right-side action area and is NOT hidden
+     after a draw. It is disabled until exactly one card is selected. */
+  #discardButton{
+    display:inline-flex !important; visibility:visible !important; opacity:1 !important;
+    position:relative !important; z-index:10003 !important;
+  }
+  #discardButton:disabled{opacity:.45 !important; cursor:not-allowed !important;}
+  .action-buttons{z-index:10001 !important;}
+  @media(max-width:700px){
+    #jkrnHandToolsBar{min-height:38px;margin-bottom:2px;}
+    #jkrnHandToolsBar #groupButton{padding:8px 12px;font-size:10px;}
+    #discardButton{padding:8px 12px !important;font-size:10px !important;}
+  }
+</style>
+<script id="jkrn-v31-group-discard-clean-js">
+(function(){
+  function myIndex(){
+    return window.__realRoomStarted && Number.isInteger(window.__onlineMyIndex)
+      ? Number(window.__onlineMyIndex) : 0;
+  }
+  function myTurn(){
+    const i=myIndex();
+    return currentPlayer===i && !gameOver &&
+      !(window.__realRoomStarted && window.__onlineEliminated) &&
+      !(typeof droppedThisDeal!=='undefined' && droppedThisDeal[i]);
+  }
+  function installToolbar(){
+    const playerArea=document.getElementById('playerArea');
+    const groups=document.getElementById('playerGroupsContainer');
+    const group=document.getElementById('groupButton');
+    if(!playerArea||!groups||!group)return false;
+    let bar=document.getElementById('jkrnHandToolsBar');
+    if(!bar){
+      bar=document.createElement('div');
+      bar.id='jkrnHandToolsBar';
+      playerArea.insertBefore(bar,groups);
+    }
+    if(group.parentElement!==bar)bar.appendChild(group);
+    return true;
+  }
+  function sync(){
+    if(!installToolbar())return;
     const group=document.getElementById('groupButton');
     const discard=document.getElementById('discardButton');
-    const n=Array.isArray(window.selectedCards)?window.selectedCards.length:0;
-    const online=!!window.__realRoomStarted;
-    const seat=online && Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : 0;
-    const turn=typeof currentPlayer==='number' && currentPlayer===seat;
-    const drawn=!!window.playerHasDrawn;
-    const hand=(window.playerGroups||[]).flat().length;
+    const hand=(typeof playerGroups!=='undefined'&&Array.isArray(playerGroups))
+      ? playerGroups.flat().filter(Boolean) : [];
+    const selected=(typeof selectedCards!=='undefined'&&Array.isArray(selectedCards))
+      ? selectedCards : [];
+    const eliminated=window.__realRoomStarted ? !!window.__onlineEliminated :
+      (typeof isEliminated==='function' ? isEliminated(myIndex()) : false);
+    const turn=myTurn() && !eliminated;
 
     if(group){
-      const ok=n>=2 && !(typeof isEliminated==='function' && isEliminated(0));
-      group.disabled=!ok;
-      group.style.setProperty('display', ok ? 'inline-flex' : 'none','important');
-      group.style.setProperty('visibility', ok ? 'visible' : 'hidden','important');
+      const show=selected.length>=2 && !eliminated;
+      group.classList.toggle('jkrn-show',show);
+      group.disabled=!show;
+      group.textContent=show ? 'GROUP '+selected.length+' CARDS' : 'GROUP';
     }
     if(discard){
-      const ok=turn && drawn && hand===14 && n===1 &&
-        !(online ? !!window.__onlineEliminated : (typeof isEliminated==='function'&&isEliminated(0)));
-      discard.disabled=!ok;
-      discard.style.setProperty('display', (turn&&drawn&&hand===14) ? 'inline-flex':'none','important');
-      discard.style.setProperty('visibility', (turn&&drawn&&hand===14) ? 'visible':'hidden','important');
-      discard.style.setProperty('pointer-events','auto','important');
+      /* Never hide it. This removes the intermittent "button missing" bug. */
+      discard.style.setProperty('display','inline-flex','important');
+      discard.style.setProperty('visibility','visible','important');
+      const ready=turn && !!playerHasDrawn && hand.length===14 && selected.length===1;
+      discard.disabled=!ready;
+      discard.title=ready ? 'Discard selected card' :
+        (!playerHasDrawn ? 'Draw a card first' : hand.length!==14 ? 'You need 14 cards' : 'Select exactly 1 card');
     }
   }
-
-  // Replace selection with stable card IDs while preserving the existing UI shape.
-  const oldSelect=window.selectCard;
-  window.selectCard=function(gIdx,cIdx){
-    if(typeof oldSelect==='function') oldSelect.call(this,gIdx,cIdx);
-    // Existing selection remains index-based; immediately normalize if possible.
-    syncTools();
-  };
-
-  // Group using the selected cards exactly once, then clear selection.
-  const oldGroup=window.groupSelectedCards;
-  window.groupSelectedCards=function(){
-    if(!Array.isArray(window.selectedCards) || window.selectedCards.length<2) return;
-    if(typeof oldGroup==='function') oldGroup.call(this);
-    syncTools();
-  };
-
-  // Robust discard: resolve the card immediately before emitting.
-  const oldDiscard=window.discardCard;
-  window.discardCard=function(){
-    if(window.__realRoomStarted){
-      const id=selectedCardId();
-      if(!id) return;
-      if(typeof currentPlayer==='number' && currentPlayer!==Number(window.__onlineMyIndex)) return;
-      if(!window.playerHasDrawn) return;
-      if((window.playerGroups||[]).flat().length!==14) return;
-      if(window.onlineSocket){
-        window.onlineSocket.emit('discardCard',{cardId:id});
-        return;
-      }
-    }
-    if(typeof oldDiscard==='function') return oldDiscard.apply(this,arguments);
-  };
-
   const oldUpdate=window.updateUI;
   if(typeof oldUpdate==='function'){
     window.updateUI=function(){
       const r=oldUpdate.apply(this,arguments);
-      syncTools();
+      setTimeout(sync,0);
       return r;
     };
   }
-
-  document.addEventListener('click',function(e){
-    const card=e.target.closest && e.target.closest('#playerGroupsContainer .card');
-    if(card) setTimeout(syncTools,0);
-    const btn=e.target.closest && e.target.closest('#groupButton,#discardButton');
-    if(btn) setTimeout(syncTools,0);
-  },true);
-
-  window.addEventListener('load',syncTools);
-  setInterval(syncTools,300);
+  document.addEventListener('click',()=>setTimeout(sync,0),true);
+  document.addEventListener('touchend',()=>setTimeout(sync,0),true);
+  window.addEventListener('load',sync);
+  setInterval(sync,250);
+  window.jkrnV31Sync=sync;
 })();
 </script>
