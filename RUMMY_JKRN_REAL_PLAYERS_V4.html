@@ -2087,6 +2087,7 @@ body{
  .left-controls button,.action-buttons button{width:92px;min-width:92px;height:36px;padding:6px 7px;font-size:9px}
 }
 </style>
+
 </head>
 <body onload="initAutoGame()">
 
@@ -2221,7 +2222,8 @@ body{
 
     <div class="left-controls">
         <button class="btn-drop" id="dropButton" onclick="dropGame()">Drop</button>
-        <button class="btn-auto-sort" onclick="autoSortCards()">Auto Sort</button>
+        <button class="btn-auto-sort" id="autoSortButton" onclick="autoSortCards()">Auto Sort</button>
+        <button class="btn-group" id="groupButton" onclick="groupSelectedCards()">Group</button>
     </div>
 
     <div class="player-area" id="playerArea">
@@ -2233,7 +2235,6 @@ body{
     </div>
 
     <div class="action-buttons">
-        <button class="btn-group" id="groupButton" onclick="groupSelectedCards()">Group</button>
         <button class="btn-discard" id="discardButton" onclick="discardCard()">Discard</button>
         <button class="btn-declare" id="declareButton" onclick="declareGame()">Declare</button>
     </div>
@@ -3099,24 +3100,27 @@ function updateUI() {
     const discardBtn = document.getElementById("discardButton");
     if (discardBtn) {
         const handCount = playerGroups.flat().length;
-        const showDiscard = onlineMyTurn && playerHasDrawn && handCount === 14 && !onlineEliminated;
-        discardBtn.style.setProperty("display", showDiscard ? "inline-flex" : "none", "important");
-        discardBtn.disabled = !(showDiscard && selectedCards.length === 1);
+        const canDiscard = onlineMyTurn && playerHasDrawn && handCount === 14 && !onlineEliminated && selectedCards.length === 1;
+        discardBtn.style.setProperty("display", "inline-flex", "important");
+        discardBtn.disabled = !canDiscard;
+        discardBtn.classList.toggle("action-ready", canDiscard);
     }
     const declareBtn = document.getElementById("declareButton");
     if (declareBtn) {
         const handCount = playerGroups.flat().length;
-        const showDeclare = onlineMyTurn && playerHasDrawn && handCount === 14 && !onlineEliminated;
-        declareBtn.style.setProperty("display", showDeclare ? "block" : "none", "important");
-        declareBtn.disabled = !showDeclare;
+        const canDeclare = onlineMyTurn && playerHasDrawn && handCount === 14 && !onlineEliminated;
+        declareBtn.style.setProperty("display", "inline-flex", "important");
+        declareBtn.disabled = !canDeclare;
+        declareBtn.classList.toggle("action-ready", canDeclare);
     }
     const groupBtn = document.getElementById("groupButton");
     if (groupBtn) {
         const canGroup = selectedCards.length >= 2 && !isEliminated(0);
-        groupBtn.style.display = canGroup ? "inline-flex" : "none";
-        groupBtn.style.visibility = canGroup ? "visible" : "hidden";
+        groupBtn.style.setProperty("display", "inline-flex", "important");
+        groupBtn.style.visibility = "visible";
         groupBtn.disabled = !canGroup;
-        groupBtn.innerText = canGroup ? `GROUP ${selectedCards.length} CARDS` : "GROUP";
+        groupBtn.classList.toggle("action-ready", canGroup);
+        groupBtn.innerText = canGroup ? `GROUP ${selectedCards.length}` : "GROUP";
     }
 
     const dropBtn = document.getElementById("dropButton");
@@ -3286,9 +3290,11 @@ function createNewGroupWithCard(fromGIdx, fromCIdx) {
 }
 
 function selectCard(gIdx, cIdx) {
-    const exIdx = selectedCards.findIndex(s => s.gIdx===gIdx && s.cIdx===cIdx);
+    const card = playerGroups[gIdx] && playerGroups[gIdx][cIdx];
+    if (!card) return;
+    const exIdx = selectedCards.findIndex(s => s.id === card.id);
     if (exIdx > -1) selectedCards.splice(exIdx, 1);
-    else selectedCards.push({gIdx, cIdx});
+    else selectedCards.push({gIdx, cIdx, id: card.id});
     displayPlayer();
     updateUI();
 }
@@ -3339,12 +3345,12 @@ function groupSelectedCards() {
     playSound('group');
     const picked = [];
     const remaining = [];
-    const selSet = new Set(selectedCards.map(s => `${s.gIdx}_${s.cIdx}`));
+    const selSet = new Set(selectedCards.map(s => s.id).filter(Boolean));
 
     playerGroups.forEach((group, gIdx) => {
         const rest = [];
         group.forEach((card, cIdx) => {
-            if (selSet.has(`${gIdx}_${cIdx}`)) picked.push(card);
+            if (selSet.has(card.id)) picked.push(card);
             else rest.push(card);
         });
         if (rest.length) remaining.push(rest);
@@ -3377,8 +3383,13 @@ function drawFromDiscard() {
 
 function discardCard() {
     if (currentPlayer !== 0 || !playerHasDrawn || selectedCards.length !== 1 || isEliminated(0)) return;
-    const s = selectedCards[0];
-    const card = playerGroups[s.gIdx].splice(s.cIdx, 1)[0];
+    const selectedId = selectedCards[0].id;
+    let card = null;
+    for (let gIdx = 0; gIdx < playerGroups.length && !card; gIdx++) {
+        const cIdx = playerGroups[gIdx].findIndex(c => c && c.id === selectedId);
+        if (cIdx >= 0) card = playerGroups[gIdx].splice(cIdx, 1)[0];
+    }
+    if (!card) return;
     discardPile.push(card);
     playSound('discard');
     playerGroups = playerGroups.filter(g => g.length > 0);
@@ -3993,80 +4004,6 @@ function openGlobalScoreboardModal() {
 
 
 
-<script id="jkrn-single-group-js">
-(function () {
-  let lastGroupState = false;
-
-  function syncGroupButton() {
-    const btn = document.getElementById("groupButton");
-    if (!btn) return;
-
-    const count = (typeof selectedCards !== "undefined" && Array.isArray(selectedCards))
-      ? selectedCards.length : 0;
-
-    const shouldShow = count >= 2;
-
-    if (shouldShow !== lastGroupState) {
-      btn.style.display = shouldShow ? "inline-flex" : "none";
-      btn.style.visibility = shouldShow ? "visible" : "hidden";
-      btn.disabled = !shouldShow;
-      lastGroupState = shouldShow;
-    }
-
-    // Always keep the label simple.
-    btn.textContent = "GROUP";
-  }
-
-  // Run after the game's own card-selection handler.
-  document.addEventListener("click", function () {
-    setTimeout(syncGroupButton, 0);
-  }, true);
-
-  document.addEventListener("touchend", function () {
-    setTimeout(syncGroupButton, 0);
-  }, true);
-
-  document.addEventListener("pointerup", function () {
-    setTimeout(syncGroupButton, 0);
-  }, true);
-
-  window.addEventListener("load", syncGroupButton);
-  window.addEventListener("resize", syncGroupButton);
-  window.addEventListener("orientationchange", function () {
-    setTimeout(syncGroupButton, 100);
-  });
-})();
-</script>
-
-
-<script id="jkrn-action-buttons-near-cards-js">
-(function () {
-  function positionActionButtons() {
-    const left = document.querySelector('.left-controls');
-    const right = document.querySelector('.action-buttons');
-    const h = window.innerHeight;
-
-    [left, right].forEach(function(el) {
-      if (!el) return;
-      el.style.bottom = h <= 520 ? '11%' : (h <= 700 ? '15%' : '18%');
-    });
-
-    const group = document.getElementById('groupButton');
-    if (group) {
-      group.style.bottom = h <= 520 ? '21%' : (h <= 700 ? '25%' : '28%');
-    }
-  }
-
-  window.addEventListener('load', positionActionButtons);
-  window.addEventListener('resize', positionActionButtons);
-  window.addEventListener('orientationchange', function () {
-    setTimeout(positionActionButtons, 100);
-    setTimeout(positionActionButtons, 500);
-  });
-})();
-</script>
-
-
 <style id="FINAL_ACTION_BUTTON_SIZE_POSITION">
 /* FINAL: large action buttons close to player's cards */
 .left-controls,
@@ -4617,6 +4554,182 @@ button[onclick*="groupSelected"] {
 
 
 
+
+
+<!-- JKRN FINAL V35: CLEAN ACTION CONTROLS + REAL CARD DISCARD -->
+<style id="jkrn-v35-clean-controls">
+/* Compact controls with deliberate spacing. No animation, no position polling. */
+.left-controls,
+.action-buttons{
+  position:absolute!important;
+  bottom:18px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:12px!important;
+  z-index:60000!important;
+  pointer-events:auto!important;
+}
+.left-controls{left:22px!important;right:auto!important;}
+.action-buttons{right:22px!important;left:auto!important;}
+.left-controls button,
+.action-buttons button{
+  width:126px!important;
+  min-width:126px!important;
+  height:42px!important;
+  min-height:42px!important;
+  padding:7px 10px!important;
+  margin:0!important;
+  border-radius:8px!important;
+  font-size:12px!important;
+  line-height:1.05!important;
+  font-weight:900!important;
+  transition:none!important;
+  animation:none!important;
+  transform:none!important;
+}
+.left-controls #groupButton{
+  position:static!important;
+  order:3!important;
+  display:none!important;
+  visibility:hidden!important;
+  opacity:1!important;
+  transform:none!important;
+  animation:none!important;
+}
+.left-controls #groupButton.jkrn-v35-ready{
+  display:inline-flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  box-shadow:0 0 14px rgba(255,215,0,.85)!important;
+}
+#dropButton{order:1!important;}
+.left-controls .btn-auto-sort{order:2!important;}
+.action-buttons #discardButton{order:1!important;}
+.action-buttons #declareButton{order:2!important;}
+.action-buttons #discardButton{
+  display:inline-flex!important;
+  visibility:visible!important;
+  opacity:.45!important;
+  pointer-events:auto!important;
+}
+.action-buttons #discardButton.jkrn-v35-ready{
+  opacity:1!important;
+  box-shadow:0 0 14px rgba(33,150,243,.95)!important;
+  border:2px solid #fff!important;
+}
+.action-buttons #discardButton:disabled{cursor:not-allowed!important;}
+.action-buttons #declareButton{display:block!important;}
+#playerGroupsContainer .cards-in-group .card + .card{margin-left:-46px!important;}
+#playerGroupsContainer{gap:7px!important;}
+@media(max-width:900px){
+  .left-controls{left:10px!important;bottom:14px!important;}
+  .action-buttons{right:10px!important;bottom:14px!important;}
+  .left-controls button,.action-buttons button{width:105px!important;min-width:105px!important;height:38px!important;min-height:38px!important;font-size:10px!important;}
+  #playerGroupsContainer .cards-in-group .card + .card{margin-left:-34px!important;}
+}
+</style>
+<script id="jkrn-v35-clean-controls-js">
+(function(){
+  'use strict';
+  function mySeat(){ return window.__realRoomStarted && Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : 0; }
+  function online(){ return !!window.__realRoomStarted; }
+  function myTurn(){ return !gameOver && currentPlayer===mySeat() && !(Array.isArray(droppedThisDeal)&&droppedThisDeal[mySeat()]); }
+  function elim(){
+    if(online() && typeof window.__onlineEliminated==='boolean') return window.__onlineEliminated;
+    return typeof isEliminated==='function' ? !!isEliminated(0) : false;
+  }
+  function handCount(){ return Array.isArray(playerGroups) ? playerGroups.flat().filter(Boolean).length : 0; }
+  function moveGroupToLeft(){
+    const left=document.querySelector('.left-controls'), group=document.getElementById('groupButton');
+    if(left && group && group.parentElement!==left) left.appendChild(group);
+  }
+  function selectedCard(){
+    if(!Array.isArray(selectedCards) || selectedCards.length!==1) return null;
+    const s=selectedCards[0];
+    if(s.id){ const byId=playerGroups.flat().find(c=>c&&c.id===s.id); if(byId) return byId; }
+    const g=playerGroups[s.gIdx];
+    return g && g[s.cIdx] ? g[s.cIdx] : null;
+  }
+  function syncControls(){
+    moveGroupToLeft();
+    const group=document.getElementById('groupButton');
+    const discard=document.getElementById('discardButton');
+    const drop=document.getElementById('dropButton');
+    const declare=document.getElementById('declareButton');
+    const e=elim(), turn=myTurn(), drawn=!!playerHasDrawn, n=handCount(), sc=Array.isArray(selectedCards)?selectedCards.length:0;
+    if(group){
+      const ok=sc>=2 && !e;
+      group.classList.toggle('jkrn-v35-ready',ok);
+      group.disabled=!ok;
+      group.textContent='GROUP';
+      group.style.removeProperty('left'); group.style.removeProperty('right'); group.style.removeProperty('top'); group.style.removeProperty('bottom');
+    }
+    if(discard){
+      const ok=turn && drawn && n===14 && sc===1 && !e;
+      discard.disabled=!ok;
+      discard.classList.toggle('jkrn-v35-ready',ok);
+      discard.style.setProperty('display','inline-flex','important');
+      discard.style.setProperty('visibility','visible','important');
+    }
+    if(drop){
+      const ok=turn && !drawn && !e;
+      drop.disabled=!ok;
+    }
+    if(declare){
+      const ok=turn && drawn && n===14 && !e;
+      declare.disabled=!ok;
+      declare.style.setProperty('display','block','important');
+    }
+  }
+  // Correct selection binding: use the real global lexical selectedCards, not window.selectedCards.
+  window.selectCard=function(gIdx,cIdx){
+    const g=playerGroups && playerGroups[gIdx], card=g && g[cIdx]; if(!card) return;
+    const id=card.id || null;
+    let i=-1;
+    for(let k=0;k<selectedCards.length;k++){
+      const s=selectedCards[k];
+      if((id && s.id===id) || (!id && s.gIdx===gIdx && s.cIdx===cIdx)){ i=k; break; }
+    }
+    if(i>=0) selectedCards.splice(i,1); else selectedCards.push({gIdx,cIdx,id});
+    updateUI();
+  };
+  // Correct discard binding for both local and real-player online mode.
+  window.discardCard=function(){
+    if(!myTurn() || !playerHasDrawn || elim() || selectedCards.length!==1) return;
+    const card=selectedCard(); if(!card) return;
+    if(online()){
+      if(!window.onlineSocket || !card.id) return;
+      window.onlineSocket.emit('discardCard',{cardId:card.id});
+      return;
+    }
+    if(handCount()!==14 || currentPlayer!==0) return;
+    let found=false;
+    for(let gi=0;gi<playerGroups.length && !found;gi++){
+      const ci=playerGroups[gi].findIndex(c=>c===card || (card.id && c.id===card.id));
+      if(ci>=0){ playerGroups[gi].splice(ci,1); found=true; }
+    }
+    if(!found) return;
+    if(Array.isArray(discardPile)) discardPile.push(card);
+    playerGroups=playerGroups.filter(g=>g&&g.length);
+    selectedCards=[];
+    playerHasDrawn=false;
+    try{ if(typeof playSound==='function') playSound('discard'); }catch(e){}
+    updateUI();
+    if(typeof nextTurn==='function') nextTurn();
+  };
+  // One update wrapper only. No intervals, no click timers, no blinking logic.
+  const oldUpdate=window.updateUI;
+  if(typeof oldUpdate==='function' && !oldUpdate.__jkrnV35){
+    function wrapped(){ const r=oldUpdate.apply(this,arguments); syncControls(); return r; }
+    wrapped.__jkrnV35=true;
+    window.updateUI=wrapped;
+  }
+  function boot(){ moveGroupToLeft(); syncControls(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot,{once:true}); else boot();
+  window.addEventListener('load',boot,{once:true});
+  window.jkrnV35Sync=syncControls;
+})();
+</script>
 
 </body>
 </html>
@@ -5619,18 +5732,6 @@ window.jkrnV15JokerRules={
 }
 </style>
 
-<style id="jkrn-group-discard-stability-final">
-/* FINAL FIX: GROUP stays with action buttons, never over the cards. */
-#groupButton {
-  position: relative !important; left:auto !important; right:auto !important;
-  top:auto !important; bottom:auto !important; transform:none !important;
-  z-index:10002 !important; margin:0 !important;
-}
-.action-buttons { z-index:10001 !important; }
-/* DISCARD must remain clickable whenever it is shown. */
-#discardButton { position:relative !important; z-index:10003 !important; }
-</style>
-
 <script id="jkrn-v23-turn-seat-controls">
 (function(){
   const MAX=6;
@@ -5916,7 +6017,7 @@ window.jkrnV15JokerRules={
       memo.set(key(mask),best); return best;
     }
     const chosen=dfs(full), used=new Set(); chosen.forEach(c=>{for(let i=0;i<n;i++)if(c.m&(1<<i))used.add(i);});
-    const out=chosen.slice().sort((a,b)=>({pure:1,second:2,set:3}[a.k]-({pure:1,second:2,set:3}[b.k))||b.cnt-a.cnt).map(c=>order(c.g));
+    const out=chosen.slice().sort((a,b)=>({pure:1,second:2,set:3}[a.k]-({pure:1,second:2,set:3}[b.k]))||b.cnt-a.cnt).map(c=>order(c.g));
     const left=cards.filter((c,i)=>!used.has(i)); if(left.length) out.push(left.slice().sort((a,b)=>(LO[a.rank]||99)-(LO[b.rank]||99)));
     return out.length?out:[cards.slice()];
   }
@@ -5968,39 +6069,226 @@ window.jkrnV15JokerRules={
 
 
 <!-- JKRN V34: SINGLE STABLE ACTION-CONTROL SYSTEM - NO BLINK / NO POLLING -->
-<style id="jkrn-v34-stable-controls">
-.left-controls{z-index:50000!important;pointer-events:auto!important}
-.left-controls #groupButton{position:static!important;display:inline-flex!important;visibility:visible!important;transform:none!important;opacity:1!important;margin:0!important;pointer-events:auto!important;z-index:50001!important;min-width:120px!important;background:linear-gradient(to bottom,#fdd835,#f57f17)!important;color:#000!important;border:2px solid #fff!important}
-.left-controls #groupButton:disabled{opacity:.42!important;cursor:not-allowed!important;box-shadow:none!important}
-.left-controls #groupButton.jkrn-v34-ready{opacity:1!important;box-shadow:0 0 14px rgba(255,215,0,.9)!important}
-.action-buttons{z-index:50000!important;pointer-events:auto!important}
-.action-buttons #discardButton{position:static!important;display:inline-flex!important;visibility:visible!important;pointer-events:auto!important;min-width:120px!important}
-.action-buttons #discardButton:not(.jkrn-v34-ready){opacity:.42!important}
-.action-buttons #discardButton.jkrn-v34-ready{opacity:1!important;border-color:#fff!important;box-shadow:0 0 18px rgba(33,150,243,.95),0 0 5px #fff!important;animation:none!important}
-.action-buttons #dropButton{pointer-events:auto!important;z-index:50002!important}
-#jkrnHandToolsBar,#leftGroupButtonSlot,#finalGroupAnytimeBtn{display:none!important}
-#playerGroupsContainer{gap:5px!important;max-width:99%!important}
-#playerGroupsContainer .card-group{margin:0!important;padding:3px!important}
-#playerGroupsContainer .cards-in-group{gap:0!important}
-#playerGroupsContainer .cards-in-group .card + .card{margin-left:-46px!important}
-@media(max-width:900px){.left-controls #groupButton{min-width:92px!important}.action-buttons #discardButton{min-width:92px!important}#playerGroupsContainer .cards-in-group .card + .card{margin-left:-34px!important}}
+
+<!-- JKRN FINAL V35: CLEAN ACTION CONTROLS + REAL CARD DISCARD -->
+<style id="jkrn-v35-clean-controls">
+/* Compact controls with deliberate spacing. No animation, no position polling. */
+.left-controls,
+.action-buttons{
+  position:absolute!important;
+  bottom:18px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:12px!important;
+  z-index:60000!important;
+  pointer-events:auto!important;
+}
+.left-controls{left:22px!important;right:auto!important;}
+.action-buttons{right:22px!important;left:auto!important;}
+.left-controls button,
+.action-buttons button{
+  width:126px!important;
+  min-width:126px!important;
+  height:42px!important;
+  min-height:42px!important;
+  padding:7px 10px!important;
+  margin:0!important;
+  border-radius:8px!important;
+  font-size:12px!important;
+  line-height:1.05!important;
+  font-weight:900!important;
+  transition:none!important;
+  animation:none!important;
+  transform:none!important;
+}
+.left-controls #groupButton{
+  position:static!important;
+  order:3!important;
+  display:none!important;
+  visibility:hidden!important;
+  opacity:1!important;
+  transform:none!important;
+  animation:none!important;
+}
+.left-controls #groupButton.jkrn-v35-ready{
+  display:inline-flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  box-shadow:0 0 14px rgba(255,215,0,.85)!important;
+}
+#dropButton{order:1!important;}
+.left-controls .btn-auto-sort{order:2!important;}
+.action-buttons #discardButton{order:1!important;}
+.action-buttons #declareButton{order:2!important;}
+.action-buttons #discardButton{
+  display:inline-flex!important;
+  visibility:visible!important;
+  opacity:.45!important;
+  pointer-events:auto!important;
+}
+.action-buttons #discardButton.jkrn-v35-ready{
+  opacity:1!important;
+  box-shadow:0 0 14px rgba(33,150,243,.95)!important;
+  border:2px solid #fff!important;
+}
+.action-buttons #discardButton:disabled{cursor:not-allowed!important;}
+.action-buttons #declareButton{display:block!important;}
+#playerGroupsContainer .cards-in-group .card + .card{margin-left:-46px!important;}
+#playerGroupsContainer{gap:7px!important;}
+@media(max-width:900px){
+  .left-controls{left:10px!important;bottom:14px!important;}
+  .action-buttons{right:10px!important;bottom:14px!important;}
+  .left-controls button,.action-buttons button{width:105px!important;min-width:105px!important;height:38px!important;min-height:38px!important;font-size:10px!important;}
+  #playerGroupsContainer .cards-in-group .card + .card{margin-left:-34px!important;}
+}
 </style>
-<script id="jkrn-v34-stable-controls-js">
-(function(){'use strict';var installed=false;
-function hand(){return Array.isArray(window.playerGroups)?window.playerGroups.flat().filter(Boolean):[]}
-function online(){return !!window.__realRoomStarted}
-function seat(){return online()&&Number.isInteger(window.__onlineMyIndex)?Number(window.__onlineMyIndex):0}
-function eliminated(){if(online()&&typeof window.__onlineEliminated==='boolean')return window.__onlineEliminated;return typeof window.isEliminated==='function'?!!window.isEliminated(seat()):false}
-function turn(){return !window.gameOver&&!eliminated()&&window.currentPlayer===seat()&&!(Array.isArray(window.droppedThisDeal)&&window.droppedThisDeal[seat()])}
-function selectedCount(){return Array.isArray(window.selectedCards)?window.selectedCards.length:0}
-function selectedCard(){var s=Array.isArray(window.selectedCards)?window.selectedCards[0]:null;if(!s)return null;if(s.id){var c=hand().find(function(x){return x&&x.id===s.id});if(c)return c}var g=window.playerGroups&&window.playerGroups[s.gIdx];return g&&g[s.cIdx]||null}
-function install(){if(installed)return true;var left=document.querySelector('.left-controls'),group=document.getElementById('groupButton');if(!left||!group)return false;if(group.parentElement!==left)left.appendChild(group);group.style.removeProperty('left');group.style.removeProperty('right');group.style.removeProperty('top');group.style.removeProperty('bottom');installed=true;return true}
-function sync(){if(!install())return;var group=document.getElementById('groupButton'),discard=document.getElementById('discardButton'),drop=document.getElementById('dropButton'),hc=hand().length,sc=selectedCount(),t=turn(),drawn=!!window.playerHasDrawn,elim=eliminated();if(group){var gr=sc>=2&&!elim;group.classList.toggle('jkrn-v34-ready',gr);group.disabled=!gr;group.textContent=gr?'GROUP '+sc+' CARDS':'GROUP'}if(discard){var dr=t&&drawn&&hc===14&&sc===1&&!elim;discard.classList.toggle('jkrn-v34-ready',dr);discard.disabled=!dr;discard.style.setProperty('display','inline-flex','important');discard.style.setProperty('visibility','visible','important')}if(drop){var dp=t&&!drawn&&!elim;drop.disabled=!dp;drop.style.setProperty('pointer-events','auto','important')}}
-window.selectCard=function(gIdx,cIdx){var g=window.playerGroups&&window.playerGroups[gIdx],card=g&&g[cIdx];if(!card)return;var id=card.id||('local_'+gIdx+'_'+cIdx),arr=Array.isArray(window.selectedCards)?window.selectedCards:[],i=arr.findIndex(function(x){return x&&((x.id&&x.id===id)||(x.gIdx===gIdx&&x.cIdx===cIdx))});if(i>=0)arr.splice(i,1);else arr.push({gIdx:gIdx,cIdx:cIdx,id:id});window.selectedCards=arr;if(typeof window.updateUI==='function')window.updateUI();else sync()}
-window.discardCard=function(){var card=selectedCard();if(!card||selectedCount()!==1||!turn()||!window.playerHasDrawn)return;if(online()){if(window.onlineSocket&&card.id)window.onlineSocket.emit('discardCard',{cardId:card.id});return}if(hand().length!==14||window.currentPlayer!==0)return;var gi=-1,ci=-1;window.playerGroups.forEach(function(g,a){g.forEach(function(c,b){if(gi<0&&c===card){gi=a;ci=b}})});if(gi<0)return;window.playerGroups[gi].splice(ci,1);if(Array.isArray(window.discardPile))window.discardPile.push(card);window.playerGroups=window.playerGroups.filter(function(g){return g.length});window.selectedCards=[];window.playerHasDrawn=false;try{if(window.playSound)window.playSound('discard')}catch(e){}if(typeof window.updateUI==='function')window.updateUI();if(typeof window.nextTurn==='function')window.nextTurn()}
-var prev=window.updateUI;if(typeof prev==='function'&&!prev.__jkrnV34){function wrapped(){var r=prev.apply(this,arguments);sync();return r}wrapped.__jkrnV34=true;window.updateUI=wrapped}
-function boot(){install();sync()}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();window.addEventListener('load',boot,{once:true});window.jkrnV34Sync=sync
+<script id="jkrn-v35-clean-controls-js">
+(function(){
+  'use strict';
+  function mySeat(){ return window.__realRoomStarted && Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : 0; }
+  function online(){ return !!window.__realRoomStarted; }
+  function myTurn(){ return !gameOver && currentPlayer===mySeat() && !(Array.isArray(droppedThisDeal)&&droppedThisDeal[mySeat()]); }
+  function elim(){
+    if(online() && typeof window.__onlineEliminated==='boolean') return window.__onlineEliminated;
+    return typeof isEliminated==='function' ? !!isEliminated(0) : false;
+  }
+  function handCount(){ return Array.isArray(playerGroups) ? playerGroups.flat().filter(Boolean).length : 0; }
+  function moveGroupToLeft(){
+    const left=document.querySelector('.left-controls'), group=document.getElementById('groupButton');
+    if(left && group && group.parentElement!==left) left.appendChild(group);
+  }
+  function selectedCard(){
+    if(!Array.isArray(selectedCards) || selectedCards.length!==1) return null;
+    const s=selectedCards[0];
+    if(s.id){ const byId=playerGroups.flat().find(c=>c&&c.id===s.id); if(byId) return byId; }
+    const g=playerGroups[s.gIdx];
+    return g && g[s.cIdx] ? g[s.cIdx] : null;
+  }
+  function syncControls(){
+    moveGroupToLeft();
+    const group=document.getElementById('groupButton');
+    const discard=document.getElementById('discardButton');
+    const drop=document.getElementById('dropButton');
+    const declare=document.getElementById('declareButton');
+    const e=elim(), turn=myTurn(), drawn=!!playerHasDrawn, n=handCount(), sc=Array.isArray(selectedCards)?selectedCards.length:0;
+    if(group){
+      const ok=sc>=2 && !e;
+      group.classList.toggle('jkrn-v35-ready',ok);
+      group.disabled=!ok;
+      group.textContent='GROUP';
+      group.style.removeProperty('left'); group.style.removeProperty('right'); group.style.removeProperty('top'); group.style.removeProperty('bottom');
+    }
+    if(discard){
+      const ok=turn && drawn && n===14 && sc===1 && !e;
+      discard.disabled=!ok;
+      discard.classList.toggle('jkrn-v35-ready',ok);
+      discard.style.setProperty('display','inline-flex','important');
+      discard.style.setProperty('visibility','visible','important');
+    }
+    if(drop){
+      const ok=turn && !drawn && !e;
+      drop.disabled=!ok;
+    }
+    if(declare){
+      const ok=turn && drawn && n===14 && !e;
+      declare.disabled=!ok;
+      declare.style.setProperty('display','block','important');
+    }
+  }
+  // Correct selection binding: use the real global lexical selectedCards, not window.selectedCards.
+  window.selectCard=function(gIdx,cIdx){
+    const g=playerGroups && playerGroups[gIdx], card=g && g[cIdx]; if(!card) return;
+    const id=card.id || null;
+    let i=-1;
+    for(let k=0;k<selectedCards.length;k++){
+      const s=selectedCards[k];
+      if((id && s.id===id) || (!id && s.gIdx===gIdx && s.cIdx===cIdx)){ i=k; break; }
+    }
+    if(i>=0) selectedCards.splice(i,1); else selectedCards.push({gIdx,cIdx,id});
+    updateUI();
+  };
+  // Correct discard binding for both local and real-player online mode.
+  window.discardCard=function(){
+    if(!myTurn() || !playerHasDrawn || elim() || selectedCards.length!==1) return;
+    const card=selectedCard(); if(!card) return;
+    if(online()){
+      if(!window.onlineSocket || !card.id) return;
+      window.onlineSocket.emit('discardCard',{cardId:card.id});
+      return;
+    }
+    if(handCount()!==14 || currentPlayer!==0) return;
+    let found=false;
+    for(let gi=0;gi<playerGroups.length && !found;gi++){
+      const ci=playerGroups[gi].findIndex(c=>c===card || (card.id && c.id===card.id));
+      if(ci>=0){ playerGroups[gi].splice(ci,1); found=true; }
+    }
+    if(!found) return;
+    if(Array.isArray(discardPile)) discardPile.push(card);
+    playerGroups=playerGroups.filter(g=>g&&g.length);
+    selectedCards=[];
+    playerHasDrawn=false;
+    try{ if(typeof playSound==='function') playSound('discard'); }catch(e){}
+    updateUI();
+    if(typeof nextTurn==='function') nextTurn();
+  };
+  // One update wrapper only. No intervals, no click timers, no blinking logic.
+  const oldUpdate=window.updateUI;
+  if(typeof oldUpdate==='function' && !oldUpdate.__jkrnV35){
+    function wrapped(){ const r=oldUpdate.apply(this,arguments); syncControls(); return r; }
+    wrapped.__jkrnV35=true;
+    window.updateUI=wrapped;
+  }
+  function boot(){ moveGroupToLeft(); syncControls(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot,{once:true}); else boot();
+  window.addEventListener('load',boot,{once:true});
+  window.jkrnV35Sync=syncControls;
 })();
 </script>
+
+<style id="RUMMY_JKRN_IMAGE_LAYOUT_V36">
+/* V36: match the requested reference layout. Stable buttons: never blink/hide. */
+.left-controls{
+  position:absolute!important; left:3%!important; right:auto!important; bottom:18px!important;
+  display:flex!important; flex-direction:column!important; gap:12px!important;
+  z-index:3000!important; align-items:stretch!important;
+}
+.action-buttons{
+  position:absolute!important; right:3%!important; left:auto!important; bottom:18px!important;
+  display:flex!important; flex-direction:column!important; gap:12px!important;
+  z-index:3000!important; align-items:stretch!important;
+}
+.left-controls button,.action-buttons button{
+  width:150px!important; min-width:150px!important; height:52px!important; min-height:52px!important;
+  padding:8px 12px!important; margin:0!important; font-size:14px!important; line-height:1.05!important;
+  border-radius:10px!important; font-weight:900!important;
+  position:relative!important; transform:none!important; transition:box-shadow .12s ease,opacity .12s ease,filter .12s ease!important;
+}
+.btn-group{display:inline-flex!important;background:linear-gradient(#f9df45,#d9a900)!important;color:#111!important;border:2px solid #fff1a5!important;}
+.btn-discard{display:inline-flex!important;background:linear-gradient(#263f4a,#172b34)!important;color:#d9e3e7!important;border:2px solid #8da0a8!important;}
+.btn-declare{display:inline-flex!important;}
+.left-controls button:disabled,.action-buttons button:disabled{opacity:.48!important;filter:saturate(.55)!important;cursor:not-allowed!important;box-shadow:0 3px 8px rgba(0,0,0,.4)!important;}
+.left-controls button.action-ready,.action-buttons button.action-ready{opacity:1!important;filter:none!important;box-shadow:0 0 16px rgba(255,215,0,.45),0 5px 12px rgba(0,0,0,.65)!important;}
+.btn-group.action-ready{box-shadow:0 0 18px rgba(255,215,0,.75),0 5px 12px rgba(0,0,0,.65)!important;}
+.btn-discard.action-ready{background:linear-gradient(#2196f3,#0d47a1)!important;color:#fff!important;border-color:#b8ddff!important;box-shadow:0 0 18px rgba(33,150,243,.85),0 5px 12px rgba(0,0,0,.65)!important;}
+.player-area{bottom:92px!important;z-index:950!important;}
+.groups-container{height:145px!important;max-width:92%!important;gap:7px!important;padding-left:4px!important;padding-right:4px!important;}
+.cards-in-group{min-height:105px!important;}
+.cards-in-group .card + .card{margin-left:-39px!important;}
+.card{width:68px!important;height:100px!important;min-width:68px!important;font-size:16px!important;}
+.card-center{font-size:25px!important;}
+@media (max-width:1100px){
+ .left-controls,.action-buttons{bottom:14px!important;gap:9px!important;}
+ .left-controls button,.action-buttons button{width:118px!important;min-width:118px!important;height:44px!important;min-height:44px!important;font-size:12px!important;}
+ .player-area{bottom:78px!important;}
+ .card{width:58px!important;height:88px!important;min-width:58px!important;}
+ .cards-in-group .card + .card{margin-left:-32px!important;}
+}
+@media (max-width:700px){
+ .left-controls{left:8px!important;bottom:10px!important;}
+ .action-buttons{right:8px!important;bottom:10px!important;}
+ .left-controls button,.action-buttons button{width:92px!important;min-width:92px!important;height:38px!important;min-height:38px!important;font-size:10px!important;padding:6px 8px!important;}
+ .player-area{bottom:66px!important;}
+}
+</style>
 </body>
 </html>
