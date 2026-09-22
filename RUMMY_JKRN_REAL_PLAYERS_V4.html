@@ -1723,10 +1723,10 @@ html, body {
 <style id="jkrn-single-group-style">
 #groupButton {
   display: none;
-  position: fixed !important;
-  left: 50% !important;
-  bottom: 28% !important;
-  transform: translateX(-50%) !important;
+  position: relative !important;
+  left: auto !important;
+  bottom: auto !important;
+  transform: none !important;
   z-index: 99999 !important;
   min-width: 120px !important;
   padding: 10px 24px !important;
@@ -1735,10 +1735,10 @@ html, body {
   font-weight: 900 !important;
 }
 @media (orientation: landscape) and (max-height: 700px) {
-  #groupButton { bottom: 25% !important; }
+  #groupButton { bottom: auto !important; }
 }
 @media (orientation: landscape) and (max-height: 520px) {
-  #groupButton { bottom: 20% !important; }
+  #groupButton { bottom: auto !important; }
 }
 </style>
 
@@ -5850,6 +5850,19 @@ window.jkrnV15JokerRules={
   #opp2{top:3%!important;}
 }
 </style>
+
+<style id="jkrn-group-discard-stability-final">
+/* FINAL FIX: GROUP stays with action buttons, never over the cards. */
+#groupButton {
+  position: relative !important; left:auto !important; right:auto !important;
+  top:auto !important; bottom:auto !important; transform:none !important;
+  z-index:10002 !important; margin:0 !important;
+}
+.action-buttons { z-index:10001 !important; }
+/* DISCARD must remain clickable whenever it is shown. */
+#discardButton { position:relative !important; z-index:10003 !important; }
+</style>
+
 <script id="jkrn-v23-turn-seat-controls">
 (function(){
   const MAX=6;
@@ -6182,5 +6195,119 @@ window.jkrnV15JokerRules={
   const oldUpdate=window.updateUI;
   if(typeof oldUpdate==='function')window.updateUI=function(){const r=oldUpdate.apply(this,arguments);forceHandTools();return r;};
   window.addEventListener('load',forceHandTools);
+})();
+</script>
+
+<style id="jkrn-final-group-discard-v2">
+/* FINAL V2: action buttons never sit over the hand/cards */
+#playerArea .action-buttons{
+  position:absolute !important;
+  right:25px !important;
+  bottom:25px !important;
+  left:auto !important;
+  top:auto !important;
+  transform:none !important;
+  z-index:20000 !important;
+  pointer-events:auto !important;
+}
+#playerArea .action-buttons #groupButton,
+#playerArea .action-buttons #discardButton,
+#playerArea .action-buttons #declareButton{
+  position:relative !important;
+  left:auto !important; right:auto !important; top:auto !important; bottom:auto !important;
+  transform:none !important;
+  z-index:20001 !important;
+  pointer-events:auto !important;
+}
+#playerGroupsContainer .card{ pointer-events:auto !important; }
+</style>
+<script id="jkrn-final-group-discard-v2-js">
+(function(){
+  function selectedCardId(){
+    if(!Array.isArray(window.selectedCards) || window.selectedCards.length!==1) return null;
+    const x=window.selectedCards[0];
+    const groups=window.playerGroups||[];
+    const g=groups[x.gIdx];
+    const c=g && g[x.cIdx];
+    return c && c.id ? c.id : null;
+  }
+
+  function syncTools(){
+    const group=document.getElementById('groupButton');
+    const discard=document.getElementById('discardButton');
+    const n=Array.isArray(window.selectedCards)?window.selectedCards.length:0;
+    const online=!!window.__realRoomStarted;
+    const seat=online && Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : 0;
+    const turn=typeof currentPlayer==='number' && currentPlayer===seat;
+    const drawn=!!window.playerHasDrawn;
+    const hand=(window.playerGroups||[]).flat().length;
+
+    if(group){
+      const ok=n>=2 && !(typeof isEliminated==='function' && isEliminated(0));
+      group.disabled=!ok;
+      group.style.setProperty('display', ok ? 'inline-flex' : 'none','important');
+      group.style.setProperty('visibility', ok ? 'visible' : 'hidden','important');
+    }
+    if(discard){
+      const ok=turn && drawn && hand===14 && n===1 &&
+        !(online ? !!window.__onlineEliminated : (typeof isEliminated==='function'&&isEliminated(0)));
+      discard.disabled=!ok;
+      discard.style.setProperty('display', (turn&&drawn&&hand===14) ? 'inline-flex':'none','important');
+      discard.style.setProperty('visibility', (turn&&drawn&&hand===14) ? 'visible':'hidden','important');
+      discard.style.setProperty('pointer-events','auto','important');
+    }
+  }
+
+  // Replace selection with stable card IDs while preserving the existing UI shape.
+  const oldSelect=window.selectCard;
+  window.selectCard=function(gIdx,cIdx){
+    if(typeof oldSelect==='function') oldSelect.call(this,gIdx,cIdx);
+    // Existing selection remains index-based; immediately normalize if possible.
+    syncTools();
+  };
+
+  // Group using the selected cards exactly once, then clear selection.
+  const oldGroup=window.groupSelectedCards;
+  window.groupSelectedCards=function(){
+    if(!Array.isArray(window.selectedCards) || window.selectedCards.length<2) return;
+    if(typeof oldGroup==='function') oldGroup.call(this);
+    syncTools();
+  };
+
+  // Robust discard: resolve the card immediately before emitting.
+  const oldDiscard=window.discardCard;
+  window.discardCard=function(){
+    if(window.__realRoomStarted){
+      const id=selectedCardId();
+      if(!id) return;
+      if(typeof currentPlayer==='number' && currentPlayer!==Number(window.__onlineMyIndex)) return;
+      if(!window.playerHasDrawn) return;
+      if((window.playerGroups||[]).flat().length!==14) return;
+      if(window.onlineSocket){
+        window.onlineSocket.emit('discardCard',{cardId:id});
+        return;
+      }
+    }
+    if(typeof oldDiscard==='function') return oldDiscard.apply(this,arguments);
+  };
+
+  const oldUpdate=window.updateUI;
+  if(typeof oldUpdate==='function'){
+    window.updateUI=function(){
+      const r=oldUpdate.apply(this,arguments);
+      syncTools();
+      return r;
+    };
+  }
+
+  document.addEventListener('click',function(e){
+    const card=e.target.closest && e.target.closest('#playerGroupsContainer .card');
+    if(card) setTimeout(syncTools,0);
+    const btn=e.target.closest && e.target.closest('#groupButton,#discardButton');
+    if(btn) setTimeout(syncTools,0);
+  },true);
+
+  window.addEventListener('load',syncTools);
+  setInterval(syncTools,300);
 })();
 </script>
