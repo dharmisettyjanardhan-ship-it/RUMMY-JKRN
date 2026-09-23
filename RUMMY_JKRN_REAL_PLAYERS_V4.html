@@ -2088,6 +2088,80 @@ body{
 }
 </style>
 
+
+<style id="JKRN_FRESH_LOBBY_V53">
+#onlineLobby{
+  position:fixed!important; inset:0!important; z-index:999999!important;
+  display:flex!important; align-items:center!important; justify-content:center!important;
+  padding:20px!important; box-sizing:border-box!important; overflow:auto!important;
+  background:
+    radial-gradient(circle at 50% 20%,rgba(28,91,54,.75),transparent 40%),
+    linear-gradient(145deg,#020604,#07150d 55%,#010302)!important;
+  font-family:Arial,Helvetica,sans-serif!important;
+}
+#onlineLobby.hidden{display:none!important}
+#lobbyScreen{display:none!important}
+.fresh-lobby{
+  width:min(560px,94vw)!important; box-sizing:border-box!important;
+  padding:30px!important; border-radius:24px!important;
+  background:linear-gradient(160deg,#10251a,#07110b)!important;
+  border:1px solid rgba(239,197,62,.75)!important;
+  box-shadow:0 20px 70px rgba(0,0,0,.7),0 0 30px rgba(219,177,45,.12)!important;
+}
+.fresh-logo{text-align:center;color:#ffd83d;font-size:32px;font-weight:1000;letter-spacing:1px}
+.fresh-logo span{color:#fff}
+.fresh-subtitle{text-align:center;color:#9eaea5;font-size:12px;font-weight:800;margin-top:5px;margin-bottom:26px;letter-spacing:1.2px}
+.fresh-section{margin-top:16px}
+.fresh-label{color:#f4ce48;font-size:11px;font-weight:1000;letter-spacing:1px;margin-bottom:7px}
+.fresh-input{
+  width:100%!important; height:46px!important; box-sizing:border-box!important;
+  border:1px solid #476151!important; border-radius:10px!important;
+  background:#06100a!important; color:#fff!important; outline:none!important;
+  padding:0 14px!important; font-size:14px!important;
+}
+.fresh-input:focus{border-color:#e4bd3d!important;box-shadow:0 0 0 2px rgba(228,189,61,.12)!important}
+.fresh-grid{display:grid!important;gap:8px!important}
+.fresh-grid.two{grid-template-columns:1fr 1fr!important}
+.fresh-grid.three{grid-template-columns:repeat(3,1fr)!important}
+.fresh-choice{
+  height:44px!important; border-radius:10px!important;
+  border:1px solid #3d5747!important; background:#0a1710!important;
+  color:#d7e0da!important; font-weight:1000!important; cursor:pointer!important;
+}
+.fresh-choice.active{
+  background:linear-gradient(180deg,#ffd94b,#d89b13)!important;
+  color:#171109!important; border-color:#fff0a1!important;
+  box-shadow:0 5px 14px rgba(218,163,22,.2)!important;
+}
+.fresh-amount{display:flex!important;align-items:center!important;justify-content:space-between!important;color:#8e9b93!important;font-size:11px}
+.fresh-amount strong{color:#ffd83d!important;font-size:23px!important}
+.fresh-range{width:100%!important;margin:10px 0 6px!important;accent-color:#e6b92e!important}
+.fresh-quick{display:grid!important;grid-template-columns:repeat(6,1fr)!important;gap:5px!important}
+.fresh-quick button{
+  height:32px!important;border-radius:7px!important;border:1px solid #4d5b3b!important;
+  background:#0a150d!important;color:#f6d65a!important;font-size:10px!important;font-weight:900!important;
+}
+.fresh-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important;margin-top:18px!important}
+.fresh-actions button,.fresh-start{
+  height:48px!important;border:0!important;border-radius:10px!important;
+  font-weight:1000!important;font-size:13px!important;cursor:pointer!important;
+}
+.fresh-create{background:linear-gradient(180deg,#ffd83d,#d79a10)!important;color:#171109!important}
+.fresh-join{background:linear-gradient(180deg,#32b75b,#167c39)!important;color:#fff!important}
+.fresh-start{width:100%!important;margin-top:10px!important;background:#294331!important;color:#8f9b94!important}
+.fresh-start:not(:disabled){background:linear-gradient(180deg,#f2c83f,#d9950d)!important;color:#171109!important}
+.fresh-room-code{text-align:center;color:#7dff96;font-weight:1000;font-size:18px;margin-top:14px;min-height:22px}
+.fresh-status{text-align:center;color:#9eaaa2;font-size:11px;margin-top:7px;min-height:18px}
+.fresh-players{margin-top:10px;color:#dbe4de;font-size:11px;line-height:1.6;text-align:left;max-height:120px;overflow:auto}
+.fresh-online{text-align:center;color:#6cff8a;font-size:11px;font-weight:900;margin-top:12px}
+@media(max-width:600px){
+  #onlineLobby{padding:10px!important}
+  .fresh-lobby{padding:20px!important}
+  .fresh-logo{font-size:27px}
+  .fresh-grid.three{grid-template-columns:1fr!important}
+  .fresh-quick{grid-template-columns:repeat(3,1fr)!important}
+}
+</style>
 </head>
 <body onload="initAutoGame()">
 
@@ -2097,44 +2171,62 @@ body{
 #onlineLobby.hidden{display:none!important}.online-box{width:min(430px,92vw);background:#101b13;border:2px solid #d4af37;border-radius:22px;padding:26px;box-shadow:0 0 35px rgba(212,175,55,.35);text-align:center}.online-box h1{margin:0 0 6px;color:#ffd700;font-size:27px}.online-box p{color:#bbb;margin:6px 0 18px}.online-input{width:100%;box-sizing:border-box;padding:13px 14px;margin:7px 0;border-radius:10px;border:1px solid #4b704f;background:#08100a;color:#fff;font-size:16px}.online-btn{width:100%;padding:13px;margin-top:9px;border:0;border-radius:11px;background:linear-gradient(#ffd95a,#d39b00);font-weight:800;font-size:16px;cursor:pointer}.online-btn.alt{background:linear-gradient(#35a853,#19702e);color:#fff}.room-code{font-size:28px;letter-spacing:5px;color:#ffd700;font-weight:900;margin:12px}.online-status{margin-top:15px;padding:12px;border-radius:10px;background:#071008;color:#9cff9c;min-height:22px}.online-players{text-align:left;margin-top:15px}.online-player{padding:9px 12px;background:#18251a;border-radius:8px;margin:6px 0}.online-small{font-size:12px;color:#888;margin-top:12px}
 </style>
 <div id="onlineLobby">
-  <div class="jkrn-create-card">
-    <div class="jkrn-brand">🃏 <span>RUMMY JKRN</span></div>
-    <div class="jkrn-subbrand">REAL PLAYER POOL RUMMY</div>
+  <div class="fresh-lobby">
+    <div class="fresh-logo">🃏 RUMMY <span>JKRN</span></div>
+    <div class="fresh-subtitle">REAL PLAYER POOL RUMMY</div>
 
-    <label class="jkrn-label">PROFILE NAME</label>
-    <input id="onlineName" class="jkrn-input" maxlength="18" placeholder="Enter profile name">
-
-    <label class="jkrn-label">POOL GAME</label>
-    <div class="jkrn-scroll-row" id="poolChoiceRow">
-      <button type="button" class="jkrn-choice active" data-pool="201" onclick="selectPoolType(201)">201 POOL</button>
-      <button type="button" class="jkrn-choice" data-pool="101" onclick="selectPoolType(101)">101 POOL</button>
+    <div class="fresh-section">
+      <div class="fresh-label">PROFILE NAME</div>
+      <input id="onlineName" class="fresh-input" maxlength="18" placeholder="Enter your name">
     </div>
 
-    <label class="jkrn-label">PLAYERS</label>
-    <div class="jkrn-scroll-row" id="playerChoiceRow">
-      <button type="button" class="jkrn-choice" data-players="2" onclick="selectPlayerCount(2)">2</button>
-      <button type="button" class="jkrn-choice" data-players="4" onclick="selectPlayerCount(4)">4</button>
-      <button type="button" class="jkrn-choice active" data-players="6" onclick="selectPlayerCount(6)">6</button>
+    <div class="fresh-section">
+      <div class="fresh-label">POOL</div>
+      <div class="fresh-grid two">
+        <button type="button" class="fresh-choice active" data-pool="201" onclick="selectPoolType(201)">201 POOL</button>
+        <button type="button" class="fresh-choice" data-pool="101" onclick="selectPoolType(101)">101 POOL</button>
+      </div>
     </div>
 
-    <label class="jkrn-label">ENTRY AMOUNT</label>
-    <div class="jkrn-amount-line"><span>₹300</span><strong id="entryAmountDisplay">₹300</strong><span>₹10,000</span></div>
-    <input id="entryAmount" class="jkrn-range" type="range" min="300" max="10000" step="100" value="300" oninput="updateEntryAmount(this.value)">
-    <div class="jkrn-quick-amounts">
-      <button onclick="setEntryAmount(300)">₹300</button><button onclick="setEntryAmount(500)">₹500</button><button onclick="setEntryAmount(1000)">₹1K</button><button onclick="setEntryAmount(2500)">₹2.5K</button><button onclick="setEntryAmount(5000)">₹5K</button><button onclick="setEntryAmount(10000)">₹10K</button>
+    <div class="fresh-section">
+      <div class="fresh-label">PLAYERS</div>
+      <div class="fresh-grid three">
+        <button type="button" class="fresh-choice" data-players="2" onclick="selectPlayerCount(2)">2 PLAYERS</button>
+        <button type="button" class="fresh-choice" data-players="4" onclick="selectPlayerCount(4)">4 PLAYERS</button>
+        <button type="button" class="fresh-choice active" data-players="6" onclick="selectPlayerCount(6)">6 PLAYERS</button>
+      </div>
     </div>
 
-    <input id="onlineRoom" class="jkrn-input" maxlength="6" placeholder="ROOM ID (for Join)">
-    <div class="jkrn-main-buttons">
-      <button class="jkrn-create-btn" onclick="createOnlineRoom()">CREATE ROOM</button>
-      <button class="jkrn-start-btn" id="startRoomBtn" onclick="startRoomNow()" disabled>START</button>
+    <div class="fresh-section">
+      <div class="fresh-label">ENTRY AMOUNT</div>
+      <div class="fresh-amount"><span>₹300</span><strong id="entryAmountDisplay">₹300</strong><span>₹10,000</span></div>
+      <input id="entryAmount" class="fresh-range" type="range" min="300" max="10000" step="100" value="300" oninput="updateEntryAmount(this.value)">
+      <div class="fresh-quick">
+        <button type="button" onclick="setEntryAmount(300)">₹300</button>
+        <button type="button" onclick="setEntryAmount(500)">₹500</button>
+        <button type="button" onclick="setEntryAmount(1000)">₹1K</button>
+        <button type="button" onclick="setEntryAmount(2500)">₹2.5K</button>
+        <button type="button" onclick="setEntryAmount(5000)">₹5K</button>
+        <button type="button" onclick="setEntryAmount(10000)">₹10K</button>
+      </div>
     </div>
-    <button class="jkrn-join-btn" onclick="joinOnlineRoom()">JOIN ROOM</button>
 
-    <div id="onlineRoomCode" class="jkrn-room-code"></div>
-    <div id="onlineStatus" class="jkrn-status">Choose your game settings and create a room.</div>
-    <div id="onlinePlayers" class="jkrn-players"></div>
-    <div id="globalOnlineCount" class="jkrn-online-count">👥 Players Online: 0</div>
+    <div class="fresh-section">
+      <div class="fresh-label">ROOM</div>
+      <input id="onlineRoom" class="fresh-input" maxlength="6" placeholder="Enter Room ID to Join">
+    </div>
+
+    <div class="fresh-actions">
+      <button type="button" class="fresh-create" onclick="createOnlineRoom()">CREATE ROOM</button>
+      <button type="button" class="fresh-join" onclick="joinOnlineRoom()">JOIN ROOM</button>
+    </div>
+
+    <button type="button" id="startRoomBtn" class="fresh-start" onclick="startRoomNow()" disabled>START GAME</button>
+
+    <div id="onlineRoomCode" class="fresh-room-code"></div>
+    <div id="onlineStatus" class="fresh-status">Enter your name and create or join a room.</div>
+    <div id="onlinePlayers" class="fresh-players"></div>
+    <div id="globalOnlineCount" class="fresh-online">● Players Online: 0</div>
   </div>
 </div>
 
@@ -5837,31 +5929,7 @@ window.addEventListener('load',boot);
 
 
 <!-- JKRN V49: reliable lobby boot -->
-<script id="jkrn-v49-lobby-boot">
-(function(){
-  function openLobbyReliably(){
-    try{
-      var lobby=document.getElementById('onlineLobby');
-      var login=document.getElementById('loginScreen');
-      var main=document.getElementById('gameScreen');
-      if(login && login.classList.contains('hidden')===false) return;
-      if(lobby){
-        lobby.classList.remove('hidden');
-        lobby.style.display='';
-        lobby.style.visibility='visible';
-        lobby.style.opacity='1';
-      }
-      if(main && !window.__realRoomStarted){
-        main.classList.add('hidden');
-      }
-    }catch(e){}
-  }
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',openLobbyReliably,{once:true});
-  }else openLobbyReliably();
-  window.addEventListener('load',openLobbyReliably);
-})();
-</script>
+
 
 
 <!-- JKRN V50: anti-freeze / lightweight UI sync -->
@@ -8572,31 +8640,7 @@ window.addEventListener('load',boot);
 
 
 <!-- JKRN V49: reliable lobby boot -->
-<script id="jkrn-v49-lobby-boot">
-(function(){
-  function openLobbyReliably(){
-    try{
-      var lobby=document.getElementById('onlineLobby');
-      var login=document.getElementById('loginScreen');
-      var main=document.getElementById('gameScreen');
-      if(login && login.classList.contains('hidden')===false) return;
-      if(lobby){
-        lobby.classList.remove('hidden');
-        lobby.style.display='';
-        lobby.style.visibility='visible';
-        lobby.style.opacity='1';
-      }
-      if(main && !window.__realRoomStarted){
-        main.classList.add('hidden');
-      }
-    }catch(e){}
-  }
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',openLobbyReliably,{once:true});
-  }else openLobbyReliably();
-  window.addEventListener('load',openLobbyReliably);
-})();
-</script>
+
 
 
 <!-- JKRN V50: anti-freeze / lightweight UI sync -->
