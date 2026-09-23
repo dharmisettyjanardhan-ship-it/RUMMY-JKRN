@@ -4924,6 +4924,244 @@ window.addEventListener('load',boot);
 new MutationObserver(boot).observe(document.documentElement,{childList:true,subtree:true});
 })();
 </script>
+
+<!-- JKRN FINAL V43: AUTHORITATIVE MULTI-PLAYER DISCARD/TURN + OPEN CARD + LOCAL BOTTOM HAND -->
+<style id="jkrn-v43-multiplayer-final">
+  /* Every client sees their own cards in the bottom hand area. */
+  #playerArea, .player-area {
+    z-index: 9500 !important;
+  }
+  #playerGroupsContainer {
+    width: min(96vw, 1180px) !important;
+    justify-content: center !important;
+    align-items: flex-end !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+  }
+  #discardPile {
+    overflow: hidden !important;
+  }
+  #discardPile .jkrn-open-card {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 6px;
+    font-weight: 900;
+    text-align: left;
+  }
+  #discardPile .jkrn-open-rank { font-size: 16px; line-height: 1; }
+  #discardPile .jkrn-open-suit { font-size: 32px; align-self: center; margin: auto 0; }
+  #discardPile .jkrn-open-joker {
+    position: absolute; right: 3px; bottom: 3px;
+    background: #ffeb3b; color: #111; border: 1px solid #111;
+    border-radius: 50%; font-size: 11px; padding: 1px 3px;
+  }
+  #discardPile.jkrn-open-updated {
+    box-shadow: 0 0 20px rgba(0,229,255,.9) !important;
+    border-color: #00e5ff !important;
+  }
+.jkrn-v43-ready{opacity:1!important;background:linear-gradient(#2196f3,#0d47a1)!important;color:#fff!important;border:2px solid #fff!important;box-shadow:0 0 18px rgba(33,150,243,.9)!important;}
+</style>
+<script id="jkrn-v43-multiplayer-final-js">
+(function(){
+  'use strict';
+
+  function isOnline(){
+    return !!window.__realRoomStarted && !!window.onlineSocket;
+  }
+
+  function mySeat(){
+    return Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : 0;
+  }
+
+  function myTurn(){
+    return typeof currentPlayer !== 'undefined' && currentPlayer === mySeat();
+  }
+
+  function handCount(){
+    return Array.isArray(window.playerGroups)
+      ? window.playerGroups.flat().filter(Boolean).length : 0;
+  }
+
+  function getSelectedCard(){
+    if(!Array.isArray(window.selectedCards) || window.selectedCards.length !== 1) return null;
+    const s = window.selectedCards[0];
+    const gs = window.playerGroups || [];
+    if(s && s.id){
+      const found = gs.flat().find(c => c && c.id === s.id);
+      if(found) return found;
+    }
+    const g = gs[s.gIdx];
+    return g && g[s.cIdx] ? g[s.cIdx] : null;
+  }
+
+  function paintDiscard(card){
+    const dp = document.getElementById('discardPile');
+    if(!dp) return;
+
+    if(!card){
+      dp.innerHTML = '';
+      dp.classList.remove('jkrn-open-updated');
+      return;
+    }
+
+    const red = card.color === 'red' || card.suit === '♥' || card.suit === '♦';
+    dp.innerHTML =
+      '<div class="jkrn-open-card '+(red?'red':'black')+'">' +
+        '<div class="jkrn-open-rank">'+String(card.rank || '')+'<br>'+String(card.suit || '')+'</div>' +
+        '<div class="jkrn-open-suit">'+String(card.suit || '🃏')+'</div>' +
+        ((card.isPrintedJoker || card.isWild)
+          ? '<div class="jkrn-open-joker">👑</div>' : '') +
+      '</div>';
+
+    dp.classList.add('jkrn-open-updated');
+    clearTimeout(dp.__jkrnGlowTimer);
+    dp.__jkrnGlowTimer = setTimeout(function(){
+      dp.classList.remove('jkrn-open-updated');
+    }, 450);
+  }
+
+  function syncBottomHand(){
+    // The server sends the current player's complete hand only.
+    // Therefore every connected player sees THEIR OWN 13/14 cards at the bottom.
+    const area = document.querySelector('.player-area');
+    const groups = document.getElementById('playerGroupsContainer');
+    if(area) area.style.zIndex = '9500';
+    if(groups){
+      groups.style.display = 'flex';
+      groups.style.justifyContent = 'center';
+      groups.style.alignItems = 'flex-end';
+    }
+  }
+
+  function syncActionButtons(){
+    const discard = document.getElementById('discardButton');
+    if(!discard) return;
+
+    const active = isOnline() &&
+      myTurn() &&
+      !!window.playerHasDrawn &&
+      handCount() === 14 &&
+      !(window.__onlineEliminated || window.__onlineDropped);
+
+    // IMPORTANT: button becomes usable for PLAYER 2, 3, 4, 5, 6 exactly
+    // when their own server turn arrives. It does not depend on seat 0.
+    discard.disabled = !active;
+    discard.style.setProperty('display','inline-flex','important');
+    discard.style.setProperty('visibility','visible','important');
+    discard.style.setProperty('pointer-events','auto','important');
+    discard.classList.toggle('jkrn-v43-ready', active);
+  }
+
+  function sendAuthoritativeDiscard(){
+    if(!isOnline()) return false;
+    if(!myTurn()) return true;
+    if(!window.playerHasDrawn) return true;
+    if(handCount() !== 14) return true;
+    if(window.__onlineEliminated || window.__onlineDropped) return true;
+
+    const card = getSelectedCard();
+    const st = document.getElementById('status');
+
+    if(!card || !card.id){
+      if(st) st.textContent = '⚠️ 14 cards vachchayi. Discard cheyyadaniki 1 card select cheyyandi.';
+      return true;
+    }
+
+    window.onlineSocket.emit('discardCard', {cardId: card.id});
+    return true;
+  }
+
+  function installDiscardHandler(){
+    const b = document.getElementById('discardButton');
+    if(!b || b.__jkrnV43Installed) return;
+    b.__jkrnV43Installed = true;
+
+    // Capture phase prevents older V35/V37/V38 wrappers from sending a
+    // duplicate or seat-0-only discard request.
+    b.addEventListener('click', function(e){
+      if(!isOnline()) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      sendAuthoritativeDiscard();
+    }, true);
+  }
+
+  function installSocketHandlers(){
+    const s = window.onlineSocket;
+    if(!s || s.__jkrnV43Handlers) return;
+    s.__jkrnV43Handlers = true;
+
+    // Explicit server event: the new open card is rendered immediately.
+    s.on('discardUpdated', function(d){
+      if(d && d.card){
+        window.discardPile = [d.card];
+        paintDiscard(d.card);
+      }
+      syncActionButtons();
+    });
+
+    // Explicit server event: next player is authoritative.
+    s.on('turnChanged', function(d){
+      if(!d) return;
+      if(Number.isInteger(d.currentPlayer)) currentPlayer = d.currentPlayer;
+      window.__onlineTurnEndsAt = d.turnEndsAt || 0;
+      window.playerHasDrawn = false;
+      window.selectedCards = [];
+      syncBottomHand();
+      syncActionButtons();
+      if(typeof updateUI === 'function') updateUI();
+    });
+
+    // gameState remains the source of truth; render after the existing listener.
+    s.on('gameState', function(st){
+      if(!st) return;
+      if(st.discardTop) paintDiscard(st.discardTop);
+      else if(st.discardCount === 0) paintDiscard(null);
+      syncBottomHand();
+      setTimeout(syncActionButtons, 0);
+    });
+  }
+
+  function boot(){
+    installDiscardHandler();
+    installSocketHandlers();
+    syncBottomHand();
+    syncActionButtons();
+
+    // ensureOnlineSocket is already used by the original file.
+    // Retry only on DOM mutations, not with a permanent polling interval.
+    if(window.onlineSocket) installSocketHandlers();
+  }
+
+  // Re-apply when the original socket is created or the buttons are rendered.
+  const observer = new MutationObserver(function(){
+    installDiscardHandler();
+    installSocketHandlers();
+    syncBottomHand();
+    syncActionButtons();
+  });
+  observer.observe(document.documentElement, {childList:true, subtree:true});
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', boot, {once:true});
+  } else {
+    boot();
+  }
+  window.addEventListener('load', boot, {once:true});
+
+  window.jkrnV43PaintDiscard = paintDiscard;
+  window.jkrnV43Sync = function(){
+    installDiscardHandler();
+    installSocketHandlers();
+    syncBottomHand();
+    syncActionButtons();
+  };
+})();
+</script>
+
 </body>
 </html>
 
@@ -6676,5 +6914,242 @@ window.addEventListener('load',boot);
 new MutationObserver(boot).observe(document.documentElement,{childList:true,subtree:true});
 })();
 </script>
+
+<!-- JKRN FINAL V43: AUTHORITATIVE MULTI-PLAYER DISCARD/TURN + OPEN CARD + LOCAL BOTTOM HAND -->
+<style id="jkrn-v43-multiplayer-final">
+  /* Every client sees their own cards in the bottom hand area. */
+  #playerArea, .player-area {
+    z-index: 9500 !important;
+  }
+  #playerGroupsContainer {
+    width: min(96vw, 1180px) !important;
+    justify-content: center !important;
+    align-items: flex-end !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+  }
+  #discardPile {
+    overflow: hidden !important;
+  }
+  #discardPile .jkrn-open-card {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 6px;
+    font-weight: 900;
+    text-align: left;
+  }
+  #discardPile .jkrn-open-rank { font-size: 16px; line-height: 1; }
+  #discardPile .jkrn-open-suit { font-size: 32px; align-self: center; margin: auto 0; }
+  #discardPile .jkrn-open-joker {
+    position: absolute; right: 3px; bottom: 3px;
+    background: #ffeb3b; color: #111; border: 1px solid #111;
+    border-radius: 50%; font-size: 11px; padding: 1px 3px;
+  }
+  #discardPile.jkrn-open-updated {
+    box-shadow: 0 0 20px rgba(0,229,255,.9) !important;
+    border-color: #00e5ff !important;
+  }
+</style>
+<script id="jkrn-v43-multiplayer-final-js">
+(function(){
+  'use strict';
+
+  function isOnline(){
+    return !!window.__realRoomStarted && !!window.onlineSocket;
+  }
+
+  function mySeat(){
+    return Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : 0;
+  }
+
+  function myTurn(){
+    return typeof currentPlayer !== 'undefined' && currentPlayer === mySeat();
+  }
+
+  function handCount(){
+    return Array.isArray(window.playerGroups)
+      ? window.playerGroups.flat().filter(Boolean).length : 0;
+  }
+
+  function getSelectedCard(){
+    if(!Array.isArray(window.selectedCards) || window.selectedCards.length !== 1) return null;
+    const s = window.selectedCards[0];
+    const gs = window.playerGroups || [];
+    if(s && s.id){
+      const found = gs.flat().find(c => c && c.id === s.id);
+      if(found) return found;
+    }
+    const g = gs[s.gIdx];
+    return g && g[s.cIdx] ? g[s.cIdx] : null;
+  }
+
+  function paintDiscard(card){
+    const dp = document.getElementById('discardPile');
+    if(!dp) return;
+
+    if(!card){
+      dp.innerHTML = '';
+      dp.classList.remove('jkrn-open-updated');
+      return;
+    }
+
+    const red = card.color === 'red' || card.suit === '♥' || card.suit === '♦';
+    dp.innerHTML =
+      '<div class="jkrn-open-card '+(red?'red':'black')+'">' +
+        '<div class="jkrn-open-rank">'+String(card.rank || '')+'<br>'+String(card.suit || '')+'</div>' +
+        '<div class="jkrn-open-suit">'+String(card.suit || '🃏')+'</div>' +
+        ((card.isPrintedJoker || card.isWild)
+          ? '<div class="jkrn-open-joker">👑</div>' : '') +
+      '</div>';
+
+    dp.classList.add('jkrn-open-updated');
+    clearTimeout(dp.__jkrnGlowTimer);
+    dp.__jkrnGlowTimer = setTimeout(function(){
+      dp.classList.remove('jkrn-open-updated');
+    }, 450);
+  }
+
+  function syncBottomHand(){
+    // The server sends the current player's complete hand only.
+    // Therefore every connected player sees THEIR OWN 13/14 cards at the bottom.
+    const area = document.querySelector('.player-area');
+    const groups = document.getElementById('playerGroupsContainer');
+    if(area) area.style.zIndex = '9500';
+    if(groups){
+      groups.style.display = 'flex';
+      groups.style.justifyContent = 'center';
+      groups.style.alignItems = 'flex-end';
+    }
+  }
+
+  function syncActionButtons(){
+    const discard = document.getElementById('discardButton');
+    if(!discard) return;
+
+    const active = isOnline() &&
+      myTurn() &&
+      !!window.playerHasDrawn &&
+      handCount() === 14 &&
+      !(window.__onlineEliminated || window.__onlineDropped);
+
+    // IMPORTANT: button becomes usable for PLAYER 2, 3, 4, 5, 6 exactly
+    // when their own server turn arrives. It does not depend on seat 0.
+    discard.disabled = !active;
+    discard.style.setProperty('display','inline-flex','important');
+    discard.style.setProperty('visibility','visible','important');
+    discard.style.setProperty('pointer-events','auto','important');
+    discard.classList.toggle('jkrn-v43-ready', active);
+  }
+
+  function sendAuthoritativeDiscard(){
+    if(!isOnline()) return false;
+    if(!myTurn()) return true;
+    if(!window.playerHasDrawn) return true;
+    if(handCount() !== 14) return true;
+    if(window.__onlineEliminated || window.__onlineDropped) return true;
+
+    const card = getSelectedCard();
+    const st = document.getElementById('status');
+
+    if(!card || !card.id){
+      if(st) st.textContent = '⚠️ 14 cards vachchayi. Discard cheyyadaniki 1 card select cheyyandi.';
+      return true;
+    }
+
+    window.onlineSocket.emit('discardCard', {cardId: card.id});
+    return true;
+  }
+
+  function installDiscardHandler(){
+    const b = document.getElementById('discardButton');
+    if(!b || b.__jkrnV43Installed) return;
+    b.__jkrnV43Installed = true;
+
+    // Capture phase prevents older V35/V37/V38 wrappers from sending a
+    // duplicate or seat-0-only discard request.
+    b.addEventListener('click', function(e){
+      if(!isOnline()) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      sendAuthoritativeDiscard();
+    }, true);
+  }
+
+  function installSocketHandlers(){
+    const s = window.onlineSocket;
+    if(!s || s.__jkrnV43Handlers) return;
+    s.__jkrnV43Handlers = true;
+
+    // Explicit server event: the new open card is rendered immediately.
+    s.on('discardUpdated', function(d){
+      if(d && d.card){
+        window.discardPile = [d.card];
+        paintDiscard(d.card);
+      }
+      syncActionButtons();
+    });
+
+    // Explicit server event: next player is authoritative.
+    s.on('turnChanged', function(d){
+      if(!d) return;
+      if(Number.isInteger(d.currentPlayer)) currentPlayer = d.currentPlayer;
+      window.__onlineTurnEndsAt = d.turnEndsAt || 0;
+      window.playerHasDrawn = false;
+      window.selectedCards = [];
+      syncBottomHand();
+      syncActionButtons();
+      if(typeof updateUI === 'function') updateUI();
+    });
+
+    // gameState remains the source of truth; render after the existing listener.
+    s.on('gameState', function(st){
+      if(!st) return;
+      if(st.discardTop) paintDiscard(st.discardTop);
+      else if(st.discardCount === 0) paintDiscard(null);
+      syncBottomHand();
+      setTimeout(syncActionButtons, 0);
+    });
+  }
+
+  function boot(){
+    installDiscardHandler();
+    installSocketHandlers();
+    syncBottomHand();
+    syncActionButtons();
+
+    // ensureOnlineSocket is already used by the original file.
+    // Retry only on DOM mutations, not with a permanent polling interval.
+    if(window.onlineSocket) installSocketHandlers();
+  }
+
+  // Re-apply when the original socket is created or the buttons are rendered.
+  const observer = new MutationObserver(function(){
+    installDiscardHandler();
+    installSocketHandlers();
+    syncBottomHand();
+    syncActionButtons();
+  });
+  observer.observe(document.documentElement, {childList:true, subtree:true});
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', boot, {once:true});
+  } else {
+    boot();
+  }
+  window.addEventListener('load', boot, {once:true});
+
+  window.jkrnV43PaintDiscard = paintDiscard;
+  window.jkrnV43Sync = function(){
+    installDiscardHandler();
+    installSocketHandlers();
+    syncBottomHand();
+    syncActionButtons();
+  };
+})();
+</script>
+
 </body>
 </html>
