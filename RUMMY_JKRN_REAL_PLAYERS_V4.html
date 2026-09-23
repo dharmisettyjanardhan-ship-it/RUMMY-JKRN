@@ -2192,6 +2192,73 @@ body{
 }
 </style>
 
+
+<style id="JKRN_FRESH_LOBBY_V55">
+#onlineLobby{
+  position:fixed!important; inset:0!important; z-index:999999!important;
+  display:flex!important; align-items:flex-start!important; justify-content:center!important;
+  padding:22px 14px!important; box-sizing:border-box!important; overflow-y:auto!important;
+  background:radial-gradient(circle at 50% 10%,rgba(31,92,55,.8),transparent 42%),#020604!important;
+}
+#onlineLobby.hidden{display:none!important}
+.fresh-lobby.v55{
+  width:min(620px,96vw)!important; margin:auto!important; padding:26px 28px!important;
+  box-sizing:border-box!important; border-radius:22px!important;
+  background:linear-gradient(160deg,#10271a,#06100a)!important;
+  border:1px solid rgba(239,197,62,.8)!important;
+  box-shadow:0 20px 70px rgba(0,0,0,.8),0 0 28px rgba(220,180,45,.13)!important;
+}
+.v55 .fresh-logo{font-size:31px!important;text-align:center!important;color:#ffd83d!important;font-weight:1000!important}
+.v55 .fresh-logo span{color:#fff!important}
+.v55 .fresh-subtitle{text-align:center!important;color:#aab6af!important;font-size:12px!important;font-weight:800!important;margin:5px 0 20px!important}
+.v55 .fresh-section{margin-top:15px!important}
+.v55 .fresh-label{color:#f4ce48!important;font-size:11px!important;font-weight:1000!important;letter-spacing:1px!important;margin-bottom:7px!important}
+.v55 .fresh-input{
+  display:block!important;width:100%!important;height:48px!important;box-sizing:border-box!important;
+  border:1px solid #52695b!important;border-radius:10px!important;background:#041009!important;
+  color:#fff!important;outline:none!important;padding:0 14px!important;font-size:15px!important;
+  visibility:visible!important;opacity:1!important;pointer-events:auto!important;
+}
+.v55 .fresh-input::placeholder{color:#738077!important}
+.v55 .fresh-input:focus{border-color:#e4bd3d!important;box-shadow:0 0 0 2px rgba(228,189,61,.15)!important}
+.v55 .fresh-grid{display:grid!important;gap:10px!important}
+.v55 .fresh-grid.two{grid-template-columns:1fr 1fr!important}
+.v55 .fresh-choice{
+  height:48px!important;border-radius:10px!important;border:1px solid #3d5747!important;
+  background:#08150e!important;color:#d7e0da!important;font-weight:1000!important;cursor:pointer!important;
+}
+.v55 .fresh-choice.active{background:linear-gradient(#ffd94b,#d89b13)!important;color:#171109!important;border-color:#fff0a1!important}
+.v55 .fresh-amount{display:flex!important;align-items:center!important;justify-content:space-between!important;color:#8e9b93!important;font-size:11px!important}
+.v55 .fresh-amount strong{color:#ffd83d!important;font-size:23px!important}
+.v55 .fresh-range{display:block!important;width:100%!important;margin:10px 0 5px!important;accent-color:#e6b92e!important}
+.v55 .player-slider-row{position:relative!important;display:grid!important;grid-template-columns:24px 1fr 24px!important;align-items:center!important;gap:7px!important;color:#b7c2bb!important;font-size:11px!important}
+.v55 .player-slider{margin:0!important}
+.v55 .player-slider-row strong{position:absolute!important;left:50%!important;top:-31px!important;transform:translateX(-50%)!important;color:#ffd83d!important;font-size:20px!important;white-space:nowrap!important}
+.v55 .player-ticks{display:flex!important;justify-content:space-between!important;color:#89958e!important;font-size:10px!important;padding:0 29px!important}
+.v55 .fresh-quick{display:grid!important;grid-template-columns:repeat(6,1fr)!important;gap:5px!important}
+.v55 .fresh-quick button{height:32px!important;border-radius:7px!important;border:1px solid #4d5b3b!important;background:#0a150d!important;color:#f6d65a!important;font-size:10px!important;font-weight:900!important}
+.v55 .fresh-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important;margin-top:18px!important}
+.v55 .fresh-actions button,.v55 .fresh-start{height:48px!important;border:0!important;border-radius:10px!important;font-weight:1000!important;font-size:13px!important;cursor:pointer!important}
+.v55 .fresh-create{background:linear-gradient(#ffd83d,#d79a10)!important;color:#171109!important}
+.v55 .fresh-join{background:linear-gradient(#32b75b,#167c39)!important;color:#fff!important}
+.v55 .fresh-start{width:100%!important;margin-top:10px!important;background:#294331!important;color:#8f9b94!important}
+.v55 .fresh-start:not(:disabled){background:linear-gradient(#f2c83f,#d9950d)!important;color:#171109!important}
+.v55 .fresh-room-code{text-align:center!important;color:#7dff96!important;font-weight:1000!important;font-size:18px!important;margin-top:14px!important;min-height:22px!important}
+.v55 .fresh-status{text-align:center!important;color:#9eaaa2!important;font-size:11px!important;margin-top:7px!important;min-height:18px!important}
+.v55 .fresh-players{margin-top:10px!important;color:#dbe4de!important;font-size:11px!important;line-height:1.6!important;max-height:120px!important;overflow:auto!important}
+.v55 .fresh-online{text-align:center!important;color:#6cff8a!important;font-size:11px!important;font-weight:900!important;margin-top:12px!important}
+/* Draw controls must NOT cover the lobby. They appear only after game starts. */
+body:has(#onlineLobby:not(.hidden)) #jkrnDrawControls,
+body:has(#onlineLobby:not(.hidden)) #jkrnHandMover,
+body:has(#onlineLobby:not(.hidden)) #jkrnActionBar{display:none!important}
+@media(max-width:700px){
+  #onlineLobby{padding:10px!important}
+  .fresh-lobby.v55{padding:20px!important}
+  .v55 .fresh-logo{font-size:26px!important}
+  .v55 .fresh-quick{grid-template-columns:repeat(3,1fr)!important}
+}
+</style>
+
 </head>
 <body onload="initAutoGame()">
 
@@ -2201,13 +2268,14 @@ body{
 #onlineLobby.hidden{display:none!important}.online-box{width:min(430px,92vw);background:#101b13;border:2px solid #d4af37;border-radius:22px;padding:26px;box-shadow:0 0 35px rgba(212,175,55,.35);text-align:center}.online-box h1{margin:0 0 6px;color:#ffd700;font-size:27px}.online-box p{color:#bbb;margin:6px 0 18px}.online-input{width:100%;box-sizing:border-box;padding:13px 14px;margin:7px 0;border-radius:10px;border:1px solid #4b704f;background:#08100a;color:#fff;font-size:16px}.online-btn{width:100%;padding:13px;margin-top:9px;border:0;border-radius:11px;background:linear-gradient(#ffd95a,#d39b00);font-weight:800;font-size:16px;cursor:pointer}.online-btn.alt{background:linear-gradient(#35a853,#19702e);color:#fff}.room-code{font-size:28px;letter-spacing:5px;color:#ffd700;font-weight:900;margin:12px}.online-status{margin-top:15px;padding:12px;border-radius:10px;background:#071008;color:#9cff9c;min-height:22px}.online-players{text-align:left;margin-top:15px}.online-player{padding:9px 12px;background:#18251a;border-radius:8px;margin:6px 0}.online-small{font-size:12px;color:#888;margin-top:12px}
 </style>
 <div id="onlineLobby">
-  <div class="fresh-lobby">
+  <div class="fresh-lobby v55">
     <div class="fresh-logo">🃏 RUMMY <span>JKRN</span></div>
     <div class="fresh-subtitle">REAL PLAYER POOL RUMMY</div>
 
     <div class="fresh-section">
       <div class="fresh-label">PROFILE NAME</div>
-      <input id="onlineName" class="fresh-input" maxlength="18" placeholder="Enter your name">
+      <input id="onlineName" class="fresh-input" type="text" maxlength="18"
+             autocomplete="off" placeholder="ENTER YOUR NAME">
     </div>
 
     <div class="fresh-section">
@@ -2220,11 +2288,15 @@ body{
 
     <div class="fresh-section">
       <div class="fresh-label">PLAYERS</div>
-      <div class="fresh-grid three">
-        <button type="button" class="fresh-choice" data-players="2" onclick="selectPlayerCount(2)">2 PLAYERS</button>
-        <button type="button" class="fresh-choice" data-players="4" onclick="selectPlayerCount(4)">4 PLAYERS</button>
-        <button type="button" class="fresh-choice active" data-players="6" onclick="selectPlayerCount(6)">6 PLAYERS</button>
+      <div class="player-slider-row">
+        <span>2</span>
+        <input id="playerCountSlider" class="fresh-range player-slider" type="range"
+               min="2" max="6" step="1" value="6"
+               oninput="setPlayerSlider(this.value)">
+        <span>6</span>
+        <strong id="playerCountDisplay">6 PLAYERS</strong>
       </div>
+      <div class="player-ticks"><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span></div>
     </div>
 
     <div class="fresh-section">
@@ -2243,7 +2315,8 @@ body{
 
     <div class="fresh-section">
       <div class="fresh-label">ROOM</div>
-      <input id="onlineRoom" class="fresh-input" maxlength="6" placeholder="Enter Room ID to Join">
+      <input id="onlineRoom" class="fresh-input" type="text" maxlength="6"
+             autocomplete="off" placeholder="ENTER ROOM ID TO JOIN">
     </div>
 
     <div class="fresh-actions">
@@ -6003,6 +6076,42 @@ window.addEventListener('load',boot,{once:true});
 })();
 </script>
 
+
+<script id="JKRN_V55_LOBBY_JS">
+(function(){
+  function setPlayerSlider(v){
+    v=Math.max(2,Math.min(6,parseInt(v,10)||6));
+    var out=document.getElementById('playerCountDisplay');
+    var slider=document.getElementById('playerCountSlider');
+    if(slider) slider.value=v;
+    if(out) out.textContent=v+' PLAYERS';
+    window.selectedPlayerCount=v;
+    if(typeof maxPlayers!=='undefined') window.maxPlayers=v;
+  }
+  window.setPlayerSlider=setPlayerSlider;
+
+  function updateEntryAmount(v){
+    var n=Math.max(300,Math.min(10000,parseInt(v,10)||300));
+    var display=document.getElementById('entryAmountDisplay');
+    var slider=document.getElementById('entryAmount');
+    if(slider) slider.value=n;
+    if(display) display.textContent='₹'+n.toLocaleString('en-IN');
+    window.selectedEntryAmount=n;
+  }
+  window.updateEntryAmount=updateEntryAmount;
+
+  function setEntryAmount(v){ updateEntryAmount(v); }
+  window.setEntryAmount=setEntryAmount;
+
+  function focusName(){
+    var n=document.getElementById('onlineName');
+    if(n && !n.value) setTimeout(function(){try{n.focus()}catch(e){}},120);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',focusName,{once:true});
+  else focusName();
+})();
+</script>
+
 </body>
 </html>
 
@@ -8711,6 +8820,42 @@ function boot(){
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot,{once:true});
 else boot();
 window.addEventListener('load',boot,{once:true});
+})();
+</script>
+
+
+<script id="JKRN_V55_LOBBY_JS">
+(function(){
+  function setPlayerSlider(v){
+    v=Math.max(2,Math.min(6,parseInt(v,10)||6));
+    var out=document.getElementById('playerCountDisplay');
+    var slider=document.getElementById('playerCountSlider');
+    if(slider) slider.value=v;
+    if(out) out.textContent=v+' PLAYERS';
+    window.selectedPlayerCount=v;
+    if(typeof maxPlayers!=='undefined') window.maxPlayers=v;
+  }
+  window.setPlayerSlider=setPlayerSlider;
+
+  function updateEntryAmount(v){
+    var n=Math.max(300,Math.min(10000,parseInt(v,10)||300));
+    var display=document.getElementById('entryAmountDisplay');
+    var slider=document.getElementById('entryAmount');
+    if(slider) slider.value=n;
+    if(display) display.textContent='₹'+n.toLocaleString('en-IN');
+    window.selectedEntryAmount=n;
+  }
+  window.updateEntryAmount=updateEntryAmount;
+
+  function setEntryAmount(v){ updateEntryAmount(v); }
+  window.setEntryAmount=setEntryAmount;
+
+  function focusName(){
+    var n=document.getElementById('onlineName');
+    if(n && !n.value) setTimeout(function(){try{n.focus()}catch(e){}},120);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',focusName,{once:true});
+  else focusName();
 })();
 </script>
 
