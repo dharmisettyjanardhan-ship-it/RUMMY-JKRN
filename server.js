@@ -133,7 +133,10 @@ function stateFor(room,socketId){
     roomId:room.id, players:publicPlayers(room), maxPlayers:room.maxPlayers,
     poolLimit:room.poolLimit||DEFAULT_POOL_LIMIT, entryFee:room.entryFee||300,
     myIndex:me.index, hands:room.playersList.map(p=>p.id===socketId ? p.hand.map(publicCard) : {count:p.hand.length}),
-    deckCount:room.deck.length, discardTop:publicCard(room.discard[room.discard.length-1]), wildJoker:publicCard(room.wildJoker),
+    deckCount:room.deck.length,
+    discardCount:room.discard.length,
+    discardTop:publicCard(room.discard[room.discard.length-1]),
+    wildJoker:publicCard(room.wildJoker),
     currentPlayer:room.currentPlayer, currentPlayerName:room.playersList[room.currentPlayer]?.name||null, playerHasDrawn:room.playerHasDrawn, turnEndsAt:room.turnEndsAt,
     roundNumber:room.dealNumber||1, currentRoundScores:room.roundPoints||{}, turnPhase:room.turnPhase||'draw', graceEndsAt:room.graceEndsAt||0, started:room.started, scores:room.scores||{},
     dealerIndex:room.dealerIndex, dealerName:room.playersList[room.dealerIndex]?.name||null,
@@ -155,6 +158,11 @@ function endTurn(room){
   const next=nextActiveIndex(room,room.currentPlayer);
   room.currentPlayer=next; room.playerHasDrawn=false; room.turnPhase='draw'; room.graceEndsAt=0; room.turnEndsAt=Date.now()+30000;
   room.turnTimer=setTimeout(()=>endTurn(room),30000);
+  io.to(room.id).emit('turnChanged', {
+    currentPlayer: room.currentPlayer,
+    currentPlayerName: room.playersList[room.currentPlayer]?.name || null,
+    turnEndsAt: room.turnEndsAt
+  });
   broadcastState(room);
 }
 function startGraceTimer(room){
@@ -332,7 +340,19 @@ io.on('connection',socket=>{
     if(!room||!p||!room.started||room.eliminated?.[p.id]||room.dropped?.[p.id]||p.index!==room.currentPlayer||!room.playerHasDrawn)return socket.emit('onlineActionError',{message:'Draw first, then discard one card.'});
     if(p.hand.length!==14)return socket.emit('onlineActionError',{message:'You must have 14 cards before discard.'});
     const idx=p.hand.findIndex(c=>c.id===cardId);if(idx<0)return socket.emit('onlineActionError',{message:'Select one card to discard.'});
-    room.discard.push(p.hand.splice(idx,1)[0]); endTurn(room);
+    const discarded = p.hand.splice(idx,1)[0];
+    room.discard.push(discarded);
+
+    // Authoritative discard update BEFORE moving to the next player.
+    // Every client receives the same open/discard card and the same next turn.
+    io.to(room.id).emit('discardUpdated', {
+      card: publicCard(discarded),
+      playerId: p.id,
+      playerIndex: p.index,
+      nextPlayer: nextActiveIndex(room, p.index)
+    });
+
+    endTurn(room);
   });
   socket.on('drop',()=>{
     const room=rooms.get(socket.roomId),p=room&&room.players.get(socket.id);
