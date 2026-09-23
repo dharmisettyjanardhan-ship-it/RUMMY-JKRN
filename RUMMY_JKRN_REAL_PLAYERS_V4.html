@@ -5743,6 +5743,211 @@ new MutationObserver(sync).observe(document.documentElement,{subtree:true,attrib
 })();
 </script>
 
+
+<!-- JKRN V48: MODERN TABLE + OPEN DECK + MOVABLE HAND -->
+<style id="jkrn-v48-css">
+/* Modern central draw area */
+#centerArea{
+  position:absolute!important;
+  top:27%!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  gap:22px!important;
+  z-index:8000!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+#centerArea .pile-container{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  min-width:118px!important;
+  visibility:visible!important;
+}
+#centerArea .pile-label{
+  display:block!important;
+  color:#ffe35b!important;
+  font-size:14px!important;
+  font-weight:1000!important;
+  letter-spacing:.5px!important;
+  text-shadow:0 2px 4px #000!important;
+  margin-bottom:6px!important;
+}
+#centerArea .pile{
+  width:88px!important;
+  height:118px!important;
+  border:3px solid #e8bd35!important;
+  border-radius:13px!important;
+  box-shadow:0 5px 16px rgba(0,0,0,.7),0 0 15px rgba(255,210,50,.2)!important;
+  visibility:visible!important;
+}
+#centerArea .draw-pile{
+  background:linear-gradient(135deg,#173c68,#0b1b35)!important;
+}
+#discardPile{
+  background:#fff!important;
+  overflow:hidden!important;
+}
+#discardPile .card{
+  width:100%!important;
+  height:100%!important;
+  border-radius:9px!important;
+}
+#centerArea .jkrn-draw-action{
+  position:relative!important;
+  width:108px!important;
+  height:30px!important;
+  margin-top:6px!important;
+  border:2px solid #fff!important;
+  border-radius:8px!important;
+  font-size:10px!important;
+  font-weight:1000!important;
+  z-index:9000!important;
+}
+#centerArea .jkrn-take-closed{background:#126bd0!important}
+#centerArea .jkrn-take-open{background:#e1a914!important;color:#111!important}
+#centerArea .jkrn-draw-action:disabled{opacity:.35!important}
+
+/* Hand controls and hand position */
+#jkrnHandMover{
+  position:fixed!important;
+  right:16px!important;
+  bottom:76px!important;
+  z-index:2147483646!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:5px!important;
+  visibility:visible!important;
+}
+#jkrnHandMover button{
+  width:38px!important;
+  height:34px!important;
+  border:2px solid #fff!important;
+  border-radius:8px!important;
+  background:linear-gradient(#222,#070707)!important;
+  color:#ffd83d!important;
+  font-size:20px!important;
+  font-weight:1000!important;
+  cursor:pointer!important;
+  box-shadow:0 3px 10px #000!important;
+}
+#jkrnHandMover .label{
+  font-size:8px!important;
+  color:#fff!important;
+  text-align:center!important;
+  font-weight:900!important;
+}
+#playerArea{
+  bottom:var(--jkrn-hand-bottom,88px)!important;
+  transition:bottom .18s ease!important;
+}
+#playerGroupsContainer{
+  transform:translateY(var(--jkrn-hand-shift,0px))!important;
+  transition:transform .18s ease!important;
+}
+
+/* Keep action bar above the hand, not over the cards */
+#jkrnActionBar{
+  bottom:8px!important;
+}
+@media(max-width:700px){
+  #centerArea{top:25%!important;gap:8px!important}
+  #centerArea .pile{width:68px!important;height:92px!important}
+  #centerArea .pile-label{font-size:11px!important}
+  #centerArea .jkrn-draw-action{width:82px!important;height:26px!important;font-size:8px!important}
+  #jkrnHandMover{right:5px!important;bottom:88px!important}
+  #jkrnHandMover button{width:32px!important;height:30px!important}
+}
+</style>
+
+<script id="jkrn-v48-js">
+(function(){
+'use strict';
+let handShift=0;
+
+function makeMover(){
+  if(document.getElementById('jkrnHandMover')) return;
+  const box=document.createElement('div');
+  box.id='jkrnHandMover';
+  box.innerHTML='<div class="label">HAND</div>'+
+    '<button id="jkrnHandUp" type="button" title="Move hand up">▲</button>'+
+    '<button id="jkrnHandDown" type="button" title="Move hand down">▼</button>';
+  document.body.appendChild(box);
+
+  document.getElementById('jkrnHandUp').onclick=function(){
+    handShift=Math.max(-180,handShift-20);
+    apply();
+  };
+  document.getElementById('jkrnHandDown').onclick=function(){
+    handShift=Math.min(100,handShift+20);
+    apply();
+  };
+}
+
+function apply(){
+  document.documentElement.style.setProperty('--jkrn-hand-shift',handShift+'px');
+}
+
+function modernizeOpen(){
+  const open=document.getElementById('discardPile');
+  if(open){
+    open.style.visibility='visible';
+    open.style.opacity='1';
+    const label=open.parentElement && open.parentElement.querySelector('.pile-label');
+    if(label) label.textContent='OPEN DECK';
+  }
+  const closed=document.querySelector('#centerArea .draw-pile');
+  if(closed){
+    closed.style.visibility='visible';
+    closed.style.opacity='1';
+    const label=closed.parentElement && closed.parentElement.querySelector('.pile-label');
+    if(label) label.textContent='CLOSED DECK';
+  }
+}
+
+function boot(){
+  makeMover();
+  modernizeOpen();
+  apply();
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+else boot();
+window.addEventListener('load',boot);
+setInterval(boot,500);
+})();
+</script>
+
+
+<!-- JKRN V49: reliable lobby boot -->
+<script id="jkrn-v49-lobby-boot">
+(function(){
+  function openLobbyReliably(){
+    try{
+      var lobby=document.getElementById('onlineLobby');
+      var login=document.getElementById('loginScreen');
+      var main=document.getElementById('gameScreen');
+      if(login && login.classList.contains('hidden')===false) return;
+      if(lobby){
+        lobby.classList.remove('hidden');
+        lobby.style.display='';
+        lobby.style.visibility='visible';
+        lobby.style.opacity='1';
+      }
+      if(main && !window.__realRoomStarted){
+        main.classList.add('hidden');
+      }
+    }catch(e){}
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',openLobbyReliably,{once:true});
+  }else openLobbyReliably();
+  window.addEventListener('load',openLobbyReliably);
+})();
+</script>
+
 </body>
 </html>
 
@@ -8310,6 +8515,211 @@ else boot();
 window.addEventListener('load',boot);
 setInterval(sync,250);
 new MutationObserver(sync).observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:['disabled','class','style']});
+})();
+</script>
+
+
+<!-- JKRN V48: MODERN TABLE + OPEN DECK + MOVABLE HAND -->
+<style id="jkrn-v48-css">
+/* Modern central draw area */
+#centerArea{
+  position:absolute!important;
+  top:27%!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  gap:22px!important;
+  z-index:8000!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+#centerArea .pile-container{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  min-width:118px!important;
+  visibility:visible!important;
+}
+#centerArea .pile-label{
+  display:block!important;
+  color:#ffe35b!important;
+  font-size:14px!important;
+  font-weight:1000!important;
+  letter-spacing:.5px!important;
+  text-shadow:0 2px 4px #000!important;
+  margin-bottom:6px!important;
+}
+#centerArea .pile{
+  width:88px!important;
+  height:118px!important;
+  border:3px solid #e8bd35!important;
+  border-radius:13px!important;
+  box-shadow:0 5px 16px rgba(0,0,0,.7),0 0 15px rgba(255,210,50,.2)!important;
+  visibility:visible!important;
+}
+#centerArea .draw-pile{
+  background:linear-gradient(135deg,#173c68,#0b1b35)!important;
+}
+#discardPile{
+  background:#fff!important;
+  overflow:hidden!important;
+}
+#discardPile .card{
+  width:100%!important;
+  height:100%!important;
+  border-radius:9px!important;
+}
+#centerArea .jkrn-draw-action{
+  position:relative!important;
+  width:108px!important;
+  height:30px!important;
+  margin-top:6px!important;
+  border:2px solid #fff!important;
+  border-radius:8px!important;
+  font-size:10px!important;
+  font-weight:1000!important;
+  z-index:9000!important;
+}
+#centerArea .jkrn-take-closed{background:#126bd0!important}
+#centerArea .jkrn-take-open{background:#e1a914!important;color:#111!important}
+#centerArea .jkrn-draw-action:disabled{opacity:.35!important}
+
+/* Hand controls and hand position */
+#jkrnHandMover{
+  position:fixed!important;
+  right:16px!important;
+  bottom:76px!important;
+  z-index:2147483646!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:5px!important;
+  visibility:visible!important;
+}
+#jkrnHandMover button{
+  width:38px!important;
+  height:34px!important;
+  border:2px solid #fff!important;
+  border-radius:8px!important;
+  background:linear-gradient(#222,#070707)!important;
+  color:#ffd83d!important;
+  font-size:20px!important;
+  font-weight:1000!important;
+  cursor:pointer!important;
+  box-shadow:0 3px 10px #000!important;
+}
+#jkrnHandMover .label{
+  font-size:8px!important;
+  color:#fff!important;
+  text-align:center!important;
+  font-weight:900!important;
+}
+#playerArea{
+  bottom:var(--jkrn-hand-bottom,88px)!important;
+  transition:bottom .18s ease!important;
+}
+#playerGroupsContainer{
+  transform:translateY(var(--jkrn-hand-shift,0px))!important;
+  transition:transform .18s ease!important;
+}
+
+/* Keep action bar above the hand, not over the cards */
+#jkrnActionBar{
+  bottom:8px!important;
+}
+@media(max-width:700px){
+  #centerArea{top:25%!important;gap:8px!important}
+  #centerArea .pile{width:68px!important;height:92px!important}
+  #centerArea .pile-label{font-size:11px!important}
+  #centerArea .jkrn-draw-action{width:82px!important;height:26px!important;font-size:8px!important}
+  #jkrnHandMover{right:5px!important;bottom:88px!important}
+  #jkrnHandMover button{width:32px!important;height:30px!important}
+}
+</style>
+
+<script id="jkrn-v48-js">
+(function(){
+'use strict';
+let handShift=0;
+
+function makeMover(){
+  if(document.getElementById('jkrnHandMover')) return;
+  const box=document.createElement('div');
+  box.id='jkrnHandMover';
+  box.innerHTML='<div class="label">HAND</div>'+
+    '<button id="jkrnHandUp" type="button" title="Move hand up">▲</button>'+
+    '<button id="jkrnHandDown" type="button" title="Move hand down">▼</button>';
+  document.body.appendChild(box);
+
+  document.getElementById('jkrnHandUp').onclick=function(){
+    handShift=Math.max(-180,handShift-20);
+    apply();
+  };
+  document.getElementById('jkrnHandDown').onclick=function(){
+    handShift=Math.min(100,handShift+20);
+    apply();
+  };
+}
+
+function apply(){
+  document.documentElement.style.setProperty('--jkrn-hand-shift',handShift+'px');
+}
+
+function modernizeOpen(){
+  const open=document.getElementById('discardPile');
+  if(open){
+    open.style.visibility='visible';
+    open.style.opacity='1';
+    const label=open.parentElement && open.parentElement.querySelector('.pile-label');
+    if(label) label.textContent='OPEN DECK';
+  }
+  const closed=document.querySelector('#centerArea .draw-pile');
+  if(closed){
+    closed.style.visibility='visible';
+    closed.style.opacity='1';
+    const label=closed.parentElement && closed.parentElement.querySelector('.pile-label');
+    if(label) label.textContent='CLOSED DECK';
+  }
+}
+
+function boot(){
+  makeMover();
+  modernizeOpen();
+  apply();
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+else boot();
+window.addEventListener('load',boot);
+setInterval(boot,500);
+})();
+</script>
+
+
+<!-- JKRN V49: reliable lobby boot -->
+<script id="jkrn-v49-lobby-boot">
+(function(){
+  function openLobbyReliably(){
+    try{
+      var lobby=document.getElementById('onlineLobby');
+      var login=document.getElementById('loginScreen');
+      var main=document.getElementById('gameScreen');
+      if(login && login.classList.contains('hidden')===false) return;
+      if(lobby){
+        lobby.classList.remove('hidden');
+        lobby.style.display='';
+        lobby.style.visibility='visible';
+        lobby.style.opacity='1';
+      }
+      if(main && !window.__realRoomStarted){
+        main.classList.add('hidden');
+      }
+    }catch(e){}
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',openLobbyReliably,{once:true});
+  }else openLobbyReliably();
+  window.addEventListener('load',openLobbyReliably);
 })();
 </script>
 
