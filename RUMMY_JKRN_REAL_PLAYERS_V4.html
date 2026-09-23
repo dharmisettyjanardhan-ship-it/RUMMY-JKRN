@@ -1723,10 +1723,10 @@ html, body {
 <style id="jkrn-single-group-style">
 #groupButton {
   display: none;
-  position: fixed !important;
-  left: 50% !important;
-  bottom: 28% !important;
-  transform: translateX(-50%) !important;
+  position: relative !important;
+  left: auto !important;
+  bottom: auto !important;
+  transform: none !important;
   z-index: 99999 !important;
   min-width: 120px !important;
   padding: 10px 24px !important;
@@ -1735,10 +1735,10 @@ html, body {
   font-weight: 900 !important;
 }
 @media (orientation: landscape) and (max-height: 700px) {
-  #groupButton { bottom: 25% !important; }
+  #groupButton { bottom: auto !important; }
 }
 @media (orientation: landscape) and (max-height: 520px) {
-  #groupButton { bottom: 20% !important; }
+  #groupButton { bottom: auto !important; }
 }
 </style>
 
@@ -2087,6 +2087,7 @@ body{
  .left-controls button,.action-buttons button{width:92px;min-width:92px;height:36px;padding:6px 7px;font-size:9px}
 }
 </style>
+
 </head>
 <body onload="initAutoGame()">
 
@@ -2221,7 +2222,8 @@ body{
 
     <div class="left-controls">
         <button class="btn-drop" id="dropButton" onclick="dropGame()">Drop</button>
-        <button class="btn-auto-sort" onclick="autoSortCards()">Auto Sort</button>
+        <button class="btn-auto-sort" id="autoSortButton" onclick="autoSortCards()">Auto Sort</button>
+        <button class="btn-group" id="groupButton" onclick="groupSelectedCards()">Group</button>
     </div>
 
     <div class="player-area" id="playerArea">
@@ -2233,7 +2235,6 @@ body{
     </div>
 
     <div class="action-buttons">
-        <button class="btn-group" id="groupButton" onclick="groupSelectedCards()">Group</button>
         <button class="btn-discard" id="discardButton" onclick="discardCard()">Discard</button>
         <button class="btn-declare" id="declareButton" onclick="declareGame()">Declare</button>
     </div>
@@ -3099,24 +3100,27 @@ function updateUI() {
     const discardBtn = document.getElementById("discardButton");
     if (discardBtn) {
         const handCount = playerGroups.flat().length;
-        const showDiscard = onlineMyTurn && playerHasDrawn && handCount === 14 && !onlineEliminated;
-        discardBtn.style.setProperty("display", showDiscard ? "inline-flex" : "none", "important");
-        discardBtn.disabled = !(showDiscard && selectedCards.length === 1);
+        const canDiscard = onlineMyTurn && playerHasDrawn && handCount === 14 && !onlineEliminated && selectedCards.length === 1;
+        discardBtn.style.setProperty("display", "inline-flex", "important");
+        discardBtn.disabled = !canDiscard;
+        discardBtn.classList.toggle("action-ready", canDiscard);
     }
     const declareBtn = document.getElementById("declareButton");
     if (declareBtn) {
         const handCount = playerGroups.flat().length;
-        const showDeclare = onlineMyTurn && playerHasDrawn && handCount === 14 && !onlineEliminated;
-        declareBtn.style.setProperty("display", showDeclare ? "block" : "none", "important");
-        declareBtn.disabled = !showDeclare;
+        const canDeclare = onlineMyTurn && playerHasDrawn && handCount === 14 && !onlineEliminated;
+        declareBtn.style.setProperty("display", "inline-flex", "important");
+        declareBtn.disabled = !canDeclare;
+        declareBtn.classList.toggle("action-ready", canDeclare);
     }
     const groupBtn = document.getElementById("groupButton");
     if (groupBtn) {
         const canGroup = selectedCards.length >= 2 && !isEliminated(0);
-        groupBtn.style.display = canGroup ? "inline-flex" : "none";
-        groupBtn.style.visibility = canGroup ? "visible" : "hidden";
+        groupBtn.style.setProperty("display", "inline-flex", "important");
+        groupBtn.style.visibility = "visible";
         groupBtn.disabled = !canGroup;
-        groupBtn.innerText = canGroup ? `GROUP ${selectedCards.length} CARDS` : "GROUP";
+        groupBtn.classList.toggle("action-ready", canGroup);
+        groupBtn.innerText = canGroup ? `GROUP ${selectedCards.length}` : "GROUP";
     }
 
     const dropBtn = document.getElementById("dropButton");
@@ -3286,9 +3290,11 @@ function createNewGroupWithCard(fromGIdx, fromCIdx) {
 }
 
 function selectCard(gIdx, cIdx) {
-    const exIdx = selectedCards.findIndex(s => s.gIdx===gIdx && s.cIdx===cIdx);
+    const card = playerGroups[gIdx] && playerGroups[gIdx][cIdx];
+    if (!card) return;
+    const exIdx = selectedCards.findIndex(s => s.id === card.id);
     if (exIdx > -1) selectedCards.splice(exIdx, 1);
-    else selectedCards.push({gIdx, cIdx});
+    else selectedCards.push({gIdx, cIdx, id: card.id});
     displayPlayer();
     updateUI();
 }
@@ -3339,12 +3345,12 @@ function groupSelectedCards() {
     playSound('group');
     const picked = [];
     const remaining = [];
-    const selSet = new Set(selectedCards.map(s => `${s.gIdx}_${s.cIdx}`));
+    const selSet = new Set(selectedCards.map(s => s.id).filter(Boolean));
 
     playerGroups.forEach((group, gIdx) => {
         const rest = [];
         group.forEach((card, cIdx) => {
-            if (selSet.has(`${gIdx}_${cIdx}`)) picked.push(card);
+            if (selSet.has(card.id)) picked.push(card);
             else rest.push(card);
         });
         if (rest.length) remaining.push(rest);
@@ -3377,8 +3383,13 @@ function drawFromDiscard() {
 
 function discardCard() {
     if (currentPlayer !== 0 || !playerHasDrawn || selectedCards.length !== 1 || isEliminated(0)) return;
-    const s = selectedCards[0];
-    const card = playerGroups[s.gIdx].splice(s.cIdx, 1)[0];
+    const selectedId = selectedCards[0].id;
+    let card = null;
+    for (let gIdx = 0; gIdx < playerGroups.length && !card; gIdx++) {
+        const cIdx = playerGroups[gIdx].findIndex(c => c && c.id === selectedId);
+        if (cIdx >= 0) card = playerGroups[gIdx].splice(cIdx, 1)[0];
+    }
+    if (!card) return;
     discardPile.push(card);
     playSound('discard');
     playerGroups = playerGroups.filter(g => g.length > 0);
@@ -3993,80 +4004,6 @@ function openGlobalScoreboardModal() {
 
 
 
-<script id="jkrn-single-group-js">
-(function () {
-  let lastGroupState = false;
-
-  function syncGroupButton() {
-    const btn = document.getElementById("groupButton");
-    if (!btn) return;
-
-    const count = (typeof selectedCards !== "undefined" && Array.isArray(selectedCards))
-      ? selectedCards.length : 0;
-
-    const shouldShow = count >= 2;
-
-    if (shouldShow !== lastGroupState) {
-      btn.style.display = shouldShow ? "inline-flex" : "none";
-      btn.style.visibility = shouldShow ? "visible" : "hidden";
-      btn.disabled = !shouldShow;
-      lastGroupState = shouldShow;
-    }
-
-    // Always keep the label simple.
-    btn.textContent = "GROUP";
-  }
-
-  // Run after the game's own card-selection handler.
-  document.addEventListener("click", function () {
-    setTimeout(syncGroupButton, 0);
-  }, true);
-
-  document.addEventListener("touchend", function () {
-    setTimeout(syncGroupButton, 0);
-  }, true);
-
-  document.addEventListener("pointerup", function () {
-    setTimeout(syncGroupButton, 0);
-  }, true);
-
-  window.addEventListener("load", syncGroupButton);
-  window.addEventListener("resize", syncGroupButton);
-  window.addEventListener("orientationchange", function () {
-    setTimeout(syncGroupButton, 100);
-  });
-})();
-</script>
-
-
-<script id="jkrn-action-buttons-near-cards-js">
-(function () {
-  function positionActionButtons() {
-    const left = document.querySelector('.left-controls');
-    const right = document.querySelector('.action-buttons');
-    const h = window.innerHeight;
-
-    [left, right].forEach(function(el) {
-      if (!el) return;
-      el.style.bottom = h <= 520 ? '11%' : (h <= 700 ? '15%' : '18%');
-    });
-
-    const group = document.getElementById('groupButton');
-    if (group) {
-      group.style.bottom = h <= 520 ? '21%' : (h <= 700 ? '25%' : '28%');
-    }
-  }
-
-  window.addEventListener('load', positionActionButtons);
-  window.addEventListener('resize', positionActionButtons);
-  window.addEventListener('orientationchange', function () {
-    setTimeout(positionActionButtons, 100);
-    setTimeout(positionActionButtons, 500);
-  });
-})();
-</script>
-
-
 <style id="FINAL_ACTION_BUTTON_SIZE_POSITION">
 /* FINAL: large action buttons close to player's cards */
 .left-controls,
@@ -4200,124 +4137,9 @@ button[onclick*="groupSelected"] {
 </style>
 
 
-<style id="FINAL_CARDS_AND_GROUP_ANYTIME">
-/* Cards: a little bigger */
-.card {
-  transform: scale(1.14) !important;
-  transform-origin: center bottom !important;
-}
-.player-hand,
-.hand,
-.my-cards {
-  gap: 8px !important;
-}
 
-/* GROUP visibility is controlled by selectedCards.length below. */
 
-/* The actual game button is controlled by updateUI; the final floating
-   GROUP button below is the reliable mobile/desktop fallback. */
-#finalGroupAnytimeBtn {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(to bottom, #fdd835, #fbc02d) !important;
-  color: #000 !important;
-  border: 2px solid #fff !important;
-  box-shadow: 0 0 14px rgba(255,215,0,.65) !important;
-  cursor: pointer !important;
-}
 
-/* Make a single GROUP button appear from the selected-card count. */
-#finalGroupAnytimeBtn {
-  position: fixed !important;
-  right: 2% !important;
-  bottom: 27% !important;
-  z-index: 10050 !important;
-  min-width: 155px !important;
-  width: 155px !important;
-  min-height: 62px !important;
-  height: 62px !important;
-  padding: 12px 18px !important;
-  font-size: 20px !important;
-  font-weight: 800 !important;
-  border-radius: 12px !important;
-  box-sizing: border-box !important;
-}
-
-@media (max-width: 900px) {
-  .card { transform: scale(1.10) !important; }
-  #finalGroupAnytimeBtn {
-    right: 2% !important;
-    bottom: 25% !important;
-    min-width: 135px !important;
-    width: 135px !important;
-    min-height: 54px !important;
-    height: 54px !important;
-    font-size: 17px !important;
-  }
-}
-</style>
-
-<script id="FINAL_GROUP_ANYTIME_SCRIPT">
-(function(){
-  function getSelectedCount(){
-    // Use the game's real selection state first. The cards do not need
-    // a CSS 'selected' class for the GROUP button to appear.
-    if (Array.isArray(window.selectedCards)) return window.selectedCards.length;
-    try {
-      if (typeof selectedCards !== 'undefined' && Array.isArray(selectedCards)) {
-        return selectedCards.length;
-      }
-    } catch(e) {}
-    const selectors = [
-      '.card.selected', '.card-select.selected',
-      '.selected-card', '.card.selected-card'
-    ];
-    let found = [];
-    for (const s of selectors) {
-      document.querySelectorAll(s).forEach(el => {
-        if (!found.includes(el)) found.push(el);
-      });
-    }
-    return found.length;
-  }
-
-  function ensureGroupButton(){
-    let btn = document.getElementById('finalGroupAnytimeBtn');
-    if (!btn) {
-      btn = document.createElement('button');
-      btn.id = 'finalGroupAnytimeBtn';
-      btn.type = 'button';
-      btn.textContent = 'GROUP';
-      btn.onclick = function(){
-        if (typeof groupSelectedCards === 'function') {
-          groupSelectedCards();
-        } else if (typeof groupSelected === 'function') {
-          groupSelected();
-        } else if (typeof groupCards === 'function') {
-          groupCards();
-        }
-      };
-      document.body.appendChild(btn);
-    }
-    btn.style.display = getSelectedCount() >= 2 ? 'block' : 'none';
-  }
-
-  // Observe selection changes so GROUP can be used at any time.
-  const obs = new MutationObserver(ensureGroupButton);
-  obs.observe(document.body, {subtree:true, attributes:true, attributeFilter:['class']});
-
-  document.addEventListener('click', function(){
-    setTimeout(ensureGroupButton, 30);
-  }, true);
-  document.addEventListener('touchend', function(){
-    setTimeout(ensureGroupButton, 30);
-  }, true);
-
-  setInterval(ensureGroupButton, 250);
-  window.addEventListener('load', ensureGroupButton);
-})();
-</script>
 
 
 <style id="FINAL_SCOREBOARD_CARDS_VISIBLE">
@@ -4380,65 +4202,8 @@ button[onclick*="groupSelected"] {
 </style>
 
 
-<style id="GROUP_BUTTON_FINAL_FIX">
-#groupButton {
-  display: none !important;
-  position: fixed !important;
-  right: 2% !important;
-  bottom: 27% !important;
-  z-index: 10060 !important;
-  min-width: 155px !important;
-  width: 155px !important;
-  min-height: 62px !important;
-  height: 62px !important;
-  padding: 12px 18px !important;
-  font-size: 20px !important;
-  font-weight: 900 !important;
-  border-radius: 12px !important;
-  background: linear-gradient(to bottom, #fdd835, #fbc02d) !important;
-  color: #000 !important;
-}
-@media (max-width:900px) {
-  #groupButton {
-    right: 2% !important;
-    bottom: 25% !important;
-    min-width: 135px !important;
-    width: 135px !important;
-    min-height: 54px !important;
-    height: 54px !important;
-    font-size: 17px !important;
-  }
-}
-</style>
-<script id="GROUP_BUTTON_FINAL_STATE_FIX">
-(function(){
-  function syncGroupButton(){
-    let count = 0;
-    try {
-      if (typeof selectedCards !== 'undefined' && Array.isArray(selectedCards)) {
-        count = selectedCards.length;
-      }
-    } catch(e) {}
-    const btn = document.getElementById('groupButton');
-    if (btn) {
-      const show = count >= 2;
-      btn.style.setProperty('display', show ? 'inline-flex' : 'none', 'important');
-      btn.style.setProperty('visibility', show ? 'visible' : 'hidden', 'important');
-      btn.disabled = !show;
-      btn.textContent = show ? 'GROUP ' + count + ' CARDS' : 'GROUP';
-    }
-    const backup = document.getElementById('finalGroupAnytimeBtn');
-    if (backup) {
-      backup.style.display = count >= 2 ? 'block' : 'none';
-    }
-  }
 
-  document.addEventListener('click', function(){ setTimeout(syncGroupButton, 20); }, true);
-  document.addEventListener('touchend', function(){ setTimeout(syncGroupButton, 20); }, true);
-  setInterval(syncGroupButton, 100);
-  window.addEventListener('load', syncGroupButton);
-})();
-</script>
+
 
 
 
@@ -4787,66 +4552,1399 @@ button[onclick*="groupSelected"] {
 </script>
 
 
-<style id="jkrn-v27-hand-tools-visible">
-/* V27: Hand tools must always be visible for the local player. */
-.left-controls, .action-buttons {
-  display:flex !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  pointer-events:auto !important;
-  z-index:10020 !important;
+
+
+
+
+<!-- JKRN FINAL V35: CLEAN ACTION CONTROLS + REAL CARD DISCARD -->
+<style id="jkrn-v35-clean-controls">
+/* Compact controls with deliberate spacing. No animation, no position polling. */
+.left-controls,
+.action-buttons{
+  position:absolute!important;
+  bottom:18px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:12px!important;
+  z-index:60000!important;
+  pointer-events:auto!important;
 }
-.left-controls .btn-auto-sort,
-button.btn-auto-sort,
-button[onclick*="autoSortCards"] {
-  display:flex !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  pointer-events:auto !important;
-  min-width:150px !important;
-  min-height:58px !important;
-  align-items:center !important;
-  justify-content:center !important;
+.left-controls{left:22px!important;right:auto!important;}
+.action-buttons{right:22px!important;left:auto!important;}
+.left-controls button,
+.action-buttons button{
+  width:126px!important;
+  min-width:126px!important;
+  height:42px!important;
+  min-height:42px!important;
+  padding:7px 10px!important;
+  margin:0!important;
+  border-radius:8px!important;
+  font-size:12px!important;
+  line-height:1.05!important;
+  font-weight:900!important;
+  transition:none!important;
+  animation:none!important;
+  transform:none!important;
 }
-#groupButton,
-button.btn-group,
-button[onclick*="groupSelectedCards"] {
-  display:flex !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  pointer-events:auto !important;
-  min-width:150px !important;
-  min-height:58px !important;
-  align-items:center !important;
-  justify-content:center !important;
-  z-index:10030 !important;
+.left-controls #groupButton{
+  position:static!important;
+  order:3!important;
+  display:none!important;
+  visibility:hidden!important;
+  opacity:1!important;
+  transform:none!important;
+  animation:none!important;
 }
-/* Keep GROUP available regardless of whose turn it is; it becomes disabled only
-   when fewer than two cards are selected. */
-@media (max-width:900px){
-  .left-controls .btn-auto-sort,
-  button.btn-auto-sort,
-  button[onclick*="autoSortCards"],
-  #groupButton,
-  button.btn-group,
-  button[onclick*="groupSelectedCards"]{
-    min-width:125px !important;
-    min-height:50px !important;
-    font-size:16px !important;
-  }
+.left-controls #groupButton.jkrn-v35-ready{
+  display:inline-flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  box-shadow:0 0 14px rgba(255,215,0,.85)!important;
+}
+#dropButton{order:1!important;}
+.left-controls .btn-auto-sort{order:2!important;}
+.action-buttons #discardButton{order:1!important;}
+.action-buttons #declareButton{order:2!important;}
+.action-buttons #discardButton{
+  display:inline-flex!important;
+  visibility:visible!important;
+  opacity:.45!important;
+  pointer-events:auto!important;
+}
+.action-buttons #discardButton.jkrn-v35-ready{
+  opacity:1!important;
+  box-shadow:0 0 14px rgba(33,150,243,.95)!important;
+  border:2px solid #fff!important;
+}
+.action-buttons #discardButton:disabled{cursor:not-allowed!important;}
+.action-buttons #declareButton{display:block!important;}
+#playerGroupsContainer .cards-in-group .card + .card{margin-left:-46px!important;}
+#playerGroupsContainer{gap:7px!important;}
+@media(max-width:900px){
+  .left-controls{left:10px!important;bottom:14px!important;}
+  .action-buttons{right:10px!important;bottom:14px!important;}
+  .left-controls button,.action-buttons button{width:105px!important;min-width:105px!important;height:38px!important;min-height:38px!important;font-size:10px!important;}
+  #playerGroupsContainer .cards-in-group .card + .card{margin-left:-34px!important;}
 }
 </style>
-<script id="jkrn-v27-hand-tools-visible-js">
+<script id="jkrn-v35-clean-controls-js">
 (function(){
-  function fixHandTools(){
-    const auto=document.querySelector('.left-controls .btn-auto-sort, button.btn-auto-sort, button[onclick*="autoSortCards"]');
-    if(auto){auto.style.setProperty('display','flex','important');auto.style.setProperty('visibility','visible','important');auto.style.setProperty('opacity','1','important');auto.style.setProperty('pointer-events','auto','important');}
-    let group=document.getElementById('groupButton') || document.querySelector('button.btn-group, button[onclick*="groupSelectedCards"]');
-    if(group){group.style.setProperty('display','flex','important');group.style.setProperty('visibility','visible','important');group.style.setProperty('opacity','1','important');group.style.setProperty('pointer-events','auto','important');}
+  'use strict';
+  function mySeat(){ return window.__realRoomStarted && Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : 0; }
+  function online(){ return !!window.__realRoomStarted; }
+  function myTurn(){ return !gameOver && currentPlayer===mySeat() && !(Array.isArray(droppedThisDeal)&&droppedThisDeal[mySeat()]); }
+  function elim(){
+    if(online() && typeof window.__onlineEliminated==='boolean') return window.__onlineEliminated;
+    return typeof isEliminated==='function' ? !!isEliminated(0) : false;
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',fixHandTools);else fixHandTools();
-  window.addEventListener('load',fixHandTools);
-  setInterval(fixHandTools,500);
+  function handCount(){ return Array.isArray(playerGroups) ? playerGroups.flat().filter(Boolean).length : 0; }
+  function moveGroupToLeft(){
+    const left=document.querySelector('.left-controls'), group=document.getElementById('groupButton');
+    if(left && group && group.parentElement!==left) left.appendChild(group);
+  }
+  function selectedCard(){
+    if(!Array.isArray(selectedCards) || selectedCards.length!==1) return null;
+    const s=selectedCards[0];
+    if(s.id){ const byId=playerGroups.flat().find(c=>c&&c.id===s.id); if(byId) return byId; }
+    const g=playerGroups[s.gIdx];
+    return g && g[s.cIdx] ? g[s.cIdx] : null;
+  }
+  function syncControls(){
+    moveGroupToLeft();
+    const group=document.getElementById('groupButton');
+    const discard=document.getElementById('discardButton');
+    const drop=document.getElementById('dropButton');
+    const declare=document.getElementById('declareButton');
+    const e=elim(), turn=myTurn(), drawn=!!playerHasDrawn, n=handCount(), sc=Array.isArray(selectedCards)?selectedCards.length:0;
+    if(group){
+      const ok=sc>=2 && !e;
+      group.classList.toggle('jkrn-v35-ready',ok);
+      group.disabled=!ok;
+      group.textContent='GROUP';
+      group.style.removeProperty('left'); group.style.removeProperty('right'); group.style.removeProperty('top'); group.style.removeProperty('bottom');
+    }
+    if(discard){
+      const ok=turn && drawn && n===14 && sc===1 && !e;
+      discard.disabled=!ok;
+      discard.classList.toggle('jkrn-v35-ready',ok);
+      discard.style.setProperty('display','inline-flex','important');
+      discard.style.setProperty('visibility','visible','important');
+    }
+    if(drop){
+      const ok=turn && !drawn && !e;
+      drop.disabled=!ok;
+    }
+    if(declare){
+      const ok=turn && drawn && n===14 && !e;
+      declare.disabled=!ok;
+      declare.style.setProperty('display','block','important');
+    }
+  }
+  // Correct selection binding: use the real global lexical selectedCards, not window.selectedCards.
+  window.selectCard=function(gIdx,cIdx){
+    const g=playerGroups && playerGroups[gIdx], card=g && g[cIdx]; if(!card) return;
+    const id=card.id || null;
+    let i=-1;
+    for(let k=0;k<selectedCards.length;k++){
+      const s=selectedCards[k];
+      if((id && s.id===id) || (!id && s.gIdx===gIdx && s.cIdx===cIdx)){ i=k; break; }
+    }
+    if(i>=0) selectedCards.splice(i,1); else selectedCards.push({gIdx,cIdx,id});
+    updateUI();
+  };
+  // Correct discard binding for both local and real-player online mode.
+  window.discardCard=function(){
+    if(!myTurn() || !playerHasDrawn || elim() || selectedCards.length!==1) return;
+    const card=selectedCard(); if(!card) return;
+    if(online()){
+      if(!window.onlineSocket || !card.id) return;
+      window.onlineSocket.emit('discardCard',{cardId:card.id});
+      return;
+    }
+    if(handCount()!==14 || currentPlayer!==0) return;
+    let found=false;
+    for(let gi=0;gi<playerGroups.length && !found;gi++){
+      const ci=playerGroups[gi].findIndex(c=>c===card || (card.id && c.id===card.id));
+      if(ci>=0){ playerGroups[gi].splice(ci,1); found=true; }
+    }
+    if(!found) return;
+    if(Array.isArray(discardPile)) discardPile.push(card);
+    playerGroups=playerGroups.filter(g=>g&&g.length);
+    selectedCards=[];
+    playerHasDrawn=false;
+    try{ if(typeof playSound==='function') playSound('discard'); }catch(e){}
+    updateUI();
+    if(typeof nextTurn==='function') nextTurn();
+  };
+  // One update wrapper only. No intervals, no click timers, no blinking logic.
+  const oldUpdate=window.updateUI;
+  if(typeof oldUpdate==='function' && !oldUpdate.__jkrnV35){
+    function wrapped(){ const r=oldUpdate.apply(this,arguments); syncControls(); return r; }
+    wrapped.__jkrnV35=true;
+    window.updateUI=wrapped;
+  }
+  function boot(){ moveGroupToLeft(); syncControls(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot,{once:true}); else boot();
+  window.addEventListener('load',boot,{once:true});
+  window.jkrnV35Sync=syncControls;
+})();
+</script>
+
+
+<style id="jkrn-v37-discard-final">
+/* V37 FINAL: DISCARD must become available immediately after 14th card.
+   Selection is required only when the user actually presses DISCARD. */
+#discardButton{
+  display:inline-flex!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+  transition:none!important;
+  animation:none!important;
+}
+#discardButton.jkrn-v37-ready{
+  opacity:1!important;
+  filter:none!important;
+  background:linear-gradient(#2196f3,#0d47a1)!important;
+  color:#fff!important;
+  border:2px solid #d9efff!important;
+  box-shadow:0 0 18px rgba(33,150,243,.9),0 5px 12px rgba(0,0,0,.65)!important;
+  cursor:pointer!important;
+}
+#discardButton.jkrn-v37-selected{
+  background:linear-gradient(#00bcd4,#006064)!important;
+  box-shadow:0 0 20px rgba(0,229,255,.95),0 5px 12px rgba(0,0,0,.65)!important;
+}
+#discardButton.jkrn-v37-disabled{
+  opacity:.45!important;
+  filter:saturate(.55)!important;
+  cursor:not-allowed!important;
+}
+</style>
+<script id="jkrn-v37-discard-final-js">
+(function(){
+  'use strict';
+  function online(){ return !!window.__realRoomStarted; }
+  function seat(){ return Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : 0; }
+  function myTurn(){
+    if (typeof gameOver!=='undefined' && gameOver) return false;
+    return currentPlayer===seat() && !(Array.isArray(droppedThisDeal)&&droppedThisDeal[seat()]);
+  }
+  function eliminated(){
+    if(online() && typeof window.__onlineEliminated==='boolean') return window.__onlineEliminated;
+    return typeof isEliminated==='function' ? !!isEliminated(0) : false;
+  }
+  function count(){ return Array.isArray(playerGroups) ? playerGroups.flat().filter(Boolean).length : 0; }
+  function selected(){
+    if(!Array.isArray(selectedCards)||selectedCards.length!==1) return null;
+    const x=selectedCards[0];
+    if(x.id){ const c=playerGroups.flat().find(v=>v&&v.id===x.id); if(c)return c; }
+    const g=playerGroups[x.gIdx];
+    return g&&g[x.cIdx]?g[x.cIdx]:null;
+  }
+  function sync(){
+    const b=document.getElementById('discardButton'); if(!b)return;
+    const available=myTurn() && !!playerHasDrawn && count()===14 && !eliminated();
+    const hasOne=Array.isArray(selectedCards)&&selectedCards.length===1&&!!selected();
+    b.disabled=!available;
+    b.classList.toggle('jkrn-v37-ready',available);
+    b.classList.toggle('jkrn-v37-selected',available&&hasOne);
+    b.classList.toggle('jkrn-v37-disabled',!available);
+    b.style.setProperty('display','inline-flex','important');
+    b.style.setProperty('visibility','visible','important');
+    b.style.setProperty('pointer-events','auto','important');
+  }
+  window.discardCard=function(){
+    const b=document.getElementById('discardButton');
+    if(!myTurn() || !playerHasDrawn || count()!==14 || eliminated()) return;
+    const c=selected();
+    if(!c){
+      const st=document.getElementById('status');
+      if(st) st.innerText='⚠️ 14 cards vachchayi. Discard cheyyadaniki oka card select cheyyandi.';
+      return;
+    }
+    if(online()){
+      if(!window.onlineSocket || !c.id)return;
+      window.onlineSocket.emit('discardCard',{cardId:c.id});
+      return;
+    }
+    let removed=null;
+    for(let gi=0;gi<playerGroups.length&&!removed;gi++){
+      const idx=playerGroups[gi].findIndex(v=>v&&(v.id===c.id||v===c));
+      if(idx>=0) removed=playerGroups[gi].splice(idx,1)[0];
+    }
+    if(!removed)return;
+    if(Array.isArray(discardPile))discardPile.push(removed);
+    playerGroups=playerGroups.filter(g=>g&&g.length);
+    selectedCards=[];
+    playerHasDrawn=false;
+    try{if(typeof playSound==='function')playSound('discard');}catch(e){}
+    if(typeof updateUI==='function')updateUI();
+    if(typeof nextTurn==='function')nextTurn();
+  };
+  const oldUpdate=window.updateUI;
+  if(typeof oldUpdate==='function' && !oldUpdate.__jkrnV37){
+    function wrapped(){const r=oldUpdate.apply(this,arguments);sync();return r;}
+    wrapped.__jkrnV37=true;
+    window.updateUI=wrapped;
+  }
+  function boot(){sync();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+  window.addEventListener('load',boot,{once:true});
+  window.jkrnV37SyncDiscard=sync;
+})();
+</script>
+
+
+<style id="jkrn-v38-discard-hardfix">
+#discardButton{display:inline-flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;animation:none!important;transition:none!important;}
+#discardButton.jkrn-v38-available{background:linear-gradient(180deg,#42a5f5,#1565c0)!important;border:2px solid #fff!important;box-shadow:0 0 16px rgba(33,150,243,.95),0 4px 10px rgba(0,0,0,.7)!important;color:#fff!important;cursor:pointer!important;}
+#discardButton.jkrn-v38-disabled{opacity:.42!important;filter:saturate(.5)!important;cursor:not-allowed!important;box-shadow:none!important;}
+</style>
+<script id="jkrn-v38-discard-hardfix-js">
+(function(){
+'use strict';
+function seat(){return Number.isInteger(window.__onlineMyIndex)?Number(window.__onlineMyIndex):0;}
+function online(){return !!window.__realRoomStarted;}
+function turn(){return !gameOver && currentPlayer===seat() && !(Array.isArray(droppedThisDeal)&&droppedThisDeal[seat()]);}
+function elim(){return online()&&typeof window.__onlineEliminated==='boolean'?window.__onlineEliminated:(typeof isEliminated==='function'?!!isEliminated(0):false);}
+function count(){return Array.isArray(playerGroups)?playerGroups.flat().filter(Boolean).length:0;}
+function syncV38(){
+ const b=document.getElementById('discardButton');if(!b)return;
+ const available=turn()&&!!playerHasDrawn&&count()===14&&!elim();
+ b.disabled=!available;
+ b.classList.toggle('jkrn-v38-available',available);
+ b.classList.toggle('jkrn-v38-disabled',!available);
+ b.style.setProperty('display','inline-flex','important');
+ b.style.setProperty('visibility','visible','important');
+ b.style.setProperty('pointer-events','auto','important');
+}
+window.jkrnV38SyncDiscard=syncV38;
+const prev=window.updateUI;
+if(typeof prev==='function'&&!prev.__jkrnV38){
+ function wrapped(){const r=prev.apply(this,arguments);syncV38();return r;}
+ wrapped.__jkrnV38=true;window.updateUI=wrapped;
+}
+window.addEventListener('load',syncV38,{once:true});
+})();
+</script>
+
+<style id="JKRN_DISCARD_CARD_FLY_V42">
+#jkrnDiscardFly{position:fixed!important;z-index:999999!important;pointer-events:none!important;margin:0!important;transform-origin:center center!important;will-change:transform,opacity!important;}
+#discardPile.jkrn-drop-target{box-shadow:0 0 24px rgba(0,229,255,.95)!important;border-color:#00e5ff!important;}
+</style>
+<script id="JKRN_DISCARD_CARD_FLY_V42_JS">
+(function(){
+'use strict';
+function cardFromSelection(){
+  if(!Array.isArray(window.selectedCards)||window.selectedCards.length!==1)return null;
+  const x=window.selectedCards[0];
+  const gs=window.playerGroups||[];
+  if(x&&x.id){const f=gs.flat().find(c=>c&&c.id===x.id);if(f)return f;}
+  return gs[x.gIdx]&&gs[x.gIdx][x.cIdx]||null;
+}
+function animateDiscard(cardEl){
+  const target=document.getElementById('discardPile');
+  if(!cardEl||!target)return;
+  const a=cardEl.getBoundingClientRect(), b=target.getBoundingClientRect();
+  if(!a.width||!a.height||!b.width||!b.height)return;
+  const clone=cardEl.cloneNode(true); clone.id='jkrnDiscardFly';
+  document.body.appendChild(clone);
+  clone.style.left=a.left+'px'; clone.style.top=a.top+'px';
+  clone.style.width=a.width+'px'; clone.style.height=a.height+'px';
+  clone.style.opacity='1';
+  target.classList.add('jkrn-drop-target');
+  requestAnimationFrame(function(){
+    const dx=(b.left+b.width/2)-(a.left+a.width/2), dy=(b.top+b.height/2)-(a.top+a.height/2);
+    clone.style.transition='transform .42s cubic-bezier(.2,.75,.25,1),opacity .42s ease';
+    clone.style.transform='translate('+dx+'px,'+dy+'px) scale(.62) rotate(7deg)';
+    clone.style.opacity='.25';
+  });
+  setTimeout(function(){clone.remove();target.classList.remove('jkrn-drop-target');},470);
+}
+function selectedElement(){
+  const id=window.selectedCards&&window.selectedCards[0]&&window.selectedCards[0].id;
+  if(id){const e=[...document.querySelectorAll('#playerGroupsContainer .card')].find(x=>x.dataset&&x.dataset.cardId===id||x.getAttribute('data-card-id')===id);if(e)return e;}
+  const sel=document.querySelector('#playerGroupsContainer .card.selected');
+  return sel||null;
+}
+function install(){
+  const b=document.getElementById('discardButton');
+  if(!b||b.dataset.v42)return;
+  b.dataset.v42='1';
+  b.addEventListener('click',function(e){
+    if(e.defaultPrevented)return;
+    const el=selectedElement(), card=cardFromSelection();
+    if(el&&card)animateDiscard(el);
+  },true);
+}
+function boot(){install();}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+window.addEventListener('load',boot);
+new MutationObserver(boot).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
+<!-- JKRN FINAL V43: AUTHORITATIVE MULTI-PLAYER DISCARD/TURN + OPEN CARD + LOCAL BOTTOM HAND -->
+<style id="jkrn-v43-multiplayer-final">
+  /* Every client sees their own cards in the bottom hand area. */
+  #playerArea, .player-area {
+    z-index: 9500 !important;
+  }
+  #playerGroupsContainer {
+    width: min(96vw, 1180px) !important;
+    justify-content: center !important;
+    align-items: flex-end !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+  }
+  #discardPile {
+    overflow: hidden !important;
+  }
+  #discardPile .jkrn-open-card {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 6px;
+    font-weight: 900;
+    text-align: left;
+  }
+  #discardPile .jkrn-open-rank { font-size: 16px; line-height: 1; }
+  #discardPile .jkrn-open-suit { font-size: 32px; align-self: center; margin: auto 0; }
+  #discardPile .jkrn-open-joker {
+    position: absolute; right: 3px; bottom: 3px;
+    background: #ffeb3b; color: #111; border: 1px solid #111;
+    border-radius: 50%; font-size: 11px; padding: 1px 3px;
+  }
+  #discardPile.jkrn-open-updated {
+    box-shadow: 0 0 20px rgba(0,229,255,.9) !important;
+    border-color: #00e5ff !important;
+  }
+.jkrn-v43-ready{opacity:1!important;background:linear-gradient(#2196f3,#0d47a1)!important;color:#fff!important;border:2px solid #fff!important;box-shadow:0 0 18px rgba(33,150,243,.9)!important;}
+</style>
+<script id="jkrn-v43-multiplayer-final-js">
+(function(){
+  'use strict';
+
+  function isOnline(){
+    return !!window.__realRoomStarted && !!window.onlineSocket;
+  }
+
+  function mySeat(){
+    return Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : 0;
+  }
+
+  function myTurn(){
+    return typeof currentPlayer !== 'undefined' && currentPlayer === mySeat();
+  }
+
+  function handCount(){
+    return Array.isArray(window.playerGroups)
+      ? window.playerGroups.flat().filter(Boolean).length : 0;
+  }
+
+  function getSelectedCard(){
+    if(!Array.isArray(window.selectedCards) || window.selectedCards.length !== 1) return null;
+    const s = window.selectedCards[0];
+    const gs = window.playerGroups || [];
+    if(s && s.id){
+      const found = gs.flat().find(c => c && c.id === s.id);
+      if(found) return found;
+    }
+    const g = gs[s.gIdx];
+    return g && g[s.cIdx] ? g[s.cIdx] : null;
+  }
+
+  function paintDiscard(card){
+    const dp = document.getElementById('discardPile');
+    if(!dp) return;
+
+    if(!card){
+      dp.innerHTML = '';
+      dp.classList.remove('jkrn-open-updated');
+      return;
+    }
+
+    const red = card.color === 'red' || card.suit === '♥' || card.suit === '♦';
+    dp.innerHTML =
+      '<div class="jkrn-open-card '+(red?'red':'black')+'">' +
+        '<div class="jkrn-open-rank">'+String(card.rank || '')+'<br>'+String(card.suit || '')+'</div>' +
+        '<div class="jkrn-open-suit">'+String(card.suit || '🃏')+'</div>' +
+        ((card.isPrintedJoker || card.isWild)
+          ? '<div class="jkrn-open-joker">👑</div>' : '') +
+      '</div>';
+
+    dp.classList.add('jkrn-open-updated');
+    clearTimeout(dp.__jkrnGlowTimer);
+    dp.__jkrnGlowTimer = setTimeout(function(){
+      dp.classList.remove('jkrn-open-updated');
+    }, 450);
+  }
+
+  function syncBottomHand(){
+    // The server sends the current player's complete hand only.
+    // Therefore every connected player sees THEIR OWN 13/14 cards at the bottom.
+    const area = document.querySelector('.player-area');
+    const groups = document.getElementById('playerGroupsContainer');
+    if(area) area.style.zIndex = '9500';
+    if(groups){
+      groups.style.display = 'flex';
+      groups.style.justifyContent = 'center';
+      groups.style.alignItems = 'flex-end';
+    }
+  }
+
+  function syncActionButtons(){
+    const discard = document.getElementById('discardButton');
+    if(!discard) return;
+
+    const active = isOnline() &&
+      myTurn() &&
+      !!window.playerHasDrawn &&
+      handCount() === 14 &&
+      !(window.__onlineEliminated || window.__onlineDropped);
+
+    // IMPORTANT: button becomes usable for PLAYER 2, 3, 4, 5, 6 exactly
+    // when their own server turn arrives. It does not depend on seat 0.
+    discard.disabled = !active;
+    discard.style.setProperty('display','inline-flex','important');
+    discard.style.setProperty('visibility','visible','important');
+    discard.style.setProperty('pointer-events','auto','important');
+    discard.classList.toggle('jkrn-v43-ready', active);
+  }
+
+  function sendAuthoritativeDiscard(){
+    if(!isOnline()) return false;
+    if(!myTurn()) return true;
+    if(!window.playerHasDrawn) return true;
+    if(handCount() !== 14) return true;
+    if(window.__onlineEliminated || window.__onlineDropped) return true;
+
+    const card = getSelectedCard();
+    const st = document.getElementById('status');
+
+    if(!card || !card.id){
+      if(st) st.textContent = '⚠️ 14 cards vachchayi. Discard cheyyadaniki 1 card select cheyyandi.';
+      return true;
+    }
+
+    window.onlineSocket.emit('discardCard', {cardId: card.id});
+    return true;
+  }
+
+  function installDiscardHandler(){
+    const b = document.getElementById('discardButton');
+    if(!b || b.__jkrnV43Installed) return;
+    b.__jkrnV43Installed = true;
+
+    // Capture phase prevents older V35/V37/V38 wrappers from sending a
+    // duplicate or seat-0-only discard request.
+    b.addEventListener('click', function(e){
+      if(!isOnline()) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      sendAuthoritativeDiscard();
+    }, true);
+  }
+
+  function installSocketHandlers(){
+    const s = window.onlineSocket;
+    if(!s || s.__jkrnV43Handlers) return;
+    s.__jkrnV43Handlers = true;
+
+    // Explicit server event: the new open card is rendered immediately.
+    s.on('discardUpdated', function(d){
+      if(d && d.card){
+        window.discardPile = [d.card];
+        paintDiscard(d.card);
+      }
+      syncActionButtons();
+    });
+
+    // Explicit server event: next player is authoritative.
+    s.on('turnChanged', function(d){
+      if(!d) return;
+      if(Number.isInteger(d.currentPlayer)) currentPlayer = d.currentPlayer;
+      window.__onlineTurnEndsAt = d.turnEndsAt || 0;
+      window.playerHasDrawn = false;
+      window.selectedCards = [];
+      syncBottomHand();
+      syncActionButtons();
+      if(typeof updateUI === 'function') updateUI();
+    });
+
+    // gameState remains the source of truth; render after the existing listener.
+    s.on('gameState', function(st){
+      if(!st) return;
+      if(st.discardTop) paintDiscard(st.discardTop);
+      else if(st.discardCount === 0) paintDiscard(null);
+      syncBottomHand();
+      setTimeout(syncActionButtons, 0);
+    });
+  }
+
+  function boot(){
+    installDiscardHandler();
+    installSocketHandlers();
+    syncBottomHand();
+    syncActionButtons();
+
+    // ensureOnlineSocket is already used by the original file.
+    // Retry only on DOM mutations, not with a permanent polling interval.
+    if(window.onlineSocket) installSocketHandlers();
+  }
+
+  // Re-apply when the original socket is created or the buttons are rendered.
+  const observer = new MutationObserver(function(){
+    installDiscardHandler();
+    installSocketHandlers();
+    syncBottomHand();
+    syncActionButtons();
+  });
+  observer.observe(document.documentElement, {childList:true, subtree:true});
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', boot, {once:true});
+  } else {
+    boot();
+  }
+  window.addEventListener('load', boot, {once:true});
+
+  window.jkrnV43PaintDiscard = paintDiscard;
+  window.jkrnV43Sync = function(){
+    installDiscardHandler();
+    installSocketHandlers();
+    syncBottomHand();
+    syncActionButtons();
+  };
+})();
+</script>
+
+
+<!-- JKRN V44: STRICT ONLINE TURN FLOW
+     DRAW (OPEN or CLOSED) -> 14 CARDS -> SELECT ONE -> DISCARD -> OPEN CARD -> NEXT PLAYER -->
+<script id="jkrn-v44-strict-turn-flow">
+(function(){
+  'use strict';
+  function online(){ return !!window.__realRoomStarted && !!window.onlineSocket; }
+  function me(){ return Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : -1; }
+  function myTurn(){ return online() && Number(window.currentPlayer) === me(); }
+  function drawn(){ return !!window.playerHasDrawn; }
+  function hand(){ return Array.isArray(window.playerGroups) ? window.playerGroups.flat().filter(Boolean) : []; }
+  function selected(){
+    if(!Array.isArray(window.selectedCards) || window.selectedCards.length!==1) return null;
+    const s=window.selectedCards[0];
+    if(s && s.id){ const c=hand().find(x=>x && x.id===s.id); if(c) return c; }
+    const g=window.playerGroups && window.playerGroups[s.gIdx];
+    return g && g[s.cIdx] ? g[s.cIdx] : null;
+  }
+  function status(t){ const e=document.getElementById('status'); if(e) e.textContent=t; }
+  function sync(){
+    const n=hand().length;
+    const drawOK=myTurn() && !drawn();
+    const discardOK=myTurn() && drawn() && n===14;
+    const d=document.querySelector('#centerArea .draw-pile');
+    const o=document.getElementById('discardPile');
+    if(d){ d.style.pointerEvents=drawOK?'auto':'none'; d.style.opacity=drawOK?'1':'.55'; d.title=drawOK?'CLOSED DECK: Draw one card':'Wait for your turn'; }
+    if(o){ o.style.pointerEvents=drawOK?'auto':'none'; o.style.opacity=drawOK?'1':'.55'; o.title=drawOK?'OPEN CARD: Take this card':'Wait for your turn'; }
+    const b=document.getElementById('discardButton');
+    if(b){ b.disabled=!discardOK; b.style.pointerEvents=discardOK?'auto':'none'; b.style.opacity=discardOK?'1':'.45'; }
+  }
+  function drawClosed(e){
+    if(!online()) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    if(!myTurn() || drawn()) return status('Wait for your turn.');
+    window.onlineSocket.emit('drawDeck');
+    status('Closed card taking...');
+  }
+  function drawOpen(e){
+    if(!online()) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    if(!myTurn() || drawn()) return status('Wait for your turn.');
+    const dp=document.getElementById('discardPile');
+    if(!dp || !window.__onlineState || !window.__onlineState.discardTop) return status('OPEN card empty.');
+    window.onlineSocket.emit('drawDiscard');
+    status('Open card taking...');
+  }
+  function doDiscard(e){
+    if(!online()) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    if(!myTurn()) return status('Wait for your turn.');
+    if(!drawn()) return status('First DRAW OPEN or CLOSED card.');
+    if(hand().length!==14) return status('You must have 14 cards before DISCARD.');
+    const c=selected();
+    if(!c || !c.id) return status('14 cards vachchayi. DISCARD cheyyadaniki 1 card select cheyyandi.');
+    window.onlineSocket.emit('discardCard',{cardId:c.id});
+    status('Discarding card...');
+  }
+  function install(){
+    const d=document.querySelector('#centerArea .draw-pile');
+    const o=document.getElementById('discardPile');
+    const b=document.getElementById('discardButton');
+    if(d && !d.__v44){ d.__v44=1; d.addEventListener('click',drawClosed,true); }
+    if(o && !o.__v44){ o.__v44=1; o.addEventListener('click',drawOpen,true); }
+    if(b && !b.__v44){ b.__v44=1; b.addEventListener('click',doDiscard,true); }
+    sync();
+  }
+  function socket(){
+    const s=window.onlineSocket;
+    if(!s || s.__v44) return;
+    s.__v44=1;
+    s.on('onlineActionAck',function(m){
+      if(m && m.action==='draw') status('14 cards. Select ONE card and press DISCARD.');
+      sync();
+    });
+    s.on('discardUpdated',function(d){
+      if(d && d.card && typeof window.jkrnV43PaintDiscard==='function') window.jkrnV43PaintDiscard(d.card);
+      sync();
+    });
+    s.on('turnChanged',function(){ sync(); });
+    s.on('gameState',function(st){
+      setTimeout(function(){
+        if(st && st.discardTop && typeof window.jkrnV43PaintDiscard==='function') window.jkrnV43PaintDiscard(st.discardTop);
+        sync();
+      },0);
+    });
+  }
+  function boot(){ install(); socket(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+  window.addEventListener('load',boot);
+  new MutationObserver(boot).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
+
+<!-- JKRN V45: VISIBLE OPEN/CLOSED DRAW OPTIONS + COMPACT BOTTOM HAND -->
+<style id="jkrn-v45-layout">
+/* Keep the draw area clearly visible to EVERY player. Only the active player can click. */
+#centerArea{
+  top:36%!important;
+  gap:14px!important;
+  z-index:5000!important;
+}
+#centerArea .pile-container{
+  min-width:100px!important;
+}
+#centerArea .pile-label{
+  font-size:13px!important;
+  font-weight:1000!important;
+  color:#fff!important;
+  text-shadow:0 2px 4px #000!important;
+  margin-bottom:4px!important;
+}
+#centerArea .pile{
+  width:82px!important;
+  height:112px!important;
+}
+#centerArea .draw-pile::after{font-size:42px!important}
+.jkrn-draw-action{
+  display:block!important;
+  width:96px!important;
+  margin:5px auto 0!important;
+  padding:5px 4px!important;
+  border:2px solid #fff!important;
+  border-radius:8px!important;
+  color:#fff!important;
+  font-size:10px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  cursor:pointer!important;
+  box-shadow:0 3px 8px rgba(0,0,0,.6)!important;
+}
+.jkrn-take-closed{
+  background:linear-gradient(#2f8df5,#064a9e)!important;
+}
+.jkrn-take-open{
+  background:linear-gradient(#f7c948,#b77a00)!important;
+  color:#111!important;
+}
+.jkrn-draw-action:disabled{
+  opacity:.38!important;
+  filter:grayscale(.5)!important;
+  cursor:not-allowed!important;
+}
+.jkrn-draw-action.jkrn-ready{
+  box-shadow:0 0 16px rgba(255,255,255,.8),0 3px 8px rgba(0,0,0,.6)!important;
+}
+#jkrnDrawHint{
+  position:absolute!important;
+  top:calc(36% + 126px)!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  z-index:5001!important;
+  background:rgba(0,0,0,.78)!important;
+  border:1px solid rgba(255,215,0,.7)!important;
+  color:#ffd94d!important;
+  padding:4px 10px!important;
+  border-radius:9px!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+  pointer-events:none!important;
+}
+/* Compact hand: 13 cards must stay together instead of spreading across the screen. */
+#playerArea{
+  bottom:72px!important;
+  width:min(94vw,1050px)!important;
+}
+#playerGroupsContainer{
+  width:100%!important;
+  max-width:100%!important;
+  gap:0!important;
+  padding:0!important;
+  overflow-x:hidden!important;
+  justify-content:center!important;
+}
+#playerGroupsContainer .card-group{
+  min-width:0!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+#playerGroupsContainer .cards-in-group{
+  min-height:92px!important;
+  gap:0!important;
+}
+#playerGroupsContainer .card{
+  width:60px!important;
+  min-width:60px!important;
+  height:92px!important;
+  font-size:14px!important;
+  padding:4px 4px 14px!important;
+}
+#playerGroupsContainer .cards-in-group .card + .card{
+  margin-left:-25px!important;
+}
+#playerGroupsContainer .card-center{font-size:22px!important}
+@media(max-width:1100px){
+  #centerArea{top:34%!important;gap:8px!important}
+  #centerArea .pile-container{min-width:82px!important}
+  #centerArea .pile{width:70px!important;height:96px!important}
+  .jkrn-draw-action{width:80px!important;font-size:9px!important}
+  #jkrnDrawHint{top:calc(34% + 108px)!important}
+  #playerArea{bottom:62px!important;width:98vw!important}
+  #playerGroupsContainer .card{width:52px!important;min-width:52px!important;height:80px!important}
+  #playerGroupsContainer .cards-in-group .card + .card{margin-left:-20px!important}
+  #playerGroupsContainer .card-center{font-size:19px!important}
+}
+@media(max-width:700px){
+  #centerArea{top:37%!important}
+  #centerArea .pile{width:58px!important;height:82px!important}
+  .jkrn-draw-action{width:68px!important;padding:4px 2px!important}
+  #jkrnDrawHint{display:none!important}
+  #playerArea{bottom:48px!important}
+  #playerGroupsContainer .card{width:44px!important;min-width:44px!important;height:68px!important;font-size:11px!important}
+  #playerGroupsContainer .cards-in-group .card + .card{margin-left:-16px!important}
+  #playerGroupsContainer .card-center{font-size:16px!important}
+}
+</style>
+
+<script id="jkrn-v45-layout-js">
+(function(){
+  'use strict';
+
+  function online(){
+    return !!window.__realRoomStarted && !!window.onlineSocket;
+  }
+  function mySeat(){
+    return Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : 0;
+  }
+  function myTurn(){
+    return typeof currentPlayer !== 'undefined' && currentPlayer === mySeat();
+  }
+  function drawn(){
+    return !!window.playerHasDrawn;
+  }
+
+  function ensureDrawButtons(){
+    const closed = document.querySelector('#centerArea .draw-pile');
+    const open = document.getElementById('discardPile');
+    if(!closed || !open) return;
+
+    const cc = closed.parentElement;
+    const oc = open.parentElement;
+
+    if(cc && !cc.querySelector('.jkrn-take-closed')){
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='jkrn-draw-action jkrn-take-closed';
+      b.textContent='TAKE CLOSED';
+      b.title='Take one card from Closed Deck';
+      b.addEventListener('click',function(e){
+        e.preventDefault(); e.stopPropagation();
+        if(!online()) return;
+        if(!myTurn()) return setStatus('WAIT FOR YOUR TURN');
+        if(drawn()) return setStatus('ALREADY DRAWN — DISCARD ONE CARD');
+        window.onlineSocket.emit('drawDeck');
+      },true);
+      cc.appendChild(b);
+    }
+
+    if(oc && !oc.querySelector('.jkrn-take-open')){
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='jkrn-draw-action jkrn-take-open';
+      b.textContent='TAKE OPEN';
+      b.title='Take the current Open Card';
+      b.addEventListener('click',function(e){
+        e.preventDefault(); e.stopPropagation();
+        if(!online()) return;
+        if(!myTurn()) return setStatus('WAIT FOR YOUR TURN');
+        if(drawn()) return setStatus('ALREADY DRAWN — DISCARD ONE CARD');
+        const st=window.__onlineState||{};
+        if(!st.discardTop) return setStatus('NO OPEN CARD');
+        window.onlineSocket.emit('drawDiscard');
+      },true);
+      oc.appendChild(b);
+    }
+
+    if(!document.getElementById('jkrnDrawHint')){
+      const hint=document.createElement('div');
+      hint.id='jkrnDrawHint';
+      hint.textContent='YOUR TURN → TAKE OPEN OR CLOSED CARD';
+      document.querySelector('.table')?.appendChild(hint);
+    }
+  }
+
+  function setStatus(t){
+    const s=document.getElementById('status');
+    if(s) s.textContent=t;
+  }
+
+  function sync(){
+    ensureDrawButtons();
+    const canDraw=online() && myTurn() && !drawn();
+    document.querySelectorAll('.jkrn-draw-action').forEach(function(b){
+      b.disabled=!canDraw;
+      b.classList.toggle('jkrn-ready',canDraw);
+    });
+    const hint=document.getElementById('jkrnDrawHint');
+    if(hint){
+      hint.textContent=canDraw ? 'YOUR TURN → TAKE OPEN OR CLOSED CARD' :
+        (drawn() ? '14 CARDS → SELECT 1 CARD AND DISCARD' : 'WAIT FOR YOUR TURN');
+      hint.style.color=canDraw ? '#7dff8a' : '#ffd94d';
+    }
+  }
+
+  function hookSocket(){
+    const s=window.onlineSocket;
+    if(!s || s.__jkrnV45) return;
+    s.__jkrnV45=true;
+    ['gameState','turnChanged','discardUpdated','onlineActionAck'].forEach(function(ev){
+      s.on(ev,function(){ setTimeout(sync,20); });
+    });
+  }
+
+  function boot(){
+    ensureDrawButtons();
+    sync();
+    hookSocket();
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+  else boot();
+  window.addEventListener('load',boot);
+  setInterval(function(){ensureDrawButtons();hookSocket();sync();},500);
+})();
+</script>
+
+
+<!-- JKRN V46: FORCE-VISIBLE DRAW OPTIONS -->
+<style id="jkrn-v46-force-visible">
+#jkrnDrawControls{
+  position:fixed!important;
+  z-index:2147483000!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  gap:6px!important;
+  pointer-events:auto!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+#jkrnDrawControls button{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:118px!important;
+  height:32px!important;
+  padding:2px 5px!important;
+  border:2px solid #fff!important;
+  border-radius:8px!important;
+  font-size:11px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  color:#fff!important;
+  text-shadow:0 1px 2px #000!important;
+  box-shadow:0 2px 10px #000,0 0 8px rgba(255,255,255,.25)!important;
+}
+#jkrnTakeClosed{background:#146bd1!important}
+#jkrnTakeOpen{background:#d69b08!important;color:#111!important;text-shadow:none!important}
+#jkrnDrawControls button:disabled{
+  opacity:.35!important;
+  cursor:not-allowed!important;
+  filter:grayscale(.45)!important;
+}
+#jkrnDrawControls .jkrn-mini-status{
+  background:rgba(0,0,0,.88)!important;
+  border:1px solid #ffd42a!important;
+  border-radius:7px!important;
+  padding:3px 7px!important;
+  color:#fff!important;
+  font-size:9px!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+}
+</style>
+<script id="jkrn-v46-force-visible-js">
+(function(){
+'use strict';
+
+function make(){
+  let box=document.getElementById('jkrnDrawControls');
+  if(!box){
+    box=document.createElement('div');
+    box.id='jkrnDrawControls';
+    box.innerHTML=
+      '<button id="jkrnTakeClosed" type="button">TAKE CLOSED CARD</button>'+
+      '<button id="jkrnTakeOpen" type="button">TAKE OPEN CARD</button>'+
+      '<div class="jkrn-mini-status" id="jkrnDrawStatus">WAITING FOR TURN</div>';
+    document.body.appendChild(box);
+
+    box.querySelector('#jkrnTakeClosed').onclick=function(e){
+      e.preventDefault(); e.stopPropagation();
+      if(!window.onlineSocket) return;
+      if(window.__onlineMyIndex !== currentPlayer) return setStatus('WAIT FOR YOUR TURN');
+      if(window.playerHasDrawn) return setStatus('DRAW DONE — DISCARD 1 CARD');
+      window.onlineSocket.emit('drawDeck');
+    };
+    box.querySelector('#jkrnTakeOpen').onclick=function(e){
+      e.preventDefault(); e.stopPropagation();
+      if(!window.onlineSocket) return;
+      if(window.__onlineMyIndex !== currentPlayer) return setStatus('WAIT FOR YOUR TURN');
+      if(window.playerHasDrawn) return setStatus('DRAW DONE — DISCARD 1 CARD');
+      const st=window.__onlineState||{};
+      if(!st.discardTop) return setStatus('NO OPEN CARD');
+      window.onlineSocket.emit('drawDiscard');
+    };
+  }
+  position();
+  state();
+}
+
+function position(){
+  const box=document.getElementById('jkrnDrawControls');
+  const closed=document.querySelector('#centerArea .draw-pile');
+  const open=document.getElementById('discardPile');
+  if(!box || (!closed && !open)) return;
+  const c=closed ? closed.getBoundingClientRect() : open.getBoundingClientRect();
+  const o=open ? open.getBoundingClientRect() : c;
+  const left=Math.max(8, Math.min(window.innerWidth-135, ((c.left+c.width/2 + o.left+o.width/2)/2)-59));
+  const top=Math.min(window.innerHeight-115, Math.max(250, Math.max(c.bottom,o.bottom)+8));
+  box.style.left=left+'px';
+  box.style.top=top+'px';
+}
+
+function state(){
+  const a=document.getElementById('jkrnTakeClosed');
+  const b=document.getElementById('jkrnTakeOpen');
+  const st=document.getElementById('jkrnDrawStatus');
+  if(!a||!b||!st) return;
+  const turn=(typeof currentPlayer!=='undefined' && window.__onlineMyIndex===currentPlayer);
+  const can=!!window.onlineSocket && turn && !window.playerHasDrawn;
+  a.disabled=!can;
+  b.disabled=!can || !(window.__onlineState && window.__onlineState.discardTop);
+  st.textContent=can?'YOUR TURN: CHOOSE A CARD':
+    (window.playerHasDrawn?'14 CARDS: DISCARD 1':'WAIT FOR YOUR TURN');
+  st.style.color=can?'#70ff78':'#ffd42a';
+}
+
+function boot(){
+  make();
+  state();
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+else boot();
+window.addEventListener('load',boot);
+window.addEventListener('resize',position);
+setInterval(boot,300);
+})();
+</script>
+
+
+<!-- JKRN V47: FORCE-VISIBLE GAME ACTION BAR -->
+<style id="jkrn-v47-actions-css">
+#jkrnActionBar{
+  position:fixed!important;
+  left:50%!important;
+  bottom:12px!important;
+  transform:translateX(-50%)!important;
+  z-index:2147483647!important;
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:10px!important;
+  width:auto!important;
+  max-width:96vw!important;
+  padding:8px 10px!important;
+  background:rgba(0,0,0,.88)!important;
+  border:2px solid #d9ad28!important;
+  border-radius:13px!important;
+  box-shadow:0 0 18px rgba(0,0,0,.9),0 0 10px rgba(255,205,40,.3)!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+}
+#jkrnActionBar button{
+  position:relative!important;
+  display:inline-flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:118px!important;
+  height:42px!important;
+  border:2px solid #fff!important;
+  border-radius:9px!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+  text-transform:uppercase!important;
+  cursor:pointer!important;
+  box-shadow:0 3px 10px rgba(0,0,0,.75)!important;
+}
+#jkrnV47Drop{background:linear-gradient(#777,#3b3b3b)!important;color:#fff!important}
+#jkrnV47Sort{background:linear-gradient(#35bd61,#08772e)!important;color:#fff!important}
+#jkrnV47Discard{background:linear-gradient(#42a5f5,#1263bb)!important;color:#fff!important}
+#jkrnV47Declare{background:linear-gradient(#ffae25,#e56700)!important;color:#fff!important}
+#jkrnActionBar button:disabled{
+  opacity:.38!important;
+  filter:grayscale(.7)!important;
+  cursor:not-allowed!important;
+  box-shadow:none!important;
+}
+@media(max-width:700px){
+  #jkrnActionBar{gap:4px!important;padding:5px!important;bottom:5px!important}
+  #jkrnActionBar button{width:76px!important;height:34px!important;font-size:9px!important}
+}
+</style>
+
+<script id="jkrn-v47-actions-js">
+(function(){
+'use strict';
+
+function original(id){ return document.getElementById(id); }
+
+function make(){
+  let bar=document.getElementById('jkrnActionBar');
+  if(!bar){
+    bar=document.createElement('div');
+    bar.id='jkrnActionBar';
+    bar.innerHTML=
+      '<button id="jkrnV47Drop" type="button">DROP</button>'+
+      '<button id="jkrnV47Sort" type="button">AUTO SORT</button>'+
+      '<button id="jkrnV47Discard" type="button">DISCARD</button>'+
+      '<button id="jkrnV47Declare" type="button">DECLARE</button>';
+    document.body.appendChild(bar);
+
+    const map=[
+      ['jkrnV47Drop','dropButton'],
+      ['jkrnV47Sort','autoSortButton'],
+      ['jkrnV47Discard','discardButton'],
+      ['jkrnV47Declare','declareButton']
+    ];
+
+    map.forEach(function(pair){
+      const proxy=document.getElementById(pair[0]);
+      proxy.addEventListener('click',function(e){
+        e.preventDefault(); e.stopPropagation();
+        const real=original(pair[1]);
+        if(!real || real.disabled) return;
+        real.click();
+      });
+    });
+  }
+  sync();
+}
+
+function sync(){
+  const pairs=[
+    ['jkrnV47Drop','dropButton'],
+    ['jkrnV47Sort','autoSortButton'],
+    ['jkrnV47Discard','discardButton'],
+    ['jkrnV47Declare','declareButton']
+  ];
+  pairs.forEach(function(p){
+    const proxy=document.getElementById(p[0]);
+    const real=original(p[1]);
+    if(!proxy) return;
+    if(real){
+      proxy.disabled=!!real.disabled;
+      proxy.title=real.disabled ? 'Not available now' : p[1];
+    }else{
+      proxy.disabled=true;
+    }
+  });
+}
+
+function boot(){
+  make();
+  sync();
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+else boot();
+window.addEventListener('load',boot);
+setInterval(sync,250);
+new MutationObserver(sync).observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:['disabled','class','style']});
+})();
+</script>
+
+
+<!-- JKRN V48: MODERN TABLE + OPEN DECK + MOVABLE HAND -->
+<style id="jkrn-v48-css">
+/* Modern central draw area */
+#centerArea{
+  position:absolute!important;
+  top:27%!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  gap:22px!important;
+  z-index:8000!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+#centerArea .pile-container{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  min-width:118px!important;
+  visibility:visible!important;
+}
+#centerArea .pile-label{
+  display:block!important;
+  color:#ffe35b!important;
+  font-size:14px!important;
+  font-weight:1000!important;
+  letter-spacing:.5px!important;
+  text-shadow:0 2px 4px #000!important;
+  margin-bottom:6px!important;
+}
+#centerArea .pile{
+  width:88px!important;
+  height:118px!important;
+  border:3px solid #e8bd35!important;
+  border-radius:13px!important;
+  box-shadow:0 5px 16px rgba(0,0,0,.7),0 0 15px rgba(255,210,50,.2)!important;
+  visibility:visible!important;
+}
+#centerArea .draw-pile{
+  background:linear-gradient(135deg,#173c68,#0b1b35)!important;
+}
+#discardPile{
+  background:#fff!important;
+  overflow:hidden!important;
+}
+#discardPile .card{
+  width:100%!important;
+  height:100%!important;
+  border-radius:9px!important;
+}
+#centerArea .jkrn-draw-action{
+  position:relative!important;
+  width:108px!important;
+  height:30px!important;
+  margin-top:6px!important;
+  border:2px solid #fff!important;
+  border-radius:8px!important;
+  font-size:10px!important;
+  font-weight:1000!important;
+  z-index:9000!important;
+}
+#centerArea .jkrn-take-closed{background:#126bd0!important}
+#centerArea .jkrn-take-open{background:#e1a914!important;color:#111!important}
+#centerArea .jkrn-draw-action:disabled{opacity:.35!important}
+
+/* Hand controls and hand position */
+#jkrnHandMover{
+  position:fixed!important;
+  right:16px!important;
+  bottom:76px!important;
+  z-index:2147483646!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:5px!important;
+  visibility:visible!important;
+}
+#jkrnHandMover button{
+  width:38px!important;
+  height:34px!important;
+  border:2px solid #fff!important;
+  border-radius:8px!important;
+  background:linear-gradient(#222,#070707)!important;
+  color:#ffd83d!important;
+  font-size:20px!important;
+  font-weight:1000!important;
+  cursor:pointer!important;
+  box-shadow:0 3px 10px #000!important;
+}
+#jkrnHandMover .label{
+  font-size:8px!important;
+  color:#fff!important;
+  text-align:center!important;
+  font-weight:900!important;
+}
+#playerArea{
+  bottom:var(--jkrn-hand-bottom,88px)!important;
+  transition:bottom .18s ease!important;
+}
+#playerGroupsContainer{
+  transform:translateY(var(--jkrn-hand-shift,0px))!important;
+  transition:transform .18s ease!important;
+}
+
+/* Keep action bar above the hand, not over the cards */
+#jkrnActionBar{
+  bottom:8px!important;
+}
+@media(max-width:700px){
+  #centerArea{top:25%!important;gap:8px!important}
+  #centerArea .pile{width:68px!important;height:92px!important}
+  #centerArea .pile-label{font-size:11px!important}
+  #centerArea .jkrn-draw-action{width:82px!important;height:26px!important;font-size:8px!important}
+  #jkrnHandMover{right:5px!important;bottom:88px!important}
+  #jkrnHandMover button{width:32px!important;height:30px!important}
+}
+</style>
+
+<script id="jkrn-v48-js">
+(function(){
+'use strict';
+let handShift=0;
+
+function makeMover(){
+  if(document.getElementById('jkrnHandMover')) return;
+  const box=document.createElement('div');
+  box.id='jkrnHandMover';
+  box.innerHTML='<div class="label">HAND</div>'+
+    '<button id="jkrnHandUp" type="button" title="Move hand up">▲</button>'+
+    '<button id="jkrnHandDown" type="button" title="Move hand down">▼</button>';
+  document.body.appendChild(box);
+
+  document.getElementById('jkrnHandUp').onclick=function(){
+    handShift=Math.max(-180,handShift-20);
+    apply();
+  };
+  document.getElementById('jkrnHandDown').onclick=function(){
+    handShift=Math.min(100,handShift+20);
+    apply();
+  };
+}
+
+function apply(){
+  document.documentElement.style.setProperty('--jkrn-hand-shift',handShift+'px');
+}
+
+function modernizeOpen(){
+  const open=document.getElementById('discardPile');
+  if(open){
+    open.style.visibility='visible';
+    open.style.opacity='1';
+    const label=open.parentElement && open.parentElement.querySelector('.pile-label');
+    if(label) label.textContent='OPEN DECK';
+  }
+  const closed=document.querySelector('#centerArea .draw-pile');
+  if(closed){
+    closed.style.visibility='visible';
+    closed.style.opacity='1';
+    const label=closed.parentElement && closed.parentElement.querySelector('.pile-label');
+    if(label) label.textContent='CLOSED DECK';
+  }
+}
+
+function boot(){
+  makeMover();
+  modernizeOpen();
+  apply();
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+else boot();
+window.addEventListener('load',boot);
+setInterval(boot,500);
+})();
+</script>
+
+
+<!-- JKRN V49: reliable lobby boot -->
+<script id="jkrn-v49-lobby-boot">
+(function(){
+  function openLobbyReliably(){
+    try{
+      var lobby=document.getElementById('onlineLobby');
+      var login=document.getElementById('loginScreen');
+      var main=document.getElementById('gameScreen');
+      if(login && login.classList.contains('hidden')===false) return;
+      if(lobby){
+        lobby.classList.remove('hidden');
+        lobby.style.display='';
+        lobby.style.visibility='visible';
+        lobby.style.opacity='1';
+      }
+      if(main && !window.__realRoomStarted){
+        main.classList.add('hidden');
+      }
+    }catch(e){}
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',openLobbyReliably,{once:true});
+  }else openLobbyReliably();
+  window.addEventListener('load',openLobbyReliably);
 })();
 </script>
 
@@ -5850,6 +6948,7 @@ window.jkrnV15JokerRules={
   #opp2{top:3%!important;}
 }
 </style>
+
 <script id="jkrn-v23-turn-seat-controls">
 (function(){
   const MAX=6;
@@ -6135,7 +7234,7 @@ window.jkrnV15JokerRules={
       memo.set(key(mask),best); return best;
     }
     const chosen=dfs(full), used=new Set(); chosen.forEach(c=>{for(let i=0;i<n;i++)if(c.m&(1<<i))used.add(i);});
-    const out=chosen.slice().sort((a,b)=>({pure:1,second:2,set:3}[a.k]-({pure:1,second:2,set:3}[b.k))||b.cnt-a.cnt).map(c=>order(c.g));
+    const out=chosen.slice().sort((a,b)=>({pure:1,second:2,set:3}[a.k]-({pure:1,second:2,set:3}[b.k]))||b.cnt-a.cnt).map(c=>order(c.g));
     const left=cards.filter((c,i)=>!used.has(i)); if(left.length) out.push(left.slice().sort((a,b)=>(LO[a.rank]||99)-(LO[b.rank]||99)));
     return out.length?out:[cards.slice()];
   }
@@ -6184,3 +7283,1445 @@ window.jkrnV15JokerRules={
   window.addEventListener('load',forceHandTools);
 })();
 </script>
+
+
+<!-- JKRN V34: SINGLE STABLE ACTION-CONTROL SYSTEM - NO BLINK / NO POLLING -->
+
+<!-- JKRN FINAL V35: CLEAN ACTION CONTROLS + REAL CARD DISCARD -->
+<style id="jkrn-v35-clean-controls">
+/* Compact controls with deliberate spacing. No animation, no position polling. */
+.left-controls,
+.action-buttons{
+  position:absolute!important;
+  bottom:18px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:12px!important;
+  z-index:60000!important;
+  pointer-events:auto!important;
+}
+.left-controls{left:22px!important;right:auto!important;}
+.action-buttons{right:22px!important;left:auto!important;}
+.left-controls button,
+.action-buttons button{
+  width:126px!important;
+  min-width:126px!important;
+  height:42px!important;
+  min-height:42px!important;
+  padding:7px 10px!important;
+  margin:0!important;
+  border-radius:8px!important;
+  font-size:12px!important;
+  line-height:1.05!important;
+  font-weight:900!important;
+  transition:none!important;
+  animation:none!important;
+  transform:none!important;
+}
+.left-controls #groupButton{
+  position:static!important;
+  order:3!important;
+  display:none!important;
+  visibility:hidden!important;
+  opacity:1!important;
+  transform:none!important;
+  animation:none!important;
+}
+.left-controls #groupButton.jkrn-v35-ready{
+  display:inline-flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  box-shadow:0 0 14px rgba(255,215,0,.85)!important;
+}
+#dropButton{order:1!important;}
+.left-controls .btn-auto-sort{order:2!important;}
+.action-buttons #discardButton{order:1!important;}
+.action-buttons #declareButton{order:2!important;}
+.action-buttons #discardButton{
+  display:inline-flex!important;
+  visibility:visible!important;
+  opacity:.45!important;
+  pointer-events:auto!important;
+}
+.action-buttons #discardButton.jkrn-v35-ready{
+  opacity:1!important;
+  box-shadow:0 0 14px rgba(33,150,243,.95)!important;
+  border:2px solid #fff!important;
+}
+.action-buttons #discardButton:disabled{cursor:not-allowed!important;}
+.action-buttons #declareButton{display:block!important;}
+#playerGroupsContainer .cards-in-group .card + .card{margin-left:-46px!important;}
+#playerGroupsContainer{gap:7px!important;}
+@media(max-width:900px){
+  .left-controls{left:10px!important;bottom:14px!important;}
+  .action-buttons{right:10px!important;bottom:14px!important;}
+  .left-controls button,.action-buttons button{width:105px!important;min-width:105px!important;height:38px!important;min-height:38px!important;font-size:10px!important;}
+  #playerGroupsContainer .cards-in-group .card + .card{margin-left:-34px!important;}
+}
+</style>
+<script id="jkrn-v35-clean-controls-js">
+(function(){
+  'use strict';
+  function mySeat(){ return window.__realRoomStarted && Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : 0; }
+  function online(){ return !!window.__realRoomStarted; }
+  function myTurn(){ return !gameOver && currentPlayer===mySeat() && !(Array.isArray(droppedThisDeal)&&droppedThisDeal[mySeat()]); }
+  function elim(){
+    if(online() && typeof window.__onlineEliminated==='boolean') return window.__onlineEliminated;
+    return typeof isEliminated==='function' ? !!isEliminated(0) : false;
+  }
+  function handCount(){ return Array.isArray(playerGroups) ? playerGroups.flat().filter(Boolean).length : 0; }
+  function moveGroupToLeft(){
+    const left=document.querySelector('.left-controls'), group=document.getElementById('groupButton');
+    if(left && group && group.parentElement!==left) left.appendChild(group);
+  }
+  function selectedCard(){
+    if(!Array.isArray(selectedCards) || selectedCards.length!==1) return null;
+    const s=selectedCards[0];
+    if(s.id){ const byId=playerGroups.flat().find(c=>c&&c.id===s.id); if(byId) return byId; }
+    const g=playerGroups[s.gIdx];
+    return g && g[s.cIdx] ? g[s.cIdx] : null;
+  }
+  function syncControls(){
+    moveGroupToLeft();
+    const group=document.getElementById('groupButton');
+    const discard=document.getElementById('discardButton');
+    const drop=document.getElementById('dropButton');
+    const declare=document.getElementById('declareButton');
+    const e=elim(), turn=myTurn(), drawn=!!playerHasDrawn, n=handCount(), sc=Array.isArray(selectedCards)?selectedCards.length:0;
+    if(group){
+      const ok=sc>=2 && !e;
+      group.classList.toggle('jkrn-v35-ready',ok);
+      group.disabled=!ok;
+      group.textContent='GROUP';
+      group.style.removeProperty('left'); group.style.removeProperty('right'); group.style.removeProperty('top'); group.style.removeProperty('bottom');
+    }
+    if(discard){
+      const ok=turn && drawn && n===14 && sc===1 && !e;
+      discard.disabled=!ok;
+      discard.classList.toggle('jkrn-v35-ready',ok);
+      discard.style.setProperty('display','inline-flex','important');
+      discard.style.setProperty('visibility','visible','important');
+    }
+    if(drop){
+      const ok=turn && !drawn && !e;
+      drop.disabled=!ok;
+    }
+    if(declare){
+      const ok=turn && drawn && n===14 && !e;
+      declare.disabled=!ok;
+      declare.style.setProperty('display','block','important');
+    }
+  }
+  // Correct selection binding: use the real global lexical selectedCards, not window.selectedCards.
+  window.selectCard=function(gIdx,cIdx){
+    const g=playerGroups && playerGroups[gIdx], card=g && g[cIdx]; if(!card) return;
+    const id=card.id || null;
+    let i=-1;
+    for(let k=0;k<selectedCards.length;k++){
+      const s=selectedCards[k];
+      if((id && s.id===id) || (!id && s.gIdx===gIdx && s.cIdx===cIdx)){ i=k; break; }
+    }
+    if(i>=0) selectedCards.splice(i,1); else selectedCards.push({gIdx,cIdx,id});
+    updateUI();
+  };
+  // Correct discard binding for both local and real-player online mode.
+  window.discardCard=function(){
+    if(!myTurn() || !playerHasDrawn || elim() || selectedCards.length!==1) return;
+    const card=selectedCard(); if(!card) return;
+    if(online()){
+      if(!window.onlineSocket || !card.id) return;
+      window.onlineSocket.emit('discardCard',{cardId:card.id});
+      return;
+    }
+    if(handCount()!==14 || currentPlayer!==0) return;
+    let found=false;
+    for(let gi=0;gi<playerGroups.length && !found;gi++){
+      const ci=playerGroups[gi].findIndex(c=>c===card || (card.id && c.id===card.id));
+      if(ci>=0){ playerGroups[gi].splice(ci,1); found=true; }
+    }
+    if(!found) return;
+    if(Array.isArray(discardPile)) discardPile.push(card);
+    playerGroups=playerGroups.filter(g=>g&&g.length);
+    selectedCards=[];
+    playerHasDrawn=false;
+    try{ if(typeof playSound==='function') playSound('discard'); }catch(e){}
+    updateUI();
+    if(typeof nextTurn==='function') nextTurn();
+  };
+  // One update wrapper only. No intervals, no click timers, no blinking logic.
+  const oldUpdate=window.updateUI;
+  if(typeof oldUpdate==='function' && !oldUpdate.__jkrnV35){
+    function wrapped(){ const r=oldUpdate.apply(this,arguments); syncControls(); return r; }
+    wrapped.__jkrnV35=true;
+    window.updateUI=wrapped;
+  }
+  function boot(){ moveGroupToLeft(); syncControls(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot,{once:true}); else boot();
+  window.addEventListener('load',boot,{once:true});
+  window.jkrnV35Sync=syncControls;
+})();
+</script>
+
+<style id="RUMMY_JKRN_IMAGE_LAYOUT_V36">
+/* V36: match the requested reference layout. Stable buttons: never blink/hide. */
+.left-controls{
+  position:absolute!important; left:3%!important; right:auto!important; bottom:18px!important;
+  display:flex!important; flex-direction:column!important; gap:12px!important;
+  z-index:3000!important; align-items:stretch!important;
+}
+.action-buttons{
+  position:absolute!important; right:3%!important; left:auto!important; bottom:18px!important;
+  display:flex!important; flex-direction:column!important; gap:12px!important;
+  z-index:3000!important; align-items:stretch!important;
+}
+.left-controls button,.action-buttons button{
+  width:150px!important; min-width:150px!important; height:52px!important; min-height:52px!important;
+  padding:8px 12px!important; margin:0!important; font-size:14px!important; line-height:1.05!important;
+  border-radius:10px!important; font-weight:900!important;
+  position:relative!important; transform:none!important; transition:box-shadow .12s ease,opacity .12s ease,filter .12s ease!important;
+}
+.btn-group{display:inline-flex!important;background:linear-gradient(#f9df45,#d9a900)!important;color:#111!important;border:2px solid #fff1a5!important;}
+.btn-discard{display:inline-flex!important;background:linear-gradient(#263f4a,#172b34)!important;color:#d9e3e7!important;border:2px solid #8da0a8!important;}
+.btn-declare{display:inline-flex!important;}
+.left-controls button:disabled,.action-buttons button:disabled{opacity:.48!important;filter:saturate(.55)!important;cursor:not-allowed!important;box-shadow:0 3px 8px rgba(0,0,0,.4)!important;}
+.left-controls button.action-ready,.action-buttons button.action-ready{opacity:1!important;filter:none!important;box-shadow:0 0 16px rgba(255,215,0,.45),0 5px 12px rgba(0,0,0,.65)!important;}
+.btn-group.action-ready{box-shadow:0 0 18px rgba(255,215,0,.75),0 5px 12px rgba(0,0,0,.65)!important;}
+.btn-discard.action-ready{background:linear-gradient(#2196f3,#0d47a1)!important;color:#fff!important;border-color:#b8ddff!important;box-shadow:0 0 18px rgba(33,150,243,.85),0 5px 12px rgba(0,0,0,.65)!important;}
+.player-area{bottom:92px!important;z-index:950!important;}
+.groups-container{height:145px!important;max-width:92%!important;gap:7px!important;padding-left:4px!important;padding-right:4px!important;}
+.cards-in-group{min-height:105px!important;}
+.cards-in-group .card + .card{margin-left:-39px!important;}
+.card{width:68px!important;height:100px!important;min-width:68px!important;font-size:16px!important;}
+.card-center{font-size:25px!important;}
+@media (max-width:1100px){
+ .left-controls,.action-buttons{bottom:14px!important;gap:9px!important;}
+ .left-controls button,.action-buttons button{width:118px!important;min-width:118px!important;height:44px!important;min-height:44px!important;font-size:12px!important;}
+ .player-area{bottom:78px!important;}
+ .card{width:58px!important;height:88px!important;min-width:58px!important;}
+ .cards-in-group .card + .card{margin-left:-32px!important;}
+}
+@media (max-width:700px){
+ .left-controls{left:8px!important;bottom:10px!important;}
+ .action-buttons{right:8px!important;bottom:10px!important;}
+ .left-controls button,.action-buttons button{width:92px!important;min-width:92px!important;height:38px!important;min-height:38px!important;font-size:10px!important;padding:6px 8px!important;}
+ .player-area{bottom:66px!important;}
+}
+</style>
+
+<style id="jkrn-v37-discard-final">
+/* V37 FINAL: DISCARD must become available immediately after 14th card.
+   Selection is required only when the user actually presses DISCARD. */
+#discardButton{
+  display:inline-flex!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+  transition:none!important;
+  animation:none!important;
+}
+#discardButton.jkrn-v37-ready{
+  opacity:1!important;
+  filter:none!important;
+  background:linear-gradient(#2196f3,#0d47a1)!important;
+  color:#fff!important;
+  border:2px solid #d9efff!important;
+  box-shadow:0 0 18px rgba(33,150,243,.9),0 5px 12px rgba(0,0,0,.65)!important;
+  cursor:pointer!important;
+}
+#discardButton.jkrn-v37-selected{
+  background:linear-gradient(#00bcd4,#006064)!important;
+  box-shadow:0 0 20px rgba(0,229,255,.95),0 5px 12px rgba(0,0,0,.65)!important;
+}
+#discardButton.jkrn-v37-disabled{
+  opacity:.45!important;
+  filter:saturate(.55)!important;
+  cursor:not-allowed!important;
+}
+</style>
+<script id="jkrn-v37-discard-final-js">
+(function(){
+  'use strict';
+  function online(){ return !!window.__realRoomStarted; }
+  function seat(){ return Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : 0; }
+  function myTurn(){
+    if (typeof gameOver!=='undefined' && gameOver) return false;
+    return currentPlayer===seat() && !(Array.isArray(droppedThisDeal)&&droppedThisDeal[seat()]);
+  }
+  function eliminated(){
+    if(online() && typeof window.__onlineEliminated==='boolean') return window.__onlineEliminated;
+    return typeof isEliminated==='function' ? !!isEliminated(0) : false;
+  }
+  function count(){ return Array.isArray(playerGroups) ? playerGroups.flat().filter(Boolean).length : 0; }
+  function selected(){
+    if(!Array.isArray(selectedCards)||selectedCards.length!==1) return null;
+    const x=selectedCards[0];
+    if(x.id){ const c=playerGroups.flat().find(v=>v&&v.id===x.id); if(c)return c; }
+    const g=playerGroups[x.gIdx];
+    return g&&g[x.cIdx]?g[x.cIdx]:null;
+  }
+  function sync(){
+    const b=document.getElementById('discardButton'); if(!b)return;
+    const available=myTurn() && !!playerHasDrawn && count()===14 && !eliminated();
+    const hasOne=Array.isArray(selectedCards)&&selectedCards.length===1&&!!selected();
+    b.disabled=!available;
+    b.classList.toggle('jkrn-v37-ready',available);
+    b.classList.toggle('jkrn-v37-selected',available&&hasOne);
+    b.classList.toggle('jkrn-v37-disabled',!available);
+    b.style.setProperty('display','inline-flex','important');
+    b.style.setProperty('visibility','visible','important');
+    b.style.setProperty('pointer-events','auto','important');
+  }
+  window.discardCard=function(){
+    const b=document.getElementById('discardButton');
+    if(!myTurn() || !playerHasDrawn || count()!==14 || eliminated()) return;
+    const c=selected();
+    if(!c){
+      const st=document.getElementById('status');
+      if(st) st.innerText='⚠️ 14 cards vachchayi. Discard cheyyadaniki oka card select cheyyandi.';
+      return;
+    }
+    if(online()){
+      if(!window.onlineSocket || !c.id)return;
+      window.onlineSocket.emit('discardCard',{cardId:c.id});
+      return;
+    }
+    let removed=null;
+    for(let gi=0;gi<playerGroups.length&&!removed;gi++){
+      const idx=playerGroups[gi].findIndex(v=>v&&(v.id===c.id||v===c));
+      if(idx>=0) removed=playerGroups[gi].splice(idx,1)[0];
+    }
+    if(!removed)return;
+    if(Array.isArray(discardPile))discardPile.push(removed);
+    playerGroups=playerGroups.filter(g=>g&&g.length);
+    selectedCards=[];
+    playerHasDrawn=false;
+    try{if(typeof playSound==='function')playSound('discard');}catch(e){}
+    if(typeof updateUI==='function')updateUI();
+    if(typeof nextTurn==='function')nextTurn();
+  };
+  const oldUpdate=window.updateUI;
+  if(typeof oldUpdate==='function' && !oldUpdate.__jkrnV37){
+    function wrapped(){const r=oldUpdate.apply(this,arguments);sync();return r;}
+    wrapped.__jkrnV37=true;
+    window.updateUI=wrapped;
+  }
+  function boot(){sync();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+  window.addEventListener('load',boot,{once:true});
+  window.jkrnV37SyncDiscard=sync;
+})();
+</script>
+
+
+<style id="jkrn-v38-discard-hardfix">
+#discardButton{display:inline-flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;animation:none!important;transition:none!important;}
+#discardButton.jkrn-v38-available{background:linear-gradient(180deg,#42a5f5,#1565c0)!important;border:2px solid #fff!important;box-shadow:0 0 16px rgba(33,150,243,.95),0 4px 10px rgba(0,0,0,.7)!important;color:#fff!important;cursor:pointer!important;}
+#discardButton.jkrn-v38-disabled{opacity:.42!important;filter:saturate(.5)!important;cursor:not-allowed!important;box-shadow:none!important;}
+</style>
+<script id="jkrn-v38-discard-hardfix-js">
+(function(){
+'use strict';
+function seat(){return Number.isInteger(window.__onlineMyIndex)?Number(window.__onlineMyIndex):0;}
+function online(){return !!window.__realRoomStarted;}
+function turn(){return !gameOver && currentPlayer===seat() && !(Array.isArray(droppedThisDeal)&&droppedThisDeal[seat()]);}
+function elim(){return online()&&typeof window.__onlineEliminated==='boolean'?window.__onlineEliminated:(typeof isEliminated==='function'?!!isEliminated(0):false);}
+function count(){return Array.isArray(playerGroups)?playerGroups.flat().filter(Boolean).length:0;}
+function syncV38(){
+ const b=document.getElementById('discardButton');if(!b)return;
+ const available=turn()&&!!playerHasDrawn&&count()===14&&!elim();
+ b.disabled=!available;
+ b.classList.toggle('jkrn-v38-available',available);
+ b.classList.toggle('jkrn-v38-disabled',!available);
+ b.style.setProperty('display','inline-flex','important');
+ b.style.setProperty('visibility','visible','important');
+ b.style.setProperty('pointer-events','auto','important');
+}
+window.jkrnV38SyncDiscard=syncV38;
+const prev=window.updateUI;
+if(typeof prev==='function'&&!prev.__jkrnV38){
+ function wrapped(){const r=prev.apply(this,arguments);syncV38();return r;}
+ wrapped.__jkrnV38=true;window.updateUI=wrapped;
+}
+window.addEventListener('load',syncV38,{once:true});
+})();
+</script>
+
+<style id="JKRN_DISCARD_CARD_FLY_V42">
+#jkrnDiscardFly{position:fixed!important;z-index:999999!important;pointer-events:none!important;margin:0!important;transform-origin:center center!important;will-change:transform,opacity!important;}
+#discardPile.jkrn-drop-target{box-shadow:0 0 24px rgba(0,229,255,.95)!important;border-color:#00e5ff!important;}
+</style>
+<script id="JKRN_DISCARD_CARD_FLY_V42_JS">
+(function(){
+'use strict';
+function cardFromSelection(){
+  if(!Array.isArray(window.selectedCards)||window.selectedCards.length!==1)return null;
+  const x=window.selectedCards[0];
+  const gs=window.playerGroups||[];
+  if(x&&x.id){const f=gs.flat().find(c=>c&&c.id===x.id);if(f)return f;}
+  return gs[x.gIdx]&&gs[x.gIdx][x.cIdx]||null;
+}
+function animateDiscard(cardEl){
+  const target=document.getElementById('discardPile');
+  if(!cardEl||!target)return;
+  const a=cardEl.getBoundingClientRect(), b=target.getBoundingClientRect();
+  if(!a.width||!a.height||!b.width||!b.height)return;
+  const clone=cardEl.cloneNode(true); clone.id='jkrnDiscardFly';
+  document.body.appendChild(clone);
+  clone.style.left=a.left+'px'; clone.style.top=a.top+'px';
+  clone.style.width=a.width+'px'; clone.style.height=a.height+'px';
+  clone.style.opacity='1';
+  target.classList.add('jkrn-drop-target');
+  requestAnimationFrame(function(){
+    const dx=(b.left+b.width/2)-(a.left+a.width/2), dy=(b.top+b.height/2)-(a.top+a.height/2);
+    clone.style.transition='transform .42s cubic-bezier(.2,.75,.25,1),opacity .42s ease';
+    clone.style.transform='translate('+dx+'px,'+dy+'px) scale(.62) rotate(7deg)';
+    clone.style.opacity='.25';
+  });
+  setTimeout(function(){clone.remove();target.classList.remove('jkrn-drop-target');},470);
+}
+function selectedElement(){
+  const id=window.selectedCards&&window.selectedCards[0]&&window.selectedCards[0].id;
+  if(id){const e=[...document.querySelectorAll('#playerGroupsContainer .card')].find(x=>x.dataset&&x.dataset.cardId===id||x.getAttribute('data-card-id')===id);if(e)return e;}
+  const sel=document.querySelector('#playerGroupsContainer .card.selected');
+  return sel||null;
+}
+function install(){
+  const b=document.getElementById('discardButton');
+  if(!b||b.dataset.v42)return;
+  b.dataset.v42='1';
+  b.addEventListener('click',function(e){
+    if(e.defaultPrevented)return;
+    const el=selectedElement(), card=cardFromSelection();
+    if(el&&card)animateDiscard(el);
+  },true);
+}
+function boot(){install();}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+window.addEventListener('load',boot);
+new MutationObserver(boot).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
+<!-- JKRN FINAL V43: AUTHORITATIVE MULTI-PLAYER DISCARD/TURN + OPEN CARD + LOCAL BOTTOM HAND -->
+<style id="jkrn-v43-multiplayer-final">
+  /* Every client sees their own cards in the bottom hand area. */
+  #playerArea, .player-area {
+    z-index: 9500 !important;
+  }
+  #playerGroupsContainer {
+    width: min(96vw, 1180px) !important;
+    justify-content: center !important;
+    align-items: flex-end !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+  }
+  #discardPile {
+    overflow: hidden !important;
+  }
+  #discardPile .jkrn-open-card {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 6px;
+    font-weight: 900;
+    text-align: left;
+  }
+  #discardPile .jkrn-open-rank { font-size: 16px; line-height: 1; }
+  #discardPile .jkrn-open-suit { font-size: 32px; align-self: center; margin: auto 0; }
+  #discardPile .jkrn-open-joker {
+    position: absolute; right: 3px; bottom: 3px;
+    background: #ffeb3b; color: #111; border: 1px solid #111;
+    border-radius: 50%; font-size: 11px; padding: 1px 3px;
+  }
+  #discardPile.jkrn-open-updated {
+    box-shadow: 0 0 20px rgba(0,229,255,.9) !important;
+    border-color: #00e5ff !important;
+  }
+</style>
+<script id="jkrn-v43-multiplayer-final-js">
+(function(){
+  'use strict';
+
+  function isOnline(){
+    return !!window.__realRoomStarted && !!window.onlineSocket;
+  }
+
+  function mySeat(){
+    return Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : 0;
+  }
+
+  function myTurn(){
+    return typeof currentPlayer !== 'undefined' && currentPlayer === mySeat();
+  }
+
+  function handCount(){
+    return Array.isArray(window.playerGroups)
+      ? window.playerGroups.flat().filter(Boolean).length : 0;
+  }
+
+  function getSelectedCard(){
+    if(!Array.isArray(window.selectedCards) || window.selectedCards.length !== 1) return null;
+    const s = window.selectedCards[0];
+    const gs = window.playerGroups || [];
+    if(s && s.id){
+      const found = gs.flat().find(c => c && c.id === s.id);
+      if(found) return found;
+    }
+    const g = gs[s.gIdx];
+    return g && g[s.cIdx] ? g[s.cIdx] : null;
+  }
+
+  function paintDiscard(card){
+    const dp = document.getElementById('discardPile');
+    if(!dp) return;
+
+    if(!card){
+      dp.innerHTML = '';
+      dp.classList.remove('jkrn-open-updated');
+      return;
+    }
+
+    const red = card.color === 'red' || card.suit === '♥' || card.suit === '♦';
+    dp.innerHTML =
+      '<div class="jkrn-open-card '+(red?'red':'black')+'">' +
+        '<div class="jkrn-open-rank">'+String(card.rank || '')+'<br>'+String(card.suit || '')+'</div>' +
+        '<div class="jkrn-open-suit">'+String(card.suit || '🃏')+'</div>' +
+        ((card.isPrintedJoker || card.isWild)
+          ? '<div class="jkrn-open-joker">👑</div>' : '') +
+      '</div>';
+
+    dp.classList.add('jkrn-open-updated');
+    clearTimeout(dp.__jkrnGlowTimer);
+    dp.__jkrnGlowTimer = setTimeout(function(){
+      dp.classList.remove('jkrn-open-updated');
+    }, 450);
+  }
+
+  function syncBottomHand(){
+    // The server sends the current player's complete hand only.
+    // Therefore every connected player sees THEIR OWN 13/14 cards at the bottom.
+    const area = document.querySelector('.player-area');
+    const groups = document.getElementById('playerGroupsContainer');
+    if(area) area.style.zIndex = '9500';
+    if(groups){
+      groups.style.display = 'flex';
+      groups.style.justifyContent = 'center';
+      groups.style.alignItems = 'flex-end';
+    }
+  }
+
+  function syncActionButtons(){
+    const discard = document.getElementById('discardButton');
+    if(!discard) return;
+
+    const active = isOnline() &&
+      myTurn() &&
+      !!window.playerHasDrawn &&
+      handCount() === 14 &&
+      !(window.__onlineEliminated || window.__onlineDropped);
+
+    // IMPORTANT: button becomes usable for PLAYER 2, 3, 4, 5, 6 exactly
+    // when their own server turn arrives. It does not depend on seat 0.
+    discard.disabled = !active;
+    discard.style.setProperty('display','inline-flex','important');
+    discard.style.setProperty('visibility','visible','important');
+    discard.style.setProperty('pointer-events','auto','important');
+    discard.classList.toggle('jkrn-v43-ready', active);
+  }
+
+  function sendAuthoritativeDiscard(){
+    if(!isOnline()) return false;
+    if(!myTurn()) return true;
+    if(!window.playerHasDrawn) return true;
+    if(handCount() !== 14) return true;
+    if(window.__onlineEliminated || window.__onlineDropped) return true;
+
+    const card = getSelectedCard();
+    const st = document.getElementById('status');
+
+    if(!card || !card.id){
+      if(st) st.textContent = '⚠️ 14 cards vachchayi. Discard cheyyadaniki 1 card select cheyyandi.';
+      return true;
+    }
+
+    window.onlineSocket.emit('discardCard', {cardId: card.id});
+    return true;
+  }
+
+  function installDiscardHandler(){
+    const b = document.getElementById('discardButton');
+    if(!b || b.__jkrnV43Installed) return;
+    b.__jkrnV43Installed = true;
+
+    // Capture phase prevents older V35/V37/V38 wrappers from sending a
+    // duplicate or seat-0-only discard request.
+    b.addEventListener('click', function(e){
+      if(!isOnline()) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      sendAuthoritativeDiscard();
+    }, true);
+  }
+
+  function installSocketHandlers(){
+    const s = window.onlineSocket;
+    if(!s || s.__jkrnV43Handlers) return;
+    s.__jkrnV43Handlers = true;
+
+    // Explicit server event: the new open card is rendered immediately.
+    s.on('discardUpdated', function(d){
+      if(d && d.card){
+        window.discardPile = [d.card];
+        paintDiscard(d.card);
+      }
+      syncActionButtons();
+    });
+
+    // Explicit server event: next player is authoritative.
+    s.on('turnChanged', function(d){
+      if(!d) return;
+      if(Number.isInteger(d.currentPlayer)) currentPlayer = d.currentPlayer;
+      window.__onlineTurnEndsAt = d.turnEndsAt || 0;
+      window.playerHasDrawn = false;
+      window.selectedCards = [];
+      syncBottomHand();
+      syncActionButtons();
+      if(typeof updateUI === 'function') updateUI();
+    });
+
+    // gameState remains the source of truth; render after the existing listener.
+    s.on('gameState', function(st){
+      if(!st) return;
+      if(st.discardTop) paintDiscard(st.discardTop);
+      else if(st.discardCount === 0) paintDiscard(null);
+      syncBottomHand();
+      setTimeout(syncActionButtons, 0);
+    });
+  }
+
+  function boot(){
+    installDiscardHandler();
+    installSocketHandlers();
+    syncBottomHand();
+    syncActionButtons();
+
+    // ensureOnlineSocket is already used by the original file.
+    // Retry only on DOM mutations, not with a permanent polling interval.
+    if(window.onlineSocket) installSocketHandlers();
+  }
+
+  // Re-apply when the original socket is created or the buttons are rendered.
+  const observer = new MutationObserver(function(){
+    installDiscardHandler();
+    installSocketHandlers();
+    syncBottomHand();
+    syncActionButtons();
+  });
+  observer.observe(document.documentElement, {childList:true, subtree:true});
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', boot, {once:true});
+  } else {
+    boot();
+  }
+  window.addEventListener('load', boot, {once:true});
+
+  window.jkrnV43PaintDiscard = paintDiscard;
+  window.jkrnV43Sync = function(){
+    installDiscardHandler();
+    installSocketHandlers();
+    syncBottomHand();
+    syncActionButtons();
+  };
+})();
+</script>
+
+
+<!-- JKRN V44: STRICT ONLINE TURN FLOW
+     DRAW (OPEN or CLOSED) -> 14 CARDS -> SELECT ONE -> DISCARD -> OPEN CARD -> NEXT PLAYER -->
+<script id="jkrn-v44-strict-turn-flow">
+(function(){
+  'use strict';
+  function online(){ return !!window.__realRoomStarted && !!window.onlineSocket; }
+  function me(){ return Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : -1; }
+  function myTurn(){ return online() && Number(window.currentPlayer) === me(); }
+  function drawn(){ return !!window.playerHasDrawn; }
+  function hand(){ return Array.isArray(window.playerGroups) ? window.playerGroups.flat().filter(Boolean) : []; }
+  function selected(){
+    if(!Array.isArray(window.selectedCards) || window.selectedCards.length!==1) return null;
+    const s=window.selectedCards[0];
+    if(s && s.id){ const c=hand().find(x=>x && x.id===s.id); if(c) return c; }
+    const g=window.playerGroups && window.playerGroups[s.gIdx];
+    return g && g[s.cIdx] ? g[s.cIdx] : null;
+  }
+  function status(t){ const e=document.getElementById('status'); if(e) e.textContent=t; }
+  function sync(){
+    const n=hand().length;
+    const drawOK=myTurn() && !drawn();
+    const discardOK=myTurn() && drawn() && n===14;
+    const d=document.querySelector('#centerArea .draw-pile');
+    const o=document.getElementById('discardPile');
+    if(d){ d.style.pointerEvents=drawOK?'auto':'none'; d.style.opacity=drawOK?'1':'.55'; d.title=drawOK?'CLOSED DECK: Draw one card':'Wait for your turn'; }
+    if(o){ o.style.pointerEvents=drawOK?'auto':'none'; o.style.opacity=drawOK?'1':'.55'; o.title=drawOK?'OPEN CARD: Take this card':'Wait for your turn'; }
+    const b=document.getElementById('discardButton');
+    if(b){ b.disabled=!discardOK; b.style.pointerEvents=discardOK?'auto':'none'; b.style.opacity=discardOK?'1':'.45'; }
+  }
+  function drawClosed(e){
+    if(!online()) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    if(!myTurn() || drawn()) return status('Wait for your turn.');
+    window.onlineSocket.emit('drawDeck');
+    status('Closed card taking...');
+  }
+  function drawOpen(e){
+    if(!online()) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    if(!myTurn() || drawn()) return status('Wait for your turn.');
+    const dp=document.getElementById('discardPile');
+    if(!dp || !window.__onlineState || !window.__onlineState.discardTop) return status('OPEN card empty.');
+    window.onlineSocket.emit('drawDiscard');
+    status('Open card taking...');
+  }
+  function doDiscard(e){
+    if(!online()) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    if(!myTurn()) return status('Wait for your turn.');
+    if(!drawn()) return status('First DRAW OPEN or CLOSED card.');
+    if(hand().length!==14) return status('You must have 14 cards before DISCARD.');
+    const c=selected();
+    if(!c || !c.id) return status('14 cards vachchayi. DISCARD cheyyadaniki 1 card select cheyyandi.');
+    window.onlineSocket.emit('discardCard',{cardId:c.id});
+    status('Discarding card...');
+  }
+  function install(){
+    const d=document.querySelector('#centerArea .draw-pile');
+    const o=document.getElementById('discardPile');
+    const b=document.getElementById('discardButton');
+    if(d && !d.__v44){ d.__v44=1; d.addEventListener('click',drawClosed,true); }
+    if(o && !o.__v44){ o.__v44=1; o.addEventListener('click',drawOpen,true); }
+    if(b && !b.__v44){ b.__v44=1; b.addEventListener('click',doDiscard,true); }
+    sync();
+  }
+  function socket(){
+    const s=window.onlineSocket;
+    if(!s || s.__v44) return;
+    s.__v44=1;
+    s.on('onlineActionAck',function(m){
+      if(m && m.action==='draw') status('14 cards. Select ONE card and press DISCARD.');
+      sync();
+    });
+    s.on('discardUpdated',function(d){
+      if(d && d.card && typeof window.jkrnV43PaintDiscard==='function') window.jkrnV43PaintDiscard(d.card);
+      sync();
+    });
+    s.on('turnChanged',function(){ sync(); });
+    s.on('gameState',function(st){
+      setTimeout(function(){
+        if(st && st.discardTop && typeof window.jkrnV43PaintDiscard==='function') window.jkrnV43PaintDiscard(st.discardTop);
+        sync();
+      },0);
+    });
+  }
+  function boot(){ install(); socket(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+  window.addEventListener('load',boot);
+  new MutationObserver(boot).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
+
+<!-- JKRN V45: VISIBLE OPEN/CLOSED DRAW OPTIONS + COMPACT BOTTOM HAND -->
+<style id="jkrn-v45-layout">
+/* Keep the draw area clearly visible to EVERY player. Only the active player can click. */
+#centerArea{
+  top:36%!important;
+  gap:14px!important;
+  z-index:5000!important;
+}
+#centerArea .pile-container{
+  min-width:100px!important;
+}
+#centerArea .pile-label{
+  font-size:13px!important;
+  font-weight:1000!important;
+  color:#fff!important;
+  text-shadow:0 2px 4px #000!important;
+  margin-bottom:4px!important;
+}
+#centerArea .pile{
+  width:82px!important;
+  height:112px!important;
+}
+#centerArea .draw-pile::after{font-size:42px!important}
+.jkrn-draw-action{
+  display:block!important;
+  width:96px!important;
+  margin:5px auto 0!important;
+  padding:5px 4px!important;
+  border:2px solid #fff!important;
+  border-radius:8px!important;
+  color:#fff!important;
+  font-size:10px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  cursor:pointer!important;
+  box-shadow:0 3px 8px rgba(0,0,0,.6)!important;
+}
+.jkrn-take-closed{
+  background:linear-gradient(#2f8df5,#064a9e)!important;
+}
+.jkrn-take-open{
+  background:linear-gradient(#f7c948,#b77a00)!important;
+  color:#111!important;
+}
+.jkrn-draw-action:disabled{
+  opacity:.38!important;
+  filter:grayscale(.5)!important;
+  cursor:not-allowed!important;
+}
+.jkrn-draw-action.jkrn-ready{
+  box-shadow:0 0 16px rgba(255,255,255,.8),0 3px 8px rgba(0,0,0,.6)!important;
+}
+#jkrnDrawHint{
+  position:absolute!important;
+  top:calc(36% + 126px)!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  z-index:5001!important;
+  background:rgba(0,0,0,.78)!important;
+  border:1px solid rgba(255,215,0,.7)!important;
+  color:#ffd94d!important;
+  padding:4px 10px!important;
+  border-radius:9px!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+  pointer-events:none!important;
+}
+/* Compact hand: 13 cards must stay together instead of spreading across the screen. */
+#playerArea{
+  bottom:72px!important;
+  width:min(94vw,1050px)!important;
+}
+#playerGroupsContainer{
+  width:100%!important;
+  max-width:100%!important;
+  gap:0!important;
+  padding:0!important;
+  overflow-x:hidden!important;
+  justify-content:center!important;
+}
+#playerGroupsContainer .card-group{
+  min-width:0!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+#playerGroupsContainer .cards-in-group{
+  min-height:92px!important;
+  gap:0!important;
+}
+#playerGroupsContainer .card{
+  width:60px!important;
+  min-width:60px!important;
+  height:92px!important;
+  font-size:14px!important;
+  padding:4px 4px 14px!important;
+}
+#playerGroupsContainer .cards-in-group .card + .card{
+  margin-left:-25px!important;
+}
+#playerGroupsContainer .card-center{font-size:22px!important}
+@media(max-width:1100px){
+  #centerArea{top:34%!important;gap:8px!important}
+  #centerArea .pile-container{min-width:82px!important}
+  #centerArea .pile{width:70px!important;height:96px!important}
+  .jkrn-draw-action{width:80px!important;font-size:9px!important}
+  #jkrnDrawHint{top:calc(34% + 108px)!important}
+  #playerArea{bottom:62px!important;width:98vw!important}
+  #playerGroupsContainer .card{width:52px!important;min-width:52px!important;height:80px!important}
+  #playerGroupsContainer .cards-in-group .card + .card{margin-left:-20px!important}
+  #playerGroupsContainer .card-center{font-size:19px!important}
+}
+@media(max-width:700px){
+  #centerArea{top:37%!important}
+  #centerArea .pile{width:58px!important;height:82px!important}
+  .jkrn-draw-action{width:68px!important;padding:4px 2px!important}
+  #jkrnDrawHint{display:none!important}
+  #playerArea{bottom:48px!important}
+  #playerGroupsContainer .card{width:44px!important;min-width:44px!important;height:68px!important;font-size:11px!important}
+  #playerGroupsContainer .cards-in-group .card + .card{margin-left:-16px!important}
+  #playerGroupsContainer .card-center{font-size:16px!important}
+}
+</style>
+
+<script id="jkrn-v45-layout-js">
+(function(){
+  'use strict';
+
+  function online(){
+    return !!window.__realRoomStarted && !!window.onlineSocket;
+  }
+  function mySeat(){
+    return Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : 0;
+  }
+  function myTurn(){
+    return typeof currentPlayer !== 'undefined' && currentPlayer === mySeat();
+  }
+  function drawn(){
+    return !!window.playerHasDrawn;
+  }
+
+  function ensureDrawButtons(){
+    const closed = document.querySelector('#centerArea .draw-pile');
+    const open = document.getElementById('discardPile');
+    if(!closed || !open) return;
+
+    const cc = closed.parentElement;
+    const oc = open.parentElement;
+
+    if(cc && !cc.querySelector('.jkrn-take-closed')){
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='jkrn-draw-action jkrn-take-closed';
+      b.textContent='TAKE CLOSED';
+      b.title='Take one card from Closed Deck';
+      b.addEventListener('click',function(e){
+        e.preventDefault(); e.stopPropagation();
+        if(!online()) return;
+        if(!myTurn()) return setStatus('WAIT FOR YOUR TURN');
+        if(drawn()) return setStatus('ALREADY DRAWN — DISCARD ONE CARD');
+        window.onlineSocket.emit('drawDeck');
+      },true);
+      cc.appendChild(b);
+    }
+
+    if(oc && !oc.querySelector('.jkrn-take-open')){
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='jkrn-draw-action jkrn-take-open';
+      b.textContent='TAKE OPEN';
+      b.title='Take the current Open Card';
+      b.addEventListener('click',function(e){
+        e.preventDefault(); e.stopPropagation();
+        if(!online()) return;
+        if(!myTurn()) return setStatus('WAIT FOR YOUR TURN');
+        if(drawn()) return setStatus('ALREADY DRAWN — DISCARD ONE CARD');
+        const st=window.__onlineState||{};
+        if(!st.discardTop) return setStatus('NO OPEN CARD');
+        window.onlineSocket.emit('drawDiscard');
+      },true);
+      oc.appendChild(b);
+    }
+
+    if(!document.getElementById('jkrnDrawHint')){
+      const hint=document.createElement('div');
+      hint.id='jkrnDrawHint';
+      hint.textContent='YOUR TURN → TAKE OPEN OR CLOSED CARD';
+      document.querySelector('.table')?.appendChild(hint);
+    }
+  }
+
+  function setStatus(t){
+    const s=document.getElementById('status');
+    if(s) s.textContent=t;
+  }
+
+  function sync(){
+    ensureDrawButtons();
+    const canDraw=online() && myTurn() && !drawn();
+    document.querySelectorAll('.jkrn-draw-action').forEach(function(b){
+      b.disabled=!canDraw;
+      b.classList.toggle('jkrn-ready',canDraw);
+    });
+    const hint=document.getElementById('jkrnDrawHint');
+    if(hint){
+      hint.textContent=canDraw ? 'YOUR TURN → TAKE OPEN OR CLOSED CARD' :
+        (drawn() ? '14 CARDS → SELECT 1 CARD AND DISCARD' : 'WAIT FOR YOUR TURN');
+      hint.style.color=canDraw ? '#7dff8a' : '#ffd94d';
+    }
+  }
+
+  function hookSocket(){
+    const s=window.onlineSocket;
+    if(!s || s.__jkrnV45) return;
+    s.__jkrnV45=true;
+    ['gameState','turnChanged','discardUpdated','onlineActionAck'].forEach(function(ev){
+      s.on(ev,function(){ setTimeout(sync,20); });
+    });
+  }
+
+  function boot(){
+    ensureDrawButtons();
+    sync();
+    hookSocket();
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+  else boot();
+  window.addEventListener('load',boot);
+  setInterval(function(){ensureDrawButtons();hookSocket();sync();},500);
+})();
+</script>
+
+
+<!-- JKRN V46: FORCE-VISIBLE DRAW OPTIONS -->
+<style id="jkrn-v46-force-visible">
+#jkrnDrawControls{
+  position:fixed!important;
+  z-index:2147483000!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  gap:6px!important;
+  pointer-events:auto!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+#jkrnDrawControls button{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:118px!important;
+  height:32px!important;
+  padding:2px 5px!important;
+  border:2px solid #fff!important;
+  border-radius:8px!important;
+  font-size:11px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  color:#fff!important;
+  text-shadow:0 1px 2px #000!important;
+  box-shadow:0 2px 10px #000,0 0 8px rgba(255,255,255,.25)!important;
+}
+#jkrnTakeClosed{background:#146bd1!important}
+#jkrnTakeOpen{background:#d69b08!important;color:#111!important;text-shadow:none!important}
+#jkrnDrawControls button:disabled{
+  opacity:.35!important;
+  cursor:not-allowed!important;
+  filter:grayscale(.45)!important;
+}
+#jkrnDrawControls .jkrn-mini-status{
+  background:rgba(0,0,0,.88)!important;
+  border:1px solid #ffd42a!important;
+  border-radius:7px!important;
+  padding:3px 7px!important;
+  color:#fff!important;
+  font-size:9px!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+}
+</style>
+<script id="jkrn-v46-force-visible-js">
+(function(){
+'use strict';
+
+function make(){
+  let box=document.getElementById('jkrnDrawControls');
+  if(!box){
+    box=document.createElement('div');
+    box.id='jkrnDrawControls';
+    box.innerHTML=
+      '<button id="jkrnTakeClosed" type="button">TAKE CLOSED CARD</button>'+
+      '<button id="jkrnTakeOpen" type="button">TAKE OPEN CARD</button>'+
+      '<div class="jkrn-mini-status" id="jkrnDrawStatus">WAITING FOR TURN</div>';
+    document.body.appendChild(box);
+
+    box.querySelector('#jkrnTakeClosed').onclick=function(e){
+      e.preventDefault(); e.stopPropagation();
+      if(!window.onlineSocket) return;
+      if(window.__onlineMyIndex !== currentPlayer) return setStatus('WAIT FOR YOUR TURN');
+      if(window.playerHasDrawn) return setStatus('DRAW DONE — DISCARD 1 CARD');
+      window.onlineSocket.emit('drawDeck');
+    };
+    box.querySelector('#jkrnTakeOpen').onclick=function(e){
+      e.preventDefault(); e.stopPropagation();
+      if(!window.onlineSocket) return;
+      if(window.__onlineMyIndex !== currentPlayer) return setStatus('WAIT FOR YOUR TURN');
+      if(window.playerHasDrawn) return setStatus('DRAW DONE — DISCARD 1 CARD');
+      const st=window.__onlineState||{};
+      if(!st.discardTop) return setStatus('NO OPEN CARD');
+      window.onlineSocket.emit('drawDiscard');
+    };
+  }
+  position();
+  state();
+}
+
+function position(){
+  const box=document.getElementById('jkrnDrawControls');
+  const closed=document.querySelector('#centerArea .draw-pile');
+  const open=document.getElementById('discardPile');
+  if(!box || (!closed && !open)) return;
+  const c=closed ? closed.getBoundingClientRect() : open.getBoundingClientRect();
+  const o=open ? open.getBoundingClientRect() : c;
+  const left=Math.max(8, Math.min(window.innerWidth-135, ((c.left+c.width/2 + o.left+o.width/2)/2)-59));
+  const top=Math.min(window.innerHeight-115, Math.max(250, Math.max(c.bottom,o.bottom)+8));
+  box.style.left=left+'px';
+  box.style.top=top+'px';
+}
+
+function state(){
+  const a=document.getElementById('jkrnTakeClosed');
+  const b=document.getElementById('jkrnTakeOpen');
+  const st=document.getElementById('jkrnDrawStatus');
+  if(!a||!b||!st) return;
+  const turn=(typeof currentPlayer!=='undefined' && window.__onlineMyIndex===currentPlayer);
+  const can=!!window.onlineSocket && turn && !window.playerHasDrawn;
+  a.disabled=!can;
+  b.disabled=!can || !(window.__onlineState && window.__onlineState.discardTop);
+  st.textContent=can?'YOUR TURN: CHOOSE A CARD':
+    (window.playerHasDrawn?'14 CARDS: DISCARD 1':'WAIT FOR YOUR TURN');
+  st.style.color=can?'#70ff78':'#ffd42a';
+}
+
+function boot(){
+  make();
+  state();
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+else boot();
+window.addEventListener('load',boot);
+window.addEventListener('resize',position);
+setInterval(boot,300);
+})();
+</script>
+
+
+<!-- JKRN V47: FORCE-VISIBLE GAME ACTION BAR -->
+<style id="jkrn-v47-actions-css">
+#jkrnActionBar{
+  position:fixed!important;
+  left:50%!important;
+  bottom:12px!important;
+  transform:translateX(-50%)!important;
+  z-index:2147483647!important;
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:10px!important;
+  width:auto!important;
+  max-width:96vw!important;
+  padding:8px 10px!important;
+  background:rgba(0,0,0,.88)!important;
+  border:2px solid #d9ad28!important;
+  border-radius:13px!important;
+  box-shadow:0 0 18px rgba(0,0,0,.9),0 0 10px rgba(255,205,40,.3)!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+}
+#jkrnActionBar button{
+  position:relative!important;
+  display:inline-flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:118px!important;
+  height:42px!important;
+  border:2px solid #fff!important;
+  border-radius:9px!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+  text-transform:uppercase!important;
+  cursor:pointer!important;
+  box-shadow:0 3px 10px rgba(0,0,0,.75)!important;
+}
+#jkrnV47Drop{background:linear-gradient(#777,#3b3b3b)!important;color:#fff!important}
+#jkrnV47Sort{background:linear-gradient(#35bd61,#08772e)!important;color:#fff!important}
+#jkrnV47Discard{background:linear-gradient(#42a5f5,#1263bb)!important;color:#fff!important}
+#jkrnV47Declare{background:linear-gradient(#ffae25,#e56700)!important;color:#fff!important}
+#jkrnActionBar button:disabled{
+  opacity:.38!important;
+  filter:grayscale(.7)!important;
+  cursor:not-allowed!important;
+  box-shadow:none!important;
+}
+@media(max-width:700px){
+  #jkrnActionBar{gap:4px!important;padding:5px!important;bottom:5px!important}
+  #jkrnActionBar button{width:76px!important;height:34px!important;font-size:9px!important}
+}
+</style>
+
+<script id="jkrn-v47-actions-js">
+(function(){
+'use strict';
+
+function original(id){ return document.getElementById(id); }
+
+function make(){
+  let bar=document.getElementById('jkrnActionBar');
+  if(!bar){
+    bar=document.createElement('div');
+    bar.id='jkrnActionBar';
+    bar.innerHTML=
+      '<button id="jkrnV47Drop" type="button">DROP</button>'+
+      '<button id="jkrnV47Sort" type="button">AUTO SORT</button>'+
+      '<button id="jkrnV47Discard" type="button">DISCARD</button>'+
+      '<button id="jkrnV47Declare" type="button">DECLARE</button>';
+    document.body.appendChild(bar);
+
+    const map=[
+      ['jkrnV47Drop','dropButton'],
+      ['jkrnV47Sort','autoSortButton'],
+      ['jkrnV47Discard','discardButton'],
+      ['jkrnV47Declare','declareButton']
+    ];
+
+    map.forEach(function(pair){
+      const proxy=document.getElementById(pair[0]);
+      proxy.addEventListener('click',function(e){
+        e.preventDefault(); e.stopPropagation();
+        const real=original(pair[1]);
+        if(!real || real.disabled) return;
+        real.click();
+      });
+    });
+  }
+  sync();
+}
+
+function sync(){
+  const pairs=[
+    ['jkrnV47Drop','dropButton'],
+    ['jkrnV47Sort','autoSortButton'],
+    ['jkrnV47Discard','discardButton'],
+    ['jkrnV47Declare','declareButton']
+  ];
+  pairs.forEach(function(p){
+    const proxy=document.getElementById(p[0]);
+    const real=original(p[1]);
+    if(!proxy) return;
+    if(real){
+      proxy.disabled=!!real.disabled;
+      proxy.title=real.disabled ? 'Not available now' : p[1];
+    }else{
+      proxy.disabled=true;
+    }
+  });
+}
+
+function boot(){
+  make();
+  sync();
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+else boot();
+window.addEventListener('load',boot);
+setInterval(sync,250);
+new MutationObserver(sync).observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:['disabled','class','style']});
+})();
+</script>
+
+
+<!-- JKRN V48: MODERN TABLE + OPEN DECK + MOVABLE HAND -->
+<style id="jkrn-v48-css">
+/* Modern central draw area */
+#centerArea{
+  position:absolute!important;
+  top:27%!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  gap:22px!important;
+  z-index:8000!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+#centerArea .pile-container{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  min-width:118px!important;
+  visibility:visible!important;
+}
+#centerArea .pile-label{
+  display:block!important;
+  color:#ffe35b!important;
+  font-size:14px!important;
+  font-weight:1000!important;
+  letter-spacing:.5px!important;
+  text-shadow:0 2px 4px #000!important;
+  margin-bottom:6px!important;
+}
+#centerArea .pile{
+  width:88px!important;
+  height:118px!important;
+  border:3px solid #e8bd35!important;
+  border-radius:13px!important;
+  box-shadow:0 5px 16px rgba(0,0,0,.7),0 0 15px rgba(255,210,50,.2)!important;
+  visibility:visible!important;
+}
+#centerArea .draw-pile{
+  background:linear-gradient(135deg,#173c68,#0b1b35)!important;
+}
+#discardPile{
+  background:#fff!important;
+  overflow:hidden!important;
+}
+#discardPile .card{
+  width:100%!important;
+  height:100%!important;
+  border-radius:9px!important;
+}
+#centerArea .jkrn-draw-action{
+  position:relative!important;
+  width:108px!important;
+  height:30px!important;
+  margin-top:6px!important;
+  border:2px solid #fff!important;
+  border-radius:8px!important;
+  font-size:10px!important;
+  font-weight:1000!important;
+  z-index:9000!important;
+}
+#centerArea .jkrn-take-closed{background:#126bd0!important}
+#centerArea .jkrn-take-open{background:#e1a914!important;color:#111!important}
+#centerArea .jkrn-draw-action:disabled{opacity:.35!important}
+
+/* Hand controls and hand position */
+#jkrnHandMover{
+  position:fixed!important;
+  right:16px!important;
+  bottom:76px!important;
+  z-index:2147483646!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:5px!important;
+  visibility:visible!important;
+}
+#jkrnHandMover button{
+  width:38px!important;
+  height:34px!important;
+  border:2px solid #fff!important;
+  border-radius:8px!important;
+  background:linear-gradient(#222,#070707)!important;
+  color:#ffd83d!important;
+  font-size:20px!important;
+  font-weight:1000!important;
+  cursor:pointer!important;
+  box-shadow:0 3px 10px #000!important;
+}
+#jkrnHandMover .label{
+  font-size:8px!important;
+  color:#fff!important;
+  text-align:center!important;
+  font-weight:900!important;
+}
+#playerArea{
+  bottom:var(--jkrn-hand-bottom,88px)!important;
+  transition:bottom .18s ease!important;
+}
+#playerGroupsContainer{
+  transform:translateY(var(--jkrn-hand-shift,0px))!important;
+  transition:transform .18s ease!important;
+}
+
+/* Keep action bar above the hand, not over the cards */
+#jkrnActionBar{
+  bottom:8px!important;
+}
+@media(max-width:700px){
+  #centerArea{top:25%!important;gap:8px!important}
+  #centerArea .pile{width:68px!important;height:92px!important}
+  #centerArea .pile-label{font-size:11px!important}
+  #centerArea .jkrn-draw-action{width:82px!important;height:26px!important;font-size:8px!important}
+  #jkrnHandMover{right:5px!important;bottom:88px!important}
+  #jkrnHandMover button{width:32px!important;height:30px!important}
+}
+</style>
+
+<script id="jkrn-v48-js">
+(function(){
+'use strict';
+let handShift=0;
+
+function makeMover(){
+  if(document.getElementById('jkrnHandMover')) return;
+  const box=document.createElement('div');
+  box.id='jkrnHandMover';
+  box.innerHTML='<div class="label">HAND</div>'+
+    '<button id="jkrnHandUp" type="button" title="Move hand up">▲</button>'+
+    '<button id="jkrnHandDown" type="button" title="Move hand down">▼</button>';
+  document.body.appendChild(box);
+
+  document.getElementById('jkrnHandUp').onclick=function(){
+    handShift=Math.max(-180,handShift-20);
+    apply();
+  };
+  document.getElementById('jkrnHandDown').onclick=function(){
+    handShift=Math.min(100,handShift+20);
+    apply();
+  };
+}
+
+function apply(){
+  document.documentElement.style.setProperty('--jkrn-hand-shift',handShift+'px');
+}
+
+function modernizeOpen(){
+  const open=document.getElementById('discardPile');
+  if(open){
+    open.style.visibility='visible';
+    open.style.opacity='1';
+    const label=open.parentElement && open.parentElement.querySelector('.pile-label');
+    if(label) label.textContent='OPEN DECK';
+  }
+  const closed=document.querySelector('#centerArea .draw-pile');
+  if(closed){
+    closed.style.visibility='visible';
+    closed.style.opacity='1';
+    const label=closed.parentElement && closed.parentElement.querySelector('.pile-label');
+    if(label) label.textContent='CLOSED DECK';
+  }
+}
+
+function boot(){
+  makeMover();
+  modernizeOpen();
+  apply();
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+else boot();
+window.addEventListener('load',boot);
+setInterval(boot,500);
+})();
+</script>
+
+
+<!-- JKRN V49: reliable lobby boot -->
+<script id="jkrn-v49-lobby-boot">
+(function(){
+  function openLobbyReliably(){
+    try{
+      var lobby=document.getElementById('onlineLobby');
+      var login=document.getElementById('loginScreen');
+      var main=document.getElementById('gameScreen');
+      if(login && login.classList.contains('hidden')===false) return;
+      if(lobby){
+        lobby.classList.remove('hidden');
+        lobby.style.display='';
+        lobby.style.visibility='visible';
+        lobby.style.opacity='1';
+      }
+      if(main && !window.__realRoomStarted){
+        main.classList.add('hidden');
+      }
+    }catch(e){}
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',openLobbyReliably,{once:true});
+  }else openLobbyReliably();
+  window.addEventListener('load',openLobbyReliably);
+})();
+</script>
+
+</body>
+</html>
