@@ -1,47 +1,286 @@
-<style id="jkrn-clean-unwanted-ui">
-  /* 1. అనవసరమైన లేదా ఓవర్‌లాప్ అవుతున్న టోస్/స్టేటస్ మెసేజ్‌లను పూర్తిగా తీసివేయడం */
-  .dealer-toss-subtitle, 
-  #dealerTossInfo, 
-  #jkrnDrawHint,
-  #jkrnLiveStatusBar,
-  .info-overlay {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>RUMMY JKRN V10 - POOL RUMMY - 201 POOL STRICT RULES</title>
+<style>
+* { box-sizing: border-box; }
+body { 
+    margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    background: #111; color: white; text-align: center; overflow-x: hidden; 
+}
+.top-bar {
+    display: flex; justify-content: space-between; align-items: center; padding: 8px 15px; background: #000; border-bottom: 2px solid #333;
+}
+h1 { margin: 0; color: #ffd700; font-size: 18px; }
+.top-right-box { display: flex; align-items: center; gap: 8px; }
+#walletBox { font-size: 14px; font-weight: bold; color: #ffeb3b; background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 15px; border: 1px solid #b8860b; }
+.scoreboard-icon-btn, .sound-toggle-btn {
+    background: linear-gradient(to bottom, #ffd700, #ff8f00);
+    color: #000; border: 2px solid #fff; padding: 6px 12px; border-radius: 20px;
+    font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;
+}
+.sound-toggle-btn { background: linear-gradient(to bottom, #4caf50, #2e7d32); color: #fff; }
+
+.table { 
+    position: relative;
+    width: min(92vw, 1240px);
+    max-width: 1240px;
+    height: 58vh;
+    min-height: 430px;
+    margin: 18px auto 190px;
+    background: radial-gradient(ellipse at 50% 46%, #168a49 0%, #0b6a36 48%, #04361d 100%);
+    border: 10px solid #3b2106;
+    border-radius: 50% / 42%;
+    box-shadow: inset 0 0 0 3px rgba(255,255,255,.06), inset 0 0 60px rgba(0,0,0,.82), 0 0 28px rgba(0,0,0,.75);
+}
+
+.opp-box {
+    position: absolute; display: flex; align-items: center;
+    background: rgba(0,0,0,0.85); border-radius: 30px; padding: 4px 12px 4px 4px;
+    border: 2px solid #555; width: 185px; box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+}
+.opp-box.active-turn { border: 3px solid #00ff00 !important; box-shadow: 0 0 20px #00ff00; }
+.opp-avatar-container { position: relative; width: 38px; height: 38px; }
+.opp-avatar {
+    width: 38px; height: 38px; border-radius: 50%; background: #ccc; 
+    display: flex; align-items: center; justify-content: center; font-size: 20px; color: #333; border: 2px solid white;
+}
+.opp-details { margin-left: 8px; text-align: left; }
+.opp-name { font-size: 11px; color: #fff; margin: 0; white-space: nowrap; }
+.opp-score { font-size: 11px; color: #ffd700; font-weight: bold; margin: 0; }
+.opp-action { font-size: 9px; color: #00ff00; margin: 0; font-style: italic; }
+
+#opp2 { top: 35%; left: 3%; }
+#opp3 { top: 15%; left: 22%; }
+#opp4 { top: 5%; left: 50%; transform: translateX(-50%); }
+#opp5 { top: 15%; right: 22%; }
+#opp6 { top: 35%; right: 3%; }
+
+.center-area {
+    position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%);
+    display: flex; gap: 25px; align-items: center; justify-content: center; z-index: 50;
+}
+.pile-container { text-align: center; }
+.pile-label { font-size: 12px; color: rgba(255,255,255,0.9); margin-bottom: 6px; font-weight: bold; }
+.pile { 
+    width: 95px; height: 135px; border-radius: 8px; display: flex; align-items: flex-start; justify-content: flex-start; 
+    font-size: 24px; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.6); border: 2px solid #fff; cursor: pointer;
+    background: white; color: black; position: relative; padding: 6px;
+}
+.draw-pile { background: #174a9c; color: white; border-color: #aaa; align-items: center; justify-content: center; }
+.draw-pile::after { content: '🂠'; font-size: 54px; }
+.deck-count { font-size: 12px; color: #ffd700; margin-top: 5px; font-weight: bold; }
+.joker-pile { border: 2px solid #ffd700 !important; flex-direction: column; }
+
+.player-area {
+    position: absolute; left: 50%; transform: translateX(-50%); bottom: 20px;
+    width: min(96vw, 1180px); text-align: center; display: flex; flex-direction: column;
+    align-items: center; z-index: 950 !important;
+}
+.groups-container {
+    display: flex; justify-content: center; align-items: flex-end; gap: 10px;
+    height: 150px; overflow-x: auto; max-width: 96%; padding: 2px 6px 0;
+}
+.card-group { 
+    display: flex; flex-direction: column; background: rgba(0,0,0,0.5); padding: 4px; 
+    border-radius: 6px; align-items: center; flex-shrink: 0; min-width: 80px; border: 2px dashed transparent;
+}
+.cards-in-group { display: flex; align-items: flex-end; min-height: 112px; }
+.card { 
+    width: 74px; height: 108px; min-width: 74px; background: white; color: black; border-radius: 5px; 
+    display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; 
+    font-size: 17px; font-weight: bold; padding: 5px 5px 18px 5px; cursor: grab; border: 1px solid #bbb; position: relative;
+}
+.cards-in-group .card + .card { margin-left: -36px; }
+.card.selected { transform: translateY(-16px) !important; border: 2px solid #ff5722 !important; box-shadow: 0 0 10px #ff5722; z-index: 10; }
+.card.red { color: #d32f2f !important; }
+.card.black { color: #111 !important; }
+
+.left-controls { position: absolute; left: 25px; bottom: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 50; }
+.left-controls button, .action-buttons button {
+    padding: 12px 18px; border: none; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; text-transform: uppercase;
+}
+.btn-drop { background: linear-gradient(to bottom, #e53935, #b71c1c); color: white; }
+.btn-auto-sort { background: linear-gradient(to bottom, #2e7d32, #1b5e20); color: white; }
+.btn-group { background: linear-gradient(to bottom, #fdd835, #fbc02d); color: #000; }
+
+.action-buttons { position: absolute; right: 25px; bottom: 20px; display: flex; flex-init: column; flex-direction: column; gap: 10px; z-index: 50; }
+.btn-discard { background: linear-gradient(to bottom, #2196f3, #0d47a1); color: white; }
+.btn-declare { background: linear-gradient(to bottom, #ff9800, #e65100); color: white; }
+
+/* అనవసరమైన ఓవర్‌లాపింగ్ మెసేజ్ బాక్సులు మరియు స్టేటస్‌లు పూర్తిగా తొలగించబడ్డాయి */
+#jkrnLiveStatusBar, .info-overlay, .dealer-toss-subtitle, #dealerTossInfo, #jkrnDrawHint {
     display: none !important;
-  }
+}
 
-  /* 2. టేబుల్ సెంటర్ ఏరియా నీట్‌గా ఉండేలా సెట్ చేయడం */
-  #centerArea {
-    top: 30% !important;
-    gap: 30px !important;
-  }
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.88); z-index: 1000; align-items: center; justify-content: center; }
+.modal.active { display: flex; }
+#resultModal .modal-box {
+    width: 98vw !important; max-width: 980px !important; background: #150727 !important;
+    border: 3px solid #e2b047 !important; border-radius: 18px !important; padding: 16px 20px !important; color: #fff !important;
+}
+.sb-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; text-align: center; font-size: 13px; }
+.sb-row { background: rgba(30, 14, 55, 0.7); border-radius: 8px; }
 
-  /* 3. డెక్స్ కింద ఉండే డ్రా యాక్షన్ బటన్స్ స్పష్టంగా కనిపించేలా చేయడం */
-  .jkrn-draw-action {
-    margin-top: 6px !important;
-    padding: 6px 10px !important;
-    font-size: 11px !important;
-    font-weight: 900 !important;
-    border-radius: 8px !important;
-  }
-
-  /* 4. మీ చేతిలోని కార్డులు (Player Hand) మరియు బటన్స్ కింది భాగంలో సరిగ్గా సర్దుబాటు చేయడం */
-  #playerArea {
-    bottom: 20px !important;
-    z-index: 9500 !important;
-  }
-
-  .left-controls {
-    bottom: 20px !important;
-    left: 15px !important;
-  }
-
-  .action-buttons {
-    bottom: 20px !important;
-    right: 15px !important;
-  }
-
-  /* 5. ఇతర అనవసరమైన డూప్లికేట్ టెక్స్ట్ లేబుల్స్ హైడ్ చేయడం */
-  .printed-joker-display {
-    font-size: 9px !important;
-    padding: 2px 4px !important;
-  }
+#onlineLobby {
+    position: fixed; inset: 0; background: radial-gradient(circle at center, #123d25, #050805 70%);
+    z-index: 99999; display: flex; align-items: center; justify-content: center; color: #fff;
+}
+#onlineLobby.hidden { display: none !important; }
+.online-box { width: min(430px, 92vw); background: #101b13; border: 2px solid #d4af37; border-radius: 22px; padding: 26px; text-align: center; }
+.online-input { width: 100%; padding: 13px; margin: 7px 0; border-radius: 10px; border: 1px solid #4b704f; background: #08100a; color: #fff; }
+.online-btn { width: 100%; padding: 13px; margin-top: 9px; border: 0; border-radius: 11px; background: linear-gradient(#ffd95a,#d39b00); font-weight: 800; cursor: pointer; }
 </style>
+<script src="/socket.io/socket.io.js"></script>
+</head>
+<body onload="initAutoGame()">
+
+<div id="onlineLobby">
+  <div class="online-box">
+    <h1>🃏 RUMMY JKRN</h1>
+    <p>REAL PLAYER POOL RUMMY</p>
+    <input id="onlineName" class="online-input" type="text" maxlength="18" placeholder="ENTER YOUR NAME">
+    <input id="onlineRoom" class="online-input" type="text" maxlength="6" placeholder="ENTER ROOM ID TO JOIN">
+    <button class="online-btn" onclick="createOnlineRoom()">CREATE ROOM</button>
+    <button class="online-btn alt" onclick="joinOnlineRoom()" style="background:linear-gradient(#35a853,#19702e);color:#fff;">JOIN ROOM</button>
+    <div id="onlineRoomCode" class="room-code" style="color:#ffd700;font-size:22px;margin:10px 0;"></div>
+    <div id="onlineStatus" class="online-status" style="font-size:12px;color:#9cff9c;margin-top:10px;">Enter your name and create or join a room.</div>
+    <div id="onlinePlayers" class="online-players"></div>
+  </div>
+</div>
+
+<div class="top-bar">
+    <h1>🃏 POOL RUMMY (<span id="poolTypeDisplay">201</span> POOL)</h1>
+    <div class="top-right-box">
+        <button class="sound-toggle-btn" id="soundToggleBtn" onclick="toggleSound()">🔊 Sound</button>
+        <button class="scoreboard-icon-btn" onclick="openGlobalScoreboardModal()">📊 Score Board</button>
+        <div id="walletBox">🪙 <span id="walletBalance">50000</span></div>
+    </div>
+</div>
+
+<div class="modal" id="resultModal">
+    <div class="modal-box">
+        <h2 id="resultModalHeader" style="color: #ffd700; font-size: 22px;">SCORE BOARD</h2>
+        <div id="resultModalContent"></div>
+        <button class="continue-btn-glow" id="nextDealBtn" onclick="closeResultModalAndStartNext()" style="padding:10px 20px;border-radius:15px;background:#ff9800;color:#fff;font-weight:bold;cursor:pointer;">Continue</button>
+    </div>
+</div>
+
+<div class="table">
+    <div id="dealerTossStage" style="display:none; position:absolute; inset:0; z-index:900; background:rgba(0,0,0,0.6);">
+        <div id="dealerTossCards"></div>
+    </div>
+
+    <div class="opp-box" id="opp2"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div></div><div class="opp-details"><p class="opp-name">Player 2</p><p class="opp-score">Score: <span id="score-p2">0</span></p></div></div>
+    <div class="opp-box" id="opp3"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div></div><div class="opp-details"><p class="opp-name">Player 3</p><p class="opp-score">Score: <span id="score-p3">0</span></p></div></div>
+    <div class="opp-box" id="opp4"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div></div><div class="opp-details"><p class="opp-name">Player 4</p><p class="opp-score">Score: <span id="score-p4">0</span></p></div></div>
+    <div class="opp-box" id="opp5"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div></div><div class="opp-details"><p class="opp-name">Player 5</p><p class="opp-score">Score: <span id="score-p5">0</span></p></div></div>
+    <div class="opp-box" id="opp6"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div></div><div class="opp-details"><p class="opp-name">Player 6</p><p class="opp-score">Score: <span id="score-p6">0</span></p></div></div>
+
+    <div class="center-area" id="centerArea">
+        <div class="pile-container">
+            <div class="pile-label">WILD JOKER</div>
+            <div class="pile joker-pile" id="topJokerDisplay">-</div>
+        </div>
+        <div class="pile-container">
+            <div class="pile-label">CLOSED DECK</div>
+            <div class="pile draw-pile" onclick="drawCard()"></div>
+            <div class="deck-count">SHUFFLED</div>
+        </div>
+        <div class="pile-container">
+            <div class="pile-label">OPEN DECK</div>
+            <div class="pile discard-pile" id="discardPile" onclick="drawFromDiscard()"></div>
+        </div>
+    </div>
+
+    <div class="left-controls">
+        <button class="btn-drop" id="dropButton" onclick="dropGame()">Drop</button>
+        <button class="btn-auto-sort" id="autoSortButton" onclick="autoSortCards()">Auto Sort</button>
+        <button class="btn-group" id="groupButton" onclick="groupSelectedCards()">Group</button>
+    </div>
+
+    <div class="player-area" id="playerArea">
+        <div class="groups-container" id="playerGroupsContainer"></div>
+    </div>
+
+    <div class="action-buttons">
+        <button class="btn-discard" id="discardButton" onclick="discardCard()">Discard</button>
+        <button class="btn-declare" id="declareButton" onclick="declareGame()">Declare</button>
+    </div>
+</div>
+
+<script>
+let soundMuted = false, deck = [], playerGroups = [[]], discardPile = [], wildJoker = null, selectedCards = [];
+let gameStarted = false, gameOver = false, currentPlayer = 0, dealerIndex = 0, playerHasDrawn = false;
+let gameScores = {"Player 1":0,"Player 2":0,"Player 3":0,"Player 4":0,"Player 5":0,"Player 6":0};
+let onlineSocket = null, onlineRoomId = null;
+
+function initAutoGame() {
+    document.getElementById("onlineLobby").classList.remove("hidden");
+}
+
+function ensureOnlineSocket() {
+    if(onlineSocket) return;
+    onlineSocket = io();
+    onlineSocket.on('roomCreated', d => {
+        onlineRoomId = d.roomId;
+        document.getElementById('onlineRoomCode').textContent = 'ROOM: ' + d.roomId;
+        document.getElementById('onlineStatus').textContent = 'Room created. Waiting for players...';
+    });
+    onlineSocket.on('roomJoined', d => {
+        onlineRoomId = d.roomId;
+        document.getElementById('onlineRoomCode').textContent = 'ROOM: ' + d.roomId;
+        document.getElementById('onlineStatus').textContent = 'Joined room successfully.';
+    });
+    onlineSocket.on('realGameStarted', () => {
+        document.getElementById('onlineLobby').classList.add('hidden');
+    });
+    onlineSocket.on('gameState', st => {
+        if(st && st.discardTop) {
+            let c = st.discardTop;
+            let dp = document.getElementById("discardPile");
+            dp.innerHTML = `<div class="${c.color}" style="font-size:16px;">${c.rank}${c.suit}<br><span style="font-size:28px;">${c.suit}</span></div>`;
+        }
+    });
+}
+
+function createOnlineRoom() {
+    ensureOnlineSocket();
+    let name = document.getElementById('onlineName').value || 'Player';
+    onlineSocket.emit('createRoom', {name, maxPlayers: 6, poolLimit: 201, entryFee: 300});
+}
+
+function joinOnlineRoom() {
+    ensureOnlineSocket();
+    let name = document.getElementById('onlineName').value || 'Player';
+    let roomId = document.getElementById('onlineRoom').value.trim().toUpperCase();
+    if(!roomId) return alert('Enter Room ID');
+    onlineSocket.emit('joinRoom', {name, roomId});
+}
+
+function toggleSound() { soundMuted = !soundMuted; }
+function drawCard() { if(onlineSocket && onlineRoomId) onlineSocket.emit('drawDeck'); }
+function drawFromDiscard() { if(onlineSocket && onlineRoomId) onlineSocket.emit('drawDiscard'); }
+function discardCard() {
+    if(selectedCards.length === 1) {
+        let s = selectedCards[0];
+        let card = playerGroups[s.gIdx][s.cIdx];
+        if(onlineSocket && onlineRoomId && card) onlineSocket.emit('discardCard', {cardId: card.id});
+    }
+}
+function dropGame() { if(onlineSocket) onlineSocket.emit('drop'); }
+function declareGame() { if(onlineSocket) onlineSocket.emit('declare', {groupIds: [], discardId: null}); }
+function autoSortCards() {}
+function groupSelectedCards() {}
+function selectCard(gIdx, cIdx) {
+    let ex = selectedCards.findIndex(s => s.gIdx === gIdx && s.cIdx === cIdx);
+    if(ex > -1) selectedCards.splice(ex, 1);
+    else selectedCards.push({gIdx, cIdx});
+}
+function openGlobalScoreboardModal() { document.getElementById("resultModal").classList.add("active"); }
+function closeResultModalAndStartNext() { document.getElementById("resultModal").classList.remove("active"); }
+</script>
+</body>
+</html>
