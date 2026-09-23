@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const express = require('express');
@@ -28,7 +29,18 @@ function addPlayerToRoom(room, socket, name){
 }
 
 app.use(express.static(__dirname));
-app.get('/', (req,res)=>res.sendFile(path.join(__dirname,'RUMMY_JKRN_FINAL_V49.html')));
+app.get('/', (req,res)=>{
+  const candidates = [
+    'RUMMY_JKRN_FINAL_V49.html',
+    'RUMMY_JKRN_FINAL.html',
+    'RUMMY_JKRN_FINAL_V48.html',
+    'RUMMY_JKRN_REAL_PLAYERS_V4.html',
+    'index.html'
+  ];
+  const file = candidates.find(name => fs.existsSync(path.join(__dirname, name)));
+  if (!file) return res.status(500).send('HTML file not found. Upload the RUMMY HTML file with server.js.');
+  res.sendFile(path.join(__dirname, file));
+});
 app.get('/health',(req,res)=>res.json({ok:true,service:'RUMMY_JKRN',ui:'V49'}));
 
 const suits = [
