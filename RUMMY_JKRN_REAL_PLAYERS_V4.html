@@ -4869,89 +4869,59 @@ window.addEventListener('load',syncV38,{once:true});
 })();
 </script>
 
-
-<!-- JKRN FINAL V40: DISCARD MUST WORK ON EVERY TURN -->
-<style id="jkrn-v40-repeat-discard-style">
-#discardButton{pointer-events:auto!important;visibility:visible!important;display:inline-flex!important;}
-#discardButton.jkrn-v40-ready{opacity:1!important;cursor:pointer!important;filter:none!important;}
-#discardButton.jkrn-v40-disabled{opacity:.42!important;cursor:not-allowed!important;}
+<style id="JKRN_DISCARD_CARD_FLY_V42">
+#jkrnDiscardFly{position:fixed!important;z-index:999999!important;pointer-events:none!important;margin:0!important;transform-origin:center center!important;will-change:transform,opacity!important;}
+#discardPile.jkrn-drop-target{box-shadow:0 0 24px rgba(0,229,255,.95)!important;border-color:#00e5ff!important;}
 </style>
-<script id="jkrn-v40-repeat-discard-js">
+<script id="JKRN_DISCARD_CARD_FLY_V42_JS">
 (function(){
 'use strict';
-function online(){return !!window.__realRoomStarted;}
-function seat(){return Number.isInteger(window.__onlineMyIndex)?Number(window.__onlineMyIndex):0;}
-function myTurn(){
-  if(typeof gameOver!=='undefined'&&gameOver)return false;
-  return Number(currentPlayer)===seat() && !(Array.isArray(droppedThisDeal)&&droppedThisDeal[seat()]);
+function cardFromSelection(){
+  if(!Array.isArray(window.selectedCards)||window.selectedCards.length!==1)return null;
+  const x=window.selectedCards[0];
+  const gs=window.playerGroups||[];
+  if(x&&x.id){const f=gs.flat().find(c=>c&&c.id===x.id);if(f)return f;}
+  return gs[x.gIdx]&&gs[x.gIdx][x.cIdx]||null;
 }
-function handCount(){
-  if(online() && window.__onlineState && Array.isArray(window.__onlineState.hands?.[seat()])) return window.__onlineState.hands[seat()].length;
-  return Array.isArray(playerGroups)?playerGroups.flat().filter(Boolean).length:0;
+function animateDiscard(cardEl){
+  const target=document.getElementById('discardPile');
+  if(!cardEl||!target)return;
+  const a=cardEl.getBoundingClientRect(), b=target.getBoundingClientRect();
+  if(!a.width||!a.height||!b.width||!b.height)return;
+  const clone=cardEl.cloneNode(true); clone.id='jkrnDiscardFly';
+  document.body.appendChild(clone);
+  clone.style.left=a.left+'px'; clone.style.top=a.top+'px';
+  clone.style.width=a.width+'px'; clone.style.height=a.height+'px';
+  clone.style.opacity='1';
+  target.classList.add('jkrn-drop-target');
+  requestAnimationFrame(function(){
+    const dx=(b.left+b.width/2)-(a.left+a.width/2), dy=(b.top+b.height/2)-(a.top+a.height/2);
+    clone.style.transition='transform .42s cubic-bezier(.2,.75,.25,1),opacity .42s ease';
+    clone.style.transform='translate('+dx+'px,'+dy+'px) scale(.62) rotate(7deg)';
+    clone.style.opacity='.25';
+  });
+  setTimeout(function(){clone.remove();target.classList.remove('jkrn-drop-target');},470);
 }
-function canDiscard(){return myTurn() && !!playerHasDrawn && handCount()>=14 && !(online()&&window.__onlineEliminated);}
-function selectedCardV40(){
-  if(!Array.isArray(selectedCards)||selectedCards.length!==1)return null;
-  const x=selectedCards[0];
-  if(x && x.id){const c=(playerGroups||[]).flat().find(v=>v&&v.id===x.id);if(c)return c;}
-  if(x && Number.isInteger(x.gIdx)&&Number.isInteger(x.cIdx)){
-    const g=playerGroups?.[x.gIdx]; if(g?.[x.cIdx])return g[x.cIdx];
-  }
-  return null;
+function selectedElement(){
+  const id=window.selectedCards&&window.selectedCards[0]&&window.selectedCards[0].id;
+  if(id){const e=[...document.querySelectorAll('#playerGroupsContainer .card')].find(x=>x.dataset&&x.dataset.cardId===id||x.getAttribute('data-card-id')===id);if(e)return e;}
+  const sel=document.querySelector('#playerGroupsContainer .card.selected');
+  return sel||null;
 }
-function syncV40(){
-  const b=document.getElementById('discardButton'); if(!b)return;
-  const ok=canDiscard();
-  b.disabled=!ok;
-  b.classList.toggle('jkrn-v40-ready',ok);
-  b.classList.toggle('jkrn-v40-disabled',!ok);
-  b.style.setProperty('pointer-events','auto','important');
-  b.style.setProperty('display','inline-flex','important');
-  b.style.setProperty('visibility','visible','important');
+function install(){
+  const b=document.getElementById('discardButton');
+  if(!b||b.dataset.v42)return;
+  b.dataset.v42='1';
+  b.addEventListener('click',function(e){
+    if(e.defaultPrevented)return;
+    const el=selectedElement(), card=cardFromSelection();
+    if(el&&card)animateDiscard(el);
+  },true);
 }
-window.jkrnV40SyncDiscard=syncV40;
-window.discardCard=function(){
-  if(!canDiscard())return;
-  const card=selectedCardV40();
-  if(!card){const st=document.getElementById('status');if(st)st.textContent='⚠️ 14 cards vachchayi. Discard cheyyalsina 1 card select cheyyandi.';return;}
-  if(online()){
-    if(window.__jkrnV40DiscardBusy)return;
-    if(!window.onlineSocket||!card.id)return;
-    window.__jkrnV40DiscardBusy=true;
-    window.onlineSocket.emit('discardCard',{cardId:card.id});
-    setTimeout(()=>{window.__jkrnV40DiscardBusy=false;syncV40();},500);
-    return;
-  }
-  let removed=null;
-  for(let gi=0;gi<playerGroups.length&&!removed;gi++){
-    const ci=playerGroups[gi].findIndex(c=>c&&(c.id===card.id||c===card));
-    if(ci>=0)removed=playerGroups[gi].splice(ci,1)[0];
-  }
-  if(!removed)return;
-  discardPile.push(removed);
-  playerGroups=playerGroups.filter(g=>g&&g.length);
-  selectedCards=[]; playerHasDrawn=false;
-  try{playSound('discard');}catch(e){}
-  updateUI();
-  if(typeof nextTurn==='function')nextTurn();
-};
-// Re-sync after EVERY server state, including the 2nd/3rd/4th turns.
-if(window.onlineSocket && window.onlineSocket.on){
-  window.onlineSocket.on('gameState',function(){setTimeout(syncV40,0);});
-}
-const oldApply=window.applyOnlineState;
-if(typeof oldApply==='function'&&!oldApply.__jkrnV40){
-  window.applyOnlineState=function(st){const r=oldApply.apply(this,arguments);setTimeout(syncV40,0);return r;};
-  window.applyOnlineState.__jkrnV40=true;
-}
-const oldUpdate=window.updateUI;
-if(typeof oldUpdate==='function'&&!oldUpdate.__jkrnV40){
-  window.updateUI=function(){const r=oldUpdate.apply(this,arguments);syncV40();return r;};
-  window.updateUI.__jkrnV40=true;
-}
-document.addEventListener('click',function(e){if(e.target.closest('#discardButton'))setTimeout(syncV40,0);},true);
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',syncV40,{once:true});else syncV40();
-window.addEventListener('load',syncV40);
+function boot(){install();}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+window.addEventListener('load',boot);
+new MutationObserver(boot).observe(document.documentElement,{childList:true,subtree:true});
 })();
 </script>
 </body>
@@ -6651,89 +6621,59 @@ window.addEventListener('load',syncV38,{once:true});
 })();
 </script>
 
-
-<!-- JKRN FINAL V40: DISCARD MUST WORK ON EVERY TURN -->
-<style id="jkrn-v40-repeat-discard-style">
-#discardButton{pointer-events:auto!important;visibility:visible!important;display:inline-flex!important;}
-#discardButton.jkrn-v40-ready{opacity:1!important;cursor:pointer!important;filter:none!important;}
-#discardButton.jkrn-v40-disabled{opacity:.42!important;cursor:not-allowed!important;}
+<style id="JKRN_DISCARD_CARD_FLY_V42">
+#jkrnDiscardFly{position:fixed!important;z-index:999999!important;pointer-events:none!important;margin:0!important;transform-origin:center center!important;will-change:transform,opacity!important;}
+#discardPile.jkrn-drop-target{box-shadow:0 0 24px rgba(0,229,255,.95)!important;border-color:#00e5ff!important;}
 </style>
-<script id="jkrn-v40-repeat-discard-js">
+<script id="JKRN_DISCARD_CARD_FLY_V42_JS">
 (function(){
 'use strict';
-function online(){return !!window.__realRoomStarted;}
-function seat(){return Number.isInteger(window.__onlineMyIndex)?Number(window.__onlineMyIndex):0;}
-function myTurn(){
-  if(typeof gameOver!=='undefined'&&gameOver)return false;
-  return Number(currentPlayer)===seat() && !(Array.isArray(droppedThisDeal)&&droppedThisDeal[seat()]);
+function cardFromSelection(){
+  if(!Array.isArray(window.selectedCards)||window.selectedCards.length!==1)return null;
+  const x=window.selectedCards[0];
+  const gs=window.playerGroups||[];
+  if(x&&x.id){const f=gs.flat().find(c=>c&&c.id===x.id);if(f)return f;}
+  return gs[x.gIdx]&&gs[x.gIdx][x.cIdx]||null;
 }
-function handCount(){
-  if(online() && window.__onlineState && Array.isArray(window.__onlineState.hands?.[seat()])) return window.__onlineState.hands[seat()].length;
-  return Array.isArray(playerGroups)?playerGroups.flat().filter(Boolean).length:0;
+function animateDiscard(cardEl){
+  const target=document.getElementById('discardPile');
+  if(!cardEl||!target)return;
+  const a=cardEl.getBoundingClientRect(), b=target.getBoundingClientRect();
+  if(!a.width||!a.height||!b.width||!b.height)return;
+  const clone=cardEl.cloneNode(true); clone.id='jkrnDiscardFly';
+  document.body.appendChild(clone);
+  clone.style.left=a.left+'px'; clone.style.top=a.top+'px';
+  clone.style.width=a.width+'px'; clone.style.height=a.height+'px';
+  clone.style.opacity='1';
+  target.classList.add('jkrn-drop-target');
+  requestAnimationFrame(function(){
+    const dx=(b.left+b.width/2)-(a.left+a.width/2), dy=(b.top+b.height/2)-(a.top+a.height/2);
+    clone.style.transition='transform .42s cubic-bezier(.2,.75,.25,1),opacity .42s ease';
+    clone.style.transform='translate('+dx+'px,'+dy+'px) scale(.62) rotate(7deg)';
+    clone.style.opacity='.25';
+  });
+  setTimeout(function(){clone.remove();target.classList.remove('jkrn-drop-target');},470);
 }
-function canDiscard(){return myTurn() && !!playerHasDrawn && handCount()>=14 && !(online()&&window.__onlineEliminated);}
-function selectedCardV40(){
-  if(!Array.isArray(selectedCards)||selectedCards.length!==1)return null;
-  const x=selectedCards[0];
-  if(x && x.id){const c=(playerGroups||[]).flat().find(v=>v&&v.id===x.id);if(c)return c;}
-  if(x && Number.isInteger(x.gIdx)&&Number.isInteger(x.cIdx)){
-    const g=playerGroups?.[x.gIdx]; if(g?.[x.cIdx])return g[x.cIdx];
-  }
-  return null;
+function selectedElement(){
+  const id=window.selectedCards&&window.selectedCards[0]&&window.selectedCards[0].id;
+  if(id){const e=[...document.querySelectorAll('#playerGroupsContainer .card')].find(x=>x.dataset&&x.dataset.cardId===id||x.getAttribute('data-card-id')===id);if(e)return e;}
+  const sel=document.querySelector('#playerGroupsContainer .card.selected');
+  return sel||null;
 }
-function syncV40(){
-  const b=document.getElementById('discardButton'); if(!b)return;
-  const ok=canDiscard();
-  b.disabled=!ok;
-  b.classList.toggle('jkrn-v40-ready',ok);
-  b.classList.toggle('jkrn-v40-disabled',!ok);
-  b.style.setProperty('pointer-events','auto','important');
-  b.style.setProperty('display','inline-flex','important');
-  b.style.setProperty('visibility','visible','important');
+function install(){
+  const b=document.getElementById('discardButton');
+  if(!b||b.dataset.v42)return;
+  b.dataset.v42='1';
+  b.addEventListener('click',function(e){
+    if(e.defaultPrevented)return;
+    const el=selectedElement(), card=cardFromSelection();
+    if(el&&card)animateDiscard(el);
+  },true);
 }
-window.jkrnV40SyncDiscard=syncV40;
-window.discardCard=function(){
-  if(!canDiscard())return;
-  const card=selectedCardV40();
-  if(!card){const st=document.getElementById('status');if(st)st.textContent='⚠️ 14 cards vachchayi. Discard cheyyalsina 1 card select cheyyandi.';return;}
-  if(online()){
-    if(window.__jkrnV40DiscardBusy)return;
-    if(!window.onlineSocket||!card.id)return;
-    window.__jkrnV40DiscardBusy=true;
-    window.onlineSocket.emit('discardCard',{cardId:card.id});
-    setTimeout(()=>{window.__jkrnV40DiscardBusy=false;syncV40();},500);
-    return;
-  }
-  let removed=null;
-  for(let gi=0;gi<playerGroups.length&&!removed;gi++){
-    const ci=playerGroups[gi].findIndex(c=>c&&(c.id===card.id||c===card));
-    if(ci>=0)removed=playerGroups[gi].splice(ci,1)[0];
-  }
-  if(!removed)return;
-  discardPile.push(removed);
-  playerGroups=playerGroups.filter(g=>g&&g.length);
-  selectedCards=[]; playerHasDrawn=false;
-  try{playSound('discard');}catch(e){}
-  updateUI();
-  if(typeof nextTurn==='function')nextTurn();
-};
-// Re-sync after EVERY server state, including the 2nd/3rd/4th turns.
-if(window.onlineSocket && window.onlineSocket.on){
-  window.onlineSocket.on('gameState',function(){setTimeout(syncV40,0);});
-}
-const oldApply=window.applyOnlineState;
-if(typeof oldApply==='function'&&!oldApply.__jkrnV40){
-  window.applyOnlineState=function(st){const r=oldApply.apply(this,arguments);setTimeout(syncV40,0);return r;};
-  window.applyOnlineState.__jkrnV40=true;
-}
-const oldUpdate=window.updateUI;
-if(typeof oldUpdate==='function'&&!oldUpdate.__jkrnV40){
-  window.updateUI=function(){const r=oldUpdate.apply(this,arguments);syncV40();return r;};
-  window.updateUI.__jkrnV40=true;
-}
-document.addEventListener('click',function(e){if(e.target.closest('#discardButton'))setTimeout(syncV40,0);},true);
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',syncV40,{once:true});else syncV40();
-window.addEventListener('load',syncV40);
+function boot(){install();}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+window.addEventListener('load',boot);
+new MutationObserver(boot).observe(document.documentElement,{childList:true,subtree:true});
 })();
 </script>
 </body>
