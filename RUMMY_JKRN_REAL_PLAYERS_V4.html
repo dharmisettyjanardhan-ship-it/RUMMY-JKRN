@@ -5255,6 +5255,494 @@ new MutationObserver(boot).observe(document.documentElement,{childList:true,subt
 })();
 </script>
 
+
+<!-- JKRN V45: VISIBLE OPEN/CLOSED DRAW OPTIONS + COMPACT BOTTOM HAND -->
+<style id="jkrn-v45-layout">
+/* Keep the draw area clearly visible to EVERY player. Only the active player can click. */
+#centerArea{
+  top:36%!important;
+  gap:14px!important;
+  z-index:5000!important;
+}
+#centerArea .pile-container{
+  min-width:100px!important;
+}
+#centerArea .pile-label{
+  font-size:13px!important;
+  font-weight:1000!important;
+  color:#fff!important;
+  text-shadow:0 2px 4px #000!important;
+  margin-bottom:4px!important;
+}
+#centerArea .pile{
+  width:82px!important;
+  height:112px!important;
+}
+#centerArea .draw-pile::after{font-size:42px!important}
+.jkrn-draw-action{
+  display:block!important;
+  width:96px!important;
+  margin:5px auto 0!important;
+  padding:5px 4px!important;
+  border:2px solid #fff!important;
+  border-radius:8px!important;
+  color:#fff!important;
+  font-size:10px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  cursor:pointer!important;
+  box-shadow:0 3px 8px rgba(0,0,0,.6)!important;
+}
+.jkrn-take-closed{
+  background:linear-gradient(#2f8df5,#064a9e)!important;
+}
+.jkrn-take-open{
+  background:linear-gradient(#f7c948,#b77a00)!important;
+  color:#111!important;
+}
+.jkrn-draw-action:disabled{
+  opacity:.38!important;
+  filter:grayscale(.5)!important;
+  cursor:not-allowed!important;
+}
+.jkrn-draw-action.jkrn-ready{
+  box-shadow:0 0 16px rgba(255,255,255,.8),0 3px 8px rgba(0,0,0,.6)!important;
+}
+#jkrnDrawHint{
+  position:absolute!important;
+  top:calc(36% + 126px)!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  z-index:5001!important;
+  background:rgba(0,0,0,.78)!important;
+  border:1px solid rgba(255,215,0,.7)!important;
+  color:#ffd94d!important;
+  padding:4px 10px!important;
+  border-radius:9px!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+  pointer-events:none!important;
+}
+/* Compact hand: 13 cards must stay together instead of spreading across the screen. */
+#playerArea{
+  bottom:72px!important;
+  width:min(94vw,1050px)!important;
+}
+#playerGroupsContainer{
+  width:100%!important;
+  max-width:100%!important;
+  gap:0!important;
+  padding:0!important;
+  overflow-x:hidden!important;
+  justify-content:center!important;
+}
+#playerGroupsContainer .card-group{
+  min-width:0!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+#playerGroupsContainer .cards-in-group{
+  min-height:92px!important;
+  gap:0!important;
+}
+#playerGroupsContainer .card{
+  width:60px!important;
+  min-width:60px!important;
+  height:92px!important;
+  font-size:14px!important;
+  padding:4px 4px 14px!important;
+}
+#playerGroupsContainer .cards-in-group .card + .card{
+  margin-left:-25px!important;
+}
+#playerGroupsContainer .card-center{font-size:22px!important}
+@media(max-width:1100px){
+  #centerArea{top:34%!important;gap:8px!important}
+  #centerArea .pile-container{min-width:82px!important}
+  #centerArea .pile{width:70px!important;height:96px!important}
+  .jkrn-draw-action{width:80px!important;font-size:9px!important}
+  #jkrnDrawHint{top:calc(34% + 108px)!important}
+  #playerArea{bottom:62px!important;width:98vw!important}
+  #playerGroupsContainer .card{width:52px!important;min-width:52px!important;height:80px!important}
+  #playerGroupsContainer .cards-in-group .card + .card{margin-left:-20px!important}
+  #playerGroupsContainer .card-center{font-size:19px!important}
+}
+@media(max-width:700px){
+  #centerArea{top:37%!important}
+  #centerArea .pile{width:58px!important;height:82px!important}
+  .jkrn-draw-action{width:68px!important;padding:4px 2px!important}
+  #jkrnDrawHint{display:none!important}
+  #playerArea{bottom:48px!important}
+  #playerGroupsContainer .card{width:44px!important;min-width:44px!important;height:68px!important;font-size:11px!important}
+  #playerGroupsContainer .cards-in-group .card + .card{margin-left:-16px!important}
+  #playerGroupsContainer .card-center{font-size:16px!important}
+}
+</style>
+
+<script id="jkrn-v45-layout-js">
+(function(){
+  'use strict';
+
+  function online(){
+    return !!window.__realRoomStarted && !!window.onlineSocket;
+  }
+  function mySeat(){
+    return Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : 0;
+  }
+  function myTurn(){
+    return typeof currentPlayer !== 'undefined' && currentPlayer === mySeat();
+  }
+  function drawn(){
+    return !!window.playerHasDrawn;
+  }
+
+  function ensureDrawButtons(){
+    const closed = document.querySelector('#centerArea .draw-pile');
+    const open = document.getElementById('discardPile');
+    if(!closed || !open) return;
+
+    const cc = closed.parentElement;
+    const oc = open.parentElement;
+
+    if(cc && !cc.querySelector('.jkrn-take-closed')){
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='jkrn-draw-action jkrn-take-closed';
+      b.textContent='TAKE CLOSED';
+      b.title='Take one card from Closed Deck';
+      b.addEventListener('click',function(e){
+        e.preventDefault(); e.stopPropagation();
+        if(!online()) return;
+        if(!myTurn()) return setStatus('WAIT FOR YOUR TURN');
+        if(drawn()) return setStatus('ALREADY DRAWN — DISCARD ONE CARD');
+        window.onlineSocket.emit('drawDeck');
+      },true);
+      cc.appendChild(b);
+    }
+
+    if(oc && !oc.querySelector('.jkrn-take-open')){
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='jkrn-draw-action jkrn-take-open';
+      b.textContent='TAKE OPEN';
+      b.title='Take the current Open Card';
+      b.addEventListener('click',function(e){
+        e.preventDefault(); e.stopPropagation();
+        if(!online()) return;
+        if(!myTurn()) return setStatus('WAIT FOR YOUR TURN');
+        if(drawn()) return setStatus('ALREADY DRAWN — DISCARD ONE CARD');
+        const st=window.__onlineState||{};
+        if(!st.discardTop) return setStatus('NO OPEN CARD');
+        window.onlineSocket.emit('drawDiscard');
+      },true);
+      oc.appendChild(b);
+    }
+
+    if(!document.getElementById('jkrnDrawHint')){
+      const hint=document.createElement('div');
+      hint.id='jkrnDrawHint';
+      hint.textContent='YOUR TURN → TAKE OPEN OR CLOSED CARD';
+      document.querySelector('.table')?.appendChild(hint);
+    }
+  }
+
+  function setStatus(t){
+    const s=document.getElementById('status');
+    if(s) s.textContent=t;
+  }
+
+  function sync(){
+    ensureDrawButtons();
+    const canDraw=online() && myTurn() && !drawn();
+    document.querySelectorAll('.jkrn-draw-action').forEach(function(b){
+      b.disabled=!canDraw;
+      b.classList.toggle('jkrn-ready',canDraw);
+    });
+    const hint=document.getElementById('jkrnDrawHint');
+    if(hint){
+      hint.textContent=canDraw ? 'YOUR TURN → TAKE OPEN OR CLOSED CARD' :
+        (drawn() ? '14 CARDS → SELECT 1 CARD AND DISCARD' : 'WAIT FOR YOUR TURN');
+      hint.style.color=canDraw ? '#7dff8a' : '#ffd94d';
+    }
+  }
+
+  function hookSocket(){
+    const s=window.onlineSocket;
+    if(!s || s.__jkrnV45) return;
+    s.__jkrnV45=true;
+    ['gameState','turnChanged','discardUpdated','onlineActionAck'].forEach(function(ev){
+      s.on(ev,function(){ setTimeout(sync,20); });
+    });
+  }
+
+  function boot(){
+    ensureDrawButtons();
+    sync();
+    hookSocket();
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+  else boot();
+  window.addEventListener('load',boot);
+  setInterval(function(){ensureDrawButtons();hookSocket();sync();},500);
+})();
+</script>
+
+
+<!-- JKRN V46: FORCE-VISIBLE DRAW OPTIONS -->
+<style id="jkrn-v46-force-visible">
+#jkrnDrawControls{
+  position:fixed!important;
+  z-index:2147483000!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  gap:6px!important;
+  pointer-events:auto!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+#jkrnDrawControls button{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:118px!important;
+  height:32px!important;
+  padding:2px 5px!important;
+  border:2px solid #fff!important;
+  border-radius:8px!important;
+  font-size:11px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  color:#fff!important;
+  text-shadow:0 1px 2px #000!important;
+  box-shadow:0 2px 10px #000,0 0 8px rgba(255,255,255,.25)!important;
+}
+#jkrnTakeClosed{background:#146bd1!important}
+#jkrnTakeOpen{background:#d69b08!important;color:#111!important;text-shadow:none!important}
+#jkrnDrawControls button:disabled{
+  opacity:.35!important;
+  cursor:not-allowed!important;
+  filter:grayscale(.45)!important;
+}
+#jkrnDrawControls .jkrn-mini-status{
+  background:rgba(0,0,0,.88)!important;
+  border:1px solid #ffd42a!important;
+  border-radius:7px!important;
+  padding:3px 7px!important;
+  color:#fff!important;
+  font-size:9px!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+}
+</style>
+<script id="jkrn-v46-force-visible-js">
+(function(){
+'use strict';
+
+function make(){
+  let box=document.getElementById('jkrnDrawControls');
+  if(!box){
+    box=document.createElement('div');
+    box.id='jkrnDrawControls';
+    box.innerHTML=
+      '<button id="jkrnTakeClosed" type="button">TAKE CLOSED CARD</button>'+
+      '<button id="jkrnTakeOpen" type="button">TAKE OPEN CARD</button>'+
+      '<div class="jkrn-mini-status" id="jkrnDrawStatus">WAITING FOR TURN</div>';
+    document.body.appendChild(box);
+
+    box.querySelector('#jkrnTakeClosed').onclick=function(e){
+      e.preventDefault(); e.stopPropagation();
+      if(!window.onlineSocket) return;
+      if(window.__onlineMyIndex !== currentPlayer) return setStatus('WAIT FOR YOUR TURN');
+      if(window.playerHasDrawn) return setStatus('DRAW DONE — DISCARD 1 CARD');
+      window.onlineSocket.emit('drawDeck');
+    };
+    box.querySelector('#jkrnTakeOpen').onclick=function(e){
+      e.preventDefault(); e.stopPropagation();
+      if(!window.onlineSocket) return;
+      if(window.__onlineMyIndex !== currentPlayer) return setStatus('WAIT FOR YOUR TURN');
+      if(window.playerHasDrawn) return setStatus('DRAW DONE — DISCARD 1 CARD');
+      const st=window.__onlineState||{};
+      if(!st.discardTop) return setStatus('NO OPEN CARD');
+      window.onlineSocket.emit('drawDiscard');
+    };
+  }
+  position();
+  state();
+}
+
+function position(){
+  const box=document.getElementById('jkrnDrawControls');
+  const closed=document.querySelector('#centerArea .draw-pile');
+  const open=document.getElementById('discardPile');
+  if(!box || (!closed && !open)) return;
+  const c=closed ? closed.getBoundingClientRect() : open.getBoundingClientRect();
+  const o=open ? open.getBoundingClientRect() : c;
+  const left=Math.max(8, Math.min(window.innerWidth-135, ((c.left+c.width/2 + o.left+o.width/2)/2)-59));
+  const top=Math.min(window.innerHeight-115, Math.max(250, Math.max(c.bottom,o.bottom)+8));
+  box.style.left=left+'px';
+  box.style.top=top+'px';
+}
+
+function state(){
+  const a=document.getElementById('jkrnTakeClosed');
+  const b=document.getElementById('jkrnTakeOpen');
+  const st=document.getElementById('jkrnDrawStatus');
+  if(!a||!b||!st) return;
+  const turn=(typeof currentPlayer!=='undefined' && window.__onlineMyIndex===currentPlayer);
+  const can=!!window.onlineSocket && turn && !window.playerHasDrawn;
+  a.disabled=!can;
+  b.disabled=!can || !(window.__onlineState && window.__onlineState.discardTop);
+  st.textContent=can?'YOUR TURN: CHOOSE A CARD':
+    (window.playerHasDrawn?'14 CARDS: DISCARD 1':'WAIT FOR YOUR TURN');
+  st.style.color=can?'#70ff78':'#ffd42a';
+}
+
+function boot(){
+  make();
+  state();
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+else boot();
+window.addEventListener('load',boot);
+window.addEventListener('resize',position);
+setInterval(boot,300);
+})();
+</script>
+
+
+<!-- JKRN V47: FORCE-VISIBLE GAME ACTION BAR -->
+<style id="jkrn-v47-actions-css">
+#jkrnActionBar{
+  position:fixed!important;
+  left:50%!important;
+  bottom:12px!important;
+  transform:translateX(-50%)!important;
+  z-index:2147483647!important;
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:10px!important;
+  width:auto!important;
+  max-width:96vw!important;
+  padding:8px 10px!important;
+  background:rgba(0,0,0,.88)!important;
+  border:2px solid #d9ad28!important;
+  border-radius:13px!important;
+  box-shadow:0 0 18px rgba(0,0,0,.9),0 0 10px rgba(255,205,40,.3)!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+}
+#jkrnActionBar button{
+  position:relative!important;
+  display:inline-flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:118px!important;
+  height:42px!important;
+  border:2px solid #fff!important;
+  border-radius:9px!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+  text-transform:uppercase!important;
+  cursor:pointer!important;
+  box-shadow:0 3px 10px rgba(0,0,0,.75)!important;
+}
+#jkrnV47Drop{background:linear-gradient(#777,#3b3b3b)!important;color:#fff!important}
+#jkrnV47Sort{background:linear-gradient(#35bd61,#08772e)!important;color:#fff!important}
+#jkrnV47Discard{background:linear-gradient(#42a5f5,#1263bb)!important;color:#fff!important}
+#jkrnV47Declare{background:linear-gradient(#ffae25,#e56700)!important;color:#fff!important}
+#jkrnActionBar button:disabled{
+  opacity:.38!important;
+  filter:grayscale(.7)!important;
+  cursor:not-allowed!important;
+  box-shadow:none!important;
+}
+@media(max-width:700px){
+  #jkrnActionBar{gap:4px!important;padding:5px!important;bottom:5px!important}
+  #jkrnActionBar button{width:76px!important;height:34px!important;font-size:9px!important}
+}
+</style>
+
+<script id="jkrn-v47-actions-js">
+(function(){
+'use strict';
+
+function original(id){ return document.getElementById(id); }
+
+function make(){
+  let bar=document.getElementById('jkrnActionBar');
+  if(!bar){
+    bar=document.createElement('div');
+    bar.id='jkrnActionBar';
+    bar.innerHTML=
+      '<button id="jkrnV47Drop" type="button">DROP</button>'+
+      '<button id="jkrnV47Sort" type="button">AUTO SORT</button>'+
+      '<button id="jkrnV47Discard" type="button">DISCARD</button>'+
+      '<button id="jkrnV47Declare" type="button">DECLARE</button>';
+    document.body.appendChild(bar);
+
+    const map=[
+      ['jkrnV47Drop','dropButton'],
+      ['jkrnV47Sort','autoSortButton'],
+      ['jkrnV47Discard','discardButton'],
+      ['jkrnV47Declare','declareButton']
+    ];
+
+    map.forEach(function(pair){
+      const proxy=document.getElementById(pair[0]);
+      proxy.addEventListener('click',function(e){
+        e.preventDefault(); e.stopPropagation();
+        const real=original(pair[1]);
+        if(!real || real.disabled) return;
+        real.click();
+      });
+    });
+  }
+  sync();
+}
+
+function sync(){
+  const pairs=[
+    ['jkrnV47Drop','dropButton'],
+    ['jkrnV47Sort','autoSortButton'],
+    ['jkrnV47Discard','discardButton'],
+    ['jkrnV47Declare','declareButton']
+  ];
+  pairs.forEach(function(p){
+    const proxy=document.getElementById(p[0]);
+    const real=original(p[1]);
+    if(!proxy) return;
+    if(real){
+      proxy.disabled=!!real.disabled;
+      proxy.title=real.disabled ? 'Not available now' : p[1];
+    }else{
+      proxy.disabled=true;
+    }
+  });
+}
+
+function boot(){
+  make();
+  sync();
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+else boot();
+window.addEventListener('load',boot);
+setInterval(sync,250);
+new MutationObserver(sync).observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:['disabled','class','style']});
+})();
+</script>
+
 </body>
 </html>
 
@@ -7334,6 +7822,494 @@ new MutationObserver(boot).observe(document.documentElement,{childList:true,subt
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
   window.addEventListener('load',boot);
   new MutationObserver(boot).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
+
+<!-- JKRN V45: VISIBLE OPEN/CLOSED DRAW OPTIONS + COMPACT BOTTOM HAND -->
+<style id="jkrn-v45-layout">
+/* Keep the draw area clearly visible to EVERY player. Only the active player can click. */
+#centerArea{
+  top:36%!important;
+  gap:14px!important;
+  z-index:5000!important;
+}
+#centerArea .pile-container{
+  min-width:100px!important;
+}
+#centerArea .pile-label{
+  font-size:13px!important;
+  font-weight:1000!important;
+  color:#fff!important;
+  text-shadow:0 2px 4px #000!important;
+  margin-bottom:4px!important;
+}
+#centerArea .pile{
+  width:82px!important;
+  height:112px!important;
+}
+#centerArea .draw-pile::after{font-size:42px!important}
+.jkrn-draw-action{
+  display:block!important;
+  width:96px!important;
+  margin:5px auto 0!important;
+  padding:5px 4px!important;
+  border:2px solid #fff!important;
+  border-radius:8px!important;
+  color:#fff!important;
+  font-size:10px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  cursor:pointer!important;
+  box-shadow:0 3px 8px rgba(0,0,0,.6)!important;
+}
+.jkrn-take-closed{
+  background:linear-gradient(#2f8df5,#064a9e)!important;
+}
+.jkrn-take-open{
+  background:linear-gradient(#f7c948,#b77a00)!important;
+  color:#111!important;
+}
+.jkrn-draw-action:disabled{
+  opacity:.38!important;
+  filter:grayscale(.5)!important;
+  cursor:not-allowed!important;
+}
+.jkrn-draw-action.jkrn-ready{
+  box-shadow:0 0 16px rgba(255,255,255,.8),0 3px 8px rgba(0,0,0,.6)!important;
+}
+#jkrnDrawHint{
+  position:absolute!important;
+  top:calc(36% + 126px)!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  z-index:5001!important;
+  background:rgba(0,0,0,.78)!important;
+  border:1px solid rgba(255,215,0,.7)!important;
+  color:#ffd94d!important;
+  padding:4px 10px!important;
+  border-radius:9px!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+  pointer-events:none!important;
+}
+/* Compact hand: 13 cards must stay together instead of spreading across the screen. */
+#playerArea{
+  bottom:72px!important;
+  width:min(94vw,1050px)!important;
+}
+#playerGroupsContainer{
+  width:100%!important;
+  max-width:100%!important;
+  gap:0!important;
+  padding:0!important;
+  overflow-x:hidden!important;
+  justify-content:center!important;
+}
+#playerGroupsContainer .card-group{
+  min-width:0!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+#playerGroupsContainer .cards-in-group{
+  min-height:92px!important;
+  gap:0!important;
+}
+#playerGroupsContainer .card{
+  width:60px!important;
+  min-width:60px!important;
+  height:92px!important;
+  font-size:14px!important;
+  padding:4px 4px 14px!important;
+}
+#playerGroupsContainer .cards-in-group .card + .card{
+  margin-left:-25px!important;
+}
+#playerGroupsContainer .card-center{font-size:22px!important}
+@media(max-width:1100px){
+  #centerArea{top:34%!important;gap:8px!important}
+  #centerArea .pile-container{min-width:82px!important}
+  #centerArea .pile{width:70px!important;height:96px!important}
+  .jkrn-draw-action{width:80px!important;font-size:9px!important}
+  #jkrnDrawHint{top:calc(34% + 108px)!important}
+  #playerArea{bottom:62px!important;width:98vw!important}
+  #playerGroupsContainer .card{width:52px!important;min-width:52px!important;height:80px!important}
+  #playerGroupsContainer .cards-in-group .card + .card{margin-left:-20px!important}
+  #playerGroupsContainer .card-center{font-size:19px!important}
+}
+@media(max-width:700px){
+  #centerArea{top:37%!important}
+  #centerArea .pile{width:58px!important;height:82px!important}
+  .jkrn-draw-action{width:68px!important;padding:4px 2px!important}
+  #jkrnDrawHint{display:none!important}
+  #playerArea{bottom:48px!important}
+  #playerGroupsContainer .card{width:44px!important;min-width:44px!important;height:68px!important;font-size:11px!important}
+  #playerGroupsContainer .cards-in-group .card + .card{margin-left:-16px!important}
+  #playerGroupsContainer .card-center{font-size:16px!important}
+}
+</style>
+
+<script id="jkrn-v45-layout-js">
+(function(){
+  'use strict';
+
+  function online(){
+    return !!window.__realRoomStarted && !!window.onlineSocket;
+  }
+  function mySeat(){
+    return Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : 0;
+  }
+  function myTurn(){
+    return typeof currentPlayer !== 'undefined' && currentPlayer === mySeat();
+  }
+  function drawn(){
+    return !!window.playerHasDrawn;
+  }
+
+  function ensureDrawButtons(){
+    const closed = document.querySelector('#centerArea .draw-pile');
+    const open = document.getElementById('discardPile');
+    if(!closed || !open) return;
+
+    const cc = closed.parentElement;
+    const oc = open.parentElement;
+
+    if(cc && !cc.querySelector('.jkrn-take-closed')){
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='jkrn-draw-action jkrn-take-closed';
+      b.textContent='TAKE CLOSED';
+      b.title='Take one card from Closed Deck';
+      b.addEventListener('click',function(e){
+        e.preventDefault(); e.stopPropagation();
+        if(!online()) return;
+        if(!myTurn()) return setStatus('WAIT FOR YOUR TURN');
+        if(drawn()) return setStatus('ALREADY DRAWN — DISCARD ONE CARD');
+        window.onlineSocket.emit('drawDeck');
+      },true);
+      cc.appendChild(b);
+    }
+
+    if(oc && !oc.querySelector('.jkrn-take-open')){
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='jkrn-draw-action jkrn-take-open';
+      b.textContent='TAKE OPEN';
+      b.title='Take the current Open Card';
+      b.addEventListener('click',function(e){
+        e.preventDefault(); e.stopPropagation();
+        if(!online()) return;
+        if(!myTurn()) return setStatus('WAIT FOR YOUR TURN');
+        if(drawn()) return setStatus('ALREADY DRAWN — DISCARD ONE CARD');
+        const st=window.__onlineState||{};
+        if(!st.discardTop) return setStatus('NO OPEN CARD');
+        window.onlineSocket.emit('drawDiscard');
+      },true);
+      oc.appendChild(b);
+    }
+
+    if(!document.getElementById('jkrnDrawHint')){
+      const hint=document.createElement('div');
+      hint.id='jkrnDrawHint';
+      hint.textContent='YOUR TURN → TAKE OPEN OR CLOSED CARD';
+      document.querySelector('.table')?.appendChild(hint);
+    }
+  }
+
+  function setStatus(t){
+    const s=document.getElementById('status');
+    if(s) s.textContent=t;
+  }
+
+  function sync(){
+    ensureDrawButtons();
+    const canDraw=online() && myTurn() && !drawn();
+    document.querySelectorAll('.jkrn-draw-action').forEach(function(b){
+      b.disabled=!canDraw;
+      b.classList.toggle('jkrn-ready',canDraw);
+    });
+    const hint=document.getElementById('jkrnDrawHint');
+    if(hint){
+      hint.textContent=canDraw ? 'YOUR TURN → TAKE OPEN OR CLOSED CARD' :
+        (drawn() ? '14 CARDS → SELECT 1 CARD AND DISCARD' : 'WAIT FOR YOUR TURN');
+      hint.style.color=canDraw ? '#7dff8a' : '#ffd94d';
+    }
+  }
+
+  function hookSocket(){
+    const s=window.onlineSocket;
+    if(!s || s.__jkrnV45) return;
+    s.__jkrnV45=true;
+    ['gameState','turnChanged','discardUpdated','onlineActionAck'].forEach(function(ev){
+      s.on(ev,function(){ setTimeout(sync,20); });
+    });
+  }
+
+  function boot(){
+    ensureDrawButtons();
+    sync();
+    hookSocket();
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+  else boot();
+  window.addEventListener('load',boot);
+  setInterval(function(){ensureDrawButtons();hookSocket();sync();},500);
+})();
+</script>
+
+
+<!-- JKRN V46: FORCE-VISIBLE DRAW OPTIONS -->
+<style id="jkrn-v46-force-visible">
+#jkrnDrawControls{
+  position:fixed!important;
+  z-index:2147483000!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  gap:6px!important;
+  pointer-events:auto!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+#jkrnDrawControls button{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:118px!important;
+  height:32px!important;
+  padding:2px 5px!important;
+  border:2px solid #fff!important;
+  border-radius:8px!important;
+  font-size:11px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  color:#fff!important;
+  text-shadow:0 1px 2px #000!important;
+  box-shadow:0 2px 10px #000,0 0 8px rgba(255,255,255,.25)!important;
+}
+#jkrnTakeClosed{background:#146bd1!important}
+#jkrnTakeOpen{background:#d69b08!important;color:#111!important;text-shadow:none!important}
+#jkrnDrawControls button:disabled{
+  opacity:.35!important;
+  cursor:not-allowed!important;
+  filter:grayscale(.45)!important;
+}
+#jkrnDrawControls .jkrn-mini-status{
+  background:rgba(0,0,0,.88)!important;
+  border:1px solid #ffd42a!important;
+  border-radius:7px!important;
+  padding:3px 7px!important;
+  color:#fff!important;
+  font-size:9px!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+}
+</style>
+<script id="jkrn-v46-force-visible-js">
+(function(){
+'use strict';
+
+function make(){
+  let box=document.getElementById('jkrnDrawControls');
+  if(!box){
+    box=document.createElement('div');
+    box.id='jkrnDrawControls';
+    box.innerHTML=
+      '<button id="jkrnTakeClosed" type="button">TAKE CLOSED CARD</button>'+
+      '<button id="jkrnTakeOpen" type="button">TAKE OPEN CARD</button>'+
+      '<div class="jkrn-mini-status" id="jkrnDrawStatus">WAITING FOR TURN</div>';
+    document.body.appendChild(box);
+
+    box.querySelector('#jkrnTakeClosed').onclick=function(e){
+      e.preventDefault(); e.stopPropagation();
+      if(!window.onlineSocket) return;
+      if(window.__onlineMyIndex !== currentPlayer) return setStatus('WAIT FOR YOUR TURN');
+      if(window.playerHasDrawn) return setStatus('DRAW DONE — DISCARD 1 CARD');
+      window.onlineSocket.emit('drawDeck');
+    };
+    box.querySelector('#jkrnTakeOpen').onclick=function(e){
+      e.preventDefault(); e.stopPropagation();
+      if(!window.onlineSocket) return;
+      if(window.__onlineMyIndex !== currentPlayer) return setStatus('WAIT FOR YOUR TURN');
+      if(window.playerHasDrawn) return setStatus('DRAW DONE — DISCARD 1 CARD');
+      const st=window.__onlineState||{};
+      if(!st.discardTop) return setStatus('NO OPEN CARD');
+      window.onlineSocket.emit('drawDiscard');
+    };
+  }
+  position();
+  state();
+}
+
+function position(){
+  const box=document.getElementById('jkrnDrawControls');
+  const closed=document.querySelector('#centerArea .draw-pile');
+  const open=document.getElementById('discardPile');
+  if(!box || (!closed && !open)) return;
+  const c=closed ? closed.getBoundingClientRect() : open.getBoundingClientRect();
+  const o=open ? open.getBoundingClientRect() : c;
+  const left=Math.max(8, Math.min(window.innerWidth-135, ((c.left+c.width/2 + o.left+o.width/2)/2)-59));
+  const top=Math.min(window.innerHeight-115, Math.max(250, Math.max(c.bottom,o.bottom)+8));
+  box.style.left=left+'px';
+  box.style.top=top+'px';
+}
+
+function state(){
+  const a=document.getElementById('jkrnTakeClosed');
+  const b=document.getElementById('jkrnTakeOpen');
+  const st=document.getElementById('jkrnDrawStatus');
+  if(!a||!b||!st) return;
+  const turn=(typeof currentPlayer!=='undefined' && window.__onlineMyIndex===currentPlayer);
+  const can=!!window.onlineSocket && turn && !window.playerHasDrawn;
+  a.disabled=!can;
+  b.disabled=!can || !(window.__onlineState && window.__onlineState.discardTop);
+  st.textContent=can?'YOUR TURN: CHOOSE A CARD':
+    (window.playerHasDrawn?'14 CARDS: DISCARD 1':'WAIT FOR YOUR TURN');
+  st.style.color=can?'#70ff78':'#ffd42a';
+}
+
+function boot(){
+  make();
+  state();
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+else boot();
+window.addEventListener('load',boot);
+window.addEventListener('resize',position);
+setInterval(boot,300);
+})();
+</script>
+
+
+<!-- JKRN V47: FORCE-VISIBLE GAME ACTION BAR -->
+<style id="jkrn-v47-actions-css">
+#jkrnActionBar{
+  position:fixed!important;
+  left:50%!important;
+  bottom:12px!important;
+  transform:translateX(-50%)!important;
+  z-index:2147483647!important;
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:10px!important;
+  width:auto!important;
+  max-width:96vw!important;
+  padding:8px 10px!important;
+  background:rgba(0,0,0,.88)!important;
+  border:2px solid #d9ad28!important;
+  border-radius:13px!important;
+  box-shadow:0 0 18px rgba(0,0,0,.9),0 0 10px rgba(255,205,40,.3)!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+}
+#jkrnActionBar button{
+  position:relative!important;
+  display:inline-flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:118px!important;
+  height:42px!important;
+  border:2px solid #fff!important;
+  border-radius:9px!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+  text-transform:uppercase!important;
+  cursor:pointer!important;
+  box-shadow:0 3px 10px rgba(0,0,0,.75)!important;
+}
+#jkrnV47Drop{background:linear-gradient(#777,#3b3b3b)!important;color:#fff!important}
+#jkrnV47Sort{background:linear-gradient(#35bd61,#08772e)!important;color:#fff!important}
+#jkrnV47Discard{background:linear-gradient(#42a5f5,#1263bb)!important;color:#fff!important}
+#jkrnV47Declare{background:linear-gradient(#ffae25,#e56700)!important;color:#fff!important}
+#jkrnActionBar button:disabled{
+  opacity:.38!important;
+  filter:grayscale(.7)!important;
+  cursor:not-allowed!important;
+  box-shadow:none!important;
+}
+@media(max-width:700px){
+  #jkrnActionBar{gap:4px!important;padding:5px!important;bottom:5px!important}
+  #jkrnActionBar button{width:76px!important;height:34px!important;font-size:9px!important}
+}
+</style>
+
+<script id="jkrn-v47-actions-js">
+(function(){
+'use strict';
+
+function original(id){ return document.getElementById(id); }
+
+function make(){
+  let bar=document.getElementById('jkrnActionBar');
+  if(!bar){
+    bar=document.createElement('div');
+    bar.id='jkrnActionBar';
+    bar.innerHTML=
+      '<button id="jkrnV47Drop" type="button">DROP</button>'+
+      '<button id="jkrnV47Sort" type="button">AUTO SORT</button>'+
+      '<button id="jkrnV47Discard" type="button">DISCARD</button>'+
+      '<button id="jkrnV47Declare" type="button">DECLARE</button>';
+    document.body.appendChild(bar);
+
+    const map=[
+      ['jkrnV47Drop','dropButton'],
+      ['jkrnV47Sort','autoSortButton'],
+      ['jkrnV47Discard','discardButton'],
+      ['jkrnV47Declare','declareButton']
+    ];
+
+    map.forEach(function(pair){
+      const proxy=document.getElementById(pair[0]);
+      proxy.addEventListener('click',function(e){
+        e.preventDefault(); e.stopPropagation();
+        const real=original(pair[1]);
+        if(!real || real.disabled) return;
+        real.click();
+      });
+    });
+  }
+  sync();
+}
+
+function sync(){
+  const pairs=[
+    ['jkrnV47Drop','dropButton'],
+    ['jkrnV47Sort','autoSortButton'],
+    ['jkrnV47Discard','discardButton'],
+    ['jkrnV47Declare','declareButton']
+  ];
+  pairs.forEach(function(p){
+    const proxy=document.getElementById(p[0]);
+    const real=original(p[1]);
+    if(!proxy) return;
+    if(real){
+      proxy.disabled=!!real.disabled;
+      proxy.title=real.disabled ? 'Not available now' : p[1];
+    }else{
+      proxy.disabled=true;
+    }
+  });
+}
+
+function boot(){
+  make();
+  sync();
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+else boot();
+window.addEventListener('load',boot);
+setInterval(sync,250);
+new MutationObserver(sync).observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:['disabled','class','style']});
 })();
 </script>
 
