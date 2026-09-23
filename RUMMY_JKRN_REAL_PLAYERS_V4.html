@@ -4870,140 +4870,90 @@ window.addEventListener('load',syncV38,{once:true});
 </script>
 
 
-<!-- JKRN FINAL AFTER-DRAW ACTION FLOW FIX -->
-<style id="jkrn-after-draw-flow-fix">
-  /* After drawing the 14th card, both actions must be usable. */
-  #discardButton,#declareButton{
-    display:inline-flex!important;
-    visibility:visible!important;
-    pointer-events:auto!important;
-  }
-  #discardButton.jkrn-flow-ready,#declareButton.jkrn-flow-ready{
-    opacity:1!important;
-    filter:none!important;
-    cursor:pointer!important;
-  }
-  #discardButton.jkrn-flow-disabled,#declareButton.jkrn-flow-disabled{
-    opacity:.42!important;
-    cursor:not-allowed!important;
-  }
-  /* Make selected card visibly move/stand out without changing its data. */
-  #playerGroupsContainer .card.jkrn-discard-selected{
-    transform:translateY(-14px)!important;
-    box-shadow:0 0 0 3px #00e5ff,0 8px 18px rgba(0,0,0,.65)!important;
-    z-index:999!important;
-  }
+<!-- JKRN FINAL V40: DISCARD MUST WORK ON EVERY TURN -->
+<style id="jkrn-v40-repeat-discard-style">
+#discardButton{pointer-events:auto!important;visibility:visible!important;display:inline-flex!important;}
+#discardButton.jkrn-v40-ready{opacity:1!important;cursor:pointer!important;filter:none!important;}
+#discardButton.jkrn-v40-disabled{opacity:.42!important;cursor:not-allowed!important;}
 </style>
-<script id="jkrn-after-draw-flow-fix-js">
+<script id="jkrn-v40-repeat-discard-js">
 (function(){
-  'use strict';
-  function online(){ return !!window.__realRoomStarted; }
-  function seat(){ return Number.isInteger(window.__onlineMyIndex)?Number(window.__onlineMyIndex):0; }
-  function myTurn(){
-    return !gameOver && currentPlayer===seat() && !(Array.isArray(droppedThisDeal)&&droppedThisDeal[seat()]);
+'use strict';
+function online(){return !!window.__realRoomStarted;}
+function seat(){return Number.isInteger(window.__onlineMyIndex)?Number(window.__onlineMyIndex):0;}
+function myTurn(){
+  if(typeof gameOver!=='undefined'&&gameOver)return false;
+  return Number(currentPlayer)===seat() && !(Array.isArray(droppedThisDeal)&&droppedThisDeal[seat()]);
+}
+function handCount(){
+  if(online() && window.__onlineState && Array.isArray(window.__onlineState.hands?.[seat()])) return window.__onlineState.hands[seat()].length;
+  return Array.isArray(playerGroups)?playerGroups.flat().filter(Boolean).length:0;
+}
+function canDiscard(){return myTurn() && !!playerHasDrawn && handCount()>=14 && !(online()&&window.__onlineEliminated);}
+function selectedCardV40(){
+  if(!Array.isArray(selectedCards)||selectedCards.length!==1)return null;
+  const x=selectedCards[0];
+  if(x && x.id){const c=(playerGroups||[]).flat().find(v=>v&&v.id===x.id);if(c)return c;}
+  if(x && Number.isInteger(x.gIdx)&&Number.isInteger(x.cIdx)){
+    const g=playerGroups?.[x.gIdx]; if(g?.[x.cIdx])return g[x.cIdx];
   }
-  function eliminated(){
-    return online() && typeof window.__onlineEliminated==='boolean'
-      ? window.__onlineEliminated
-      : (typeof isEliminated==='function' ? !!isEliminated(0) : false);
+  return null;
+}
+function syncV40(){
+  const b=document.getElementById('discardButton'); if(!b)return;
+  const ok=canDiscard();
+  b.disabled=!ok;
+  b.classList.toggle('jkrn-v40-ready',ok);
+  b.classList.toggle('jkrn-v40-disabled',!ok);
+  b.style.setProperty('pointer-events','auto','important');
+  b.style.setProperty('display','inline-flex','important');
+  b.style.setProperty('visibility','visible','important');
+}
+window.jkrnV40SyncDiscard=syncV40;
+window.discardCard=function(){
+  if(!canDiscard())return;
+  const card=selectedCardV40();
+  if(!card){const st=document.getElementById('status');if(st)st.textContent='⚠️ 14 cards vachchayi. Discard cheyyalsina 1 card select cheyyandi.';return;}
+  if(online()){
+    if(window.__jkrnV40DiscardBusy)return;
+    if(!window.onlineSocket||!card.id)return;
+    window.__jkrnV40DiscardBusy=true;
+    window.onlineSocket.emit('discardCard',{cardId:card.id});
+    setTimeout(()=>{window.__jkrnV40DiscardBusy=false;syncV40();},500);
+    return;
   }
-  function handCount(){ return Array.isArray(playerGroups)?playerGroups.flat().filter(Boolean).length:0; }
-  function selectedCard(){
-    if(!Array.isArray(selectedCards)||selectedCards.length!==1)return null;
-    const s=selectedCards[0];
-    if(s&&s.id){const c=playerGroups.flat().find(v=>v&&v.id===s.id);if(c)return c;}
-    const g=playerGroups[s.gIdx];
-    return g&&g[s.cIdx]?g[s.cIdx]:null;
+  let removed=null;
+  for(let gi=0;gi<playerGroups.length&&!removed;gi++){
+    const ci=playerGroups[gi].findIndex(c=>c&&(c.id===card.id||c===card));
+    if(ci>=0)removed=playerGroups[gi].splice(ci,1)[0];
   }
-  function syncFlow(){
-    const d=document.getElementById('discardButton');
-    const dec=document.getElementById('declareButton');
-    if(!d||!dec)return;
-    const afterDraw=myTurn() && !!playerHasDrawn && handCount()===14 && !eliminated();
-    d.disabled=!afterDraw;
-    dec.disabled=!afterDraw;
-    d.classList.toggle('jkrn-flow-ready',afterDraw);
-    dec.classList.toggle('jkrn-flow-ready',afterDraw);
-    d.classList.toggle('jkrn-flow-disabled',!afterDraw);
-    dec.classList.toggle('jkrn-flow-disabled',!afterDraw);
-    d.style.setProperty('display','inline-flex','important');
-    dec.style.setProperty('display','inline-flex','important');
-  }
-  function markSelected(){
-    document.querySelectorAll('#playerGroupsContainer .card.jkrn-discard-selected').forEach(e=>e.classList.remove('jkrn-discard-selected'));
-    const c=selectedCard();
-    if(!c)return;
-    document.querySelectorAll('#playerGroupsContainer .card').forEach(el=>{
-      if(el.dataset && el.dataset.cardId===c.id)el.classList.add('jkrn-discard-selected');
-    });
-  }
-  /* Keep the existing card-selection system; only add visual feedback. */
-  const oldSelect=window.selectCard;
-  if(typeof oldSelect==='function'&&!oldSelect.__jkrnFlowWrap){
-    window.selectCard=function(g,c){
-      const r=oldSelect.apply(this,arguments);
-      setTimeout(function(){markSelected();syncFlow();},0);
-      return r;
-    };
-    window.selectCard.__jkrnFlowWrap=true;
-  }
-  /* One clean discard path. In online mode the server moves the card to OPEN DISCARD.
-     In local mode the card is removed from the 14-card hand and pushed to discardPile. */
-  const baseDiscard=window.discardCard;
-  window.discardCard=function(){
-    if(!myTurn()||!playerHasDrawn||handCount()!==14||eliminated())return;
-    const c=selectedCard();
-    if(!c){
-      const st=document.getElementById('status');
-      if(st)st.innerText='⚠️ 14 cards unnayi. Mundu 1 card select chesi DISCARD press cheyyandi.';
-      return;
-    }
-    if(online()){
-      if(!window.onlineSocket||!c.id)return;
-      window.onlineSocket.emit('discardCard',{cardId:c.id});
-      return;
-    }
-    let removed=null;
-    for(let gi=0;gi<playerGroups.length&&!removed;gi++){
-      const idx=playerGroups[gi].findIndex(v=>v&&(v.id===c.id||v===c));
-      if(idx>=0)removed=playerGroups[gi].splice(idx,1)[0];
-    }
-    if(!removed)return;
-    if(Array.isArray(discardPile))discardPile.push(removed);
-    playerGroups=playerGroups.filter(g=>g&&g.length);
-    selectedCards=[];playerHasDrawn=false;
-    try{if(typeof playSound==='function')playSound('discard')}catch(e){}
-    if(typeof updateUI==='function')updateUI();
-    if(typeof nextTurn==='function')nextTurn();
-  };
-  /* Declare is allowed only after the 14th card is drawn. The existing online
-     declare validation still requires the one discard card to be selected. */
-  const baseDeclare=window.declareGame;
-  window.declareGame=function(){
-    if(!myTurn()||!playerHasDrawn||handCount()!==14||eliminated())return;
-    const c=selectedCard();
-    if(!c){
-      const st=document.getElementById('status');
-      if(st)st.innerText='⚠️ DECLARE cheyyadaniki 14 cards lo discard cheyyalsina 1 card select cheyyandi.';
-      return;
-    }
-    if(typeof baseDeclare==='function')return baseDeclare.apply(this,arguments);
-  };
-  const oldUpdate=window.updateUI;
-  if(typeof oldUpdate==='function'&&!oldUpdate.__jkrnFlowFinal){
-    window.updateUI=function(){
-      const r=oldUpdate.apply(this,arguments);
-      syncFlow();markSelected();
-      return r;
-    };
-    window.updateUI.__jkrnFlowFinal=true;
-  }
-  document.addEventListener('DOMContentLoaded',function(){syncFlow();markSelected()});
-  window.addEventListener('load',function(){syncFlow();markSelected()});
-  window.jkrnAfterDrawFlowSync=syncFlow;
+  if(!removed)return;
+  discardPile.push(removed);
+  playerGroups=playerGroups.filter(g=>g&&g.length);
+  selectedCards=[]; playerHasDrawn=false;
+  try{playSound('discard');}catch(e){}
+  updateUI();
+  if(typeof nextTurn==='function')nextTurn();
+};
+// Re-sync after EVERY server state, including the 2nd/3rd/4th turns.
+if(window.onlineSocket && window.onlineSocket.on){
+  window.onlineSocket.on('gameState',function(){setTimeout(syncV40,0);});
+}
+const oldApply=window.applyOnlineState;
+if(typeof oldApply==='function'&&!oldApply.__jkrnV40){
+  window.applyOnlineState=function(st){const r=oldApply.apply(this,arguments);setTimeout(syncV40,0);return r;};
+  window.applyOnlineState.__jkrnV40=true;
+}
+const oldUpdate=window.updateUI;
+if(typeof oldUpdate==='function'&&!oldUpdate.__jkrnV40){
+  window.updateUI=function(){const r=oldUpdate.apply(this,arguments);syncV40();return r;};
+  window.updateUI.__jkrnV40=true;
+}
+document.addEventListener('click',function(e){if(e.target.closest('#discardButton'))setTimeout(syncV40,0);},true);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',syncV40,{once:true});else syncV40();
+window.addEventListener('load',syncV40);
 })();
 </script>
-
 </body>
 </html>
 
@@ -6702,235 +6652,89 @@ window.addEventListener('load',syncV38,{once:true});
 </script>
 
 
-<!-- JKRN FINAL AFTER-DRAW ACTION FLOW FIX -->
-<style id="jkrn-after-draw-flow-fix">
-  /* After drawing the 14th card, both actions must be usable. */
-  #discardButton,#declareButton{
-    display:inline-flex!important;
-    visibility:visible!important;
-    pointer-events:auto!important;
-  }
-  #discardButton.jkrn-flow-ready,#declareButton.jkrn-flow-ready{
-    opacity:1!important;
-    filter:none!important;
-    cursor:pointer!important;
-  }
-  #discardButton.jkrn-flow-disabled,#declareButton.jkrn-flow-disabled{
-    opacity:.42!important;
-    cursor:not-allowed!important;
-  }
-  /* Make selected card visibly move/stand out without changing its data. */
-  #playerGroupsContainer .card.jkrn-discard-selected{
-    transform:translateY(-14px)!important;
-    box-shadow:0 0 0 3px #00e5ff,0 8px 18px rgba(0,0,0,.65)!important;
-    z-index:999!important;
-  }
+<!-- JKRN FINAL V40: DISCARD MUST WORK ON EVERY TURN -->
+<style id="jkrn-v40-repeat-discard-style">
+#discardButton{pointer-events:auto!important;visibility:visible!important;display:inline-flex!important;}
+#discardButton.jkrn-v40-ready{opacity:1!important;cursor:pointer!important;filter:none!important;}
+#discardButton.jkrn-v40-disabled{opacity:.42!important;cursor:not-allowed!important;}
 </style>
-<script id="jkrn-after-draw-flow-fix-js">
+<script id="jkrn-v40-repeat-discard-js">
 (function(){
-  'use strict';
-  function online(){ return !!window.__realRoomStarted; }
-  function seat(){ return Number.isInteger(window.__onlineMyIndex)?Number(window.__onlineMyIndex):0; }
-  function myTurn(){
-    return !gameOver && currentPlayer===seat() && !(Array.isArray(droppedThisDeal)&&droppedThisDeal[seat()]);
+'use strict';
+function online(){return !!window.__realRoomStarted;}
+function seat(){return Number.isInteger(window.__onlineMyIndex)?Number(window.__onlineMyIndex):0;}
+function myTurn(){
+  if(typeof gameOver!=='undefined'&&gameOver)return false;
+  return Number(currentPlayer)===seat() && !(Array.isArray(droppedThisDeal)&&droppedThisDeal[seat()]);
+}
+function handCount(){
+  if(online() && window.__onlineState && Array.isArray(window.__onlineState.hands?.[seat()])) return window.__onlineState.hands[seat()].length;
+  return Array.isArray(playerGroups)?playerGroups.flat().filter(Boolean).length:0;
+}
+function canDiscard(){return myTurn() && !!playerHasDrawn && handCount()>=14 && !(online()&&window.__onlineEliminated);}
+function selectedCardV40(){
+  if(!Array.isArray(selectedCards)||selectedCards.length!==1)return null;
+  const x=selectedCards[0];
+  if(x && x.id){const c=(playerGroups||[]).flat().find(v=>v&&v.id===x.id);if(c)return c;}
+  if(x && Number.isInteger(x.gIdx)&&Number.isInteger(x.cIdx)){
+    const g=playerGroups?.[x.gIdx]; if(g?.[x.cIdx])return g[x.cIdx];
   }
-  function eliminated(){
-    return online() && typeof window.__onlineEliminated==='boolean'
-      ? window.__onlineEliminated
-      : (typeof isEliminated==='function' ? !!isEliminated(0) : false);
+  return null;
+}
+function syncV40(){
+  const b=document.getElementById('discardButton'); if(!b)return;
+  const ok=canDiscard();
+  b.disabled=!ok;
+  b.classList.toggle('jkrn-v40-ready',ok);
+  b.classList.toggle('jkrn-v40-disabled',!ok);
+  b.style.setProperty('pointer-events','auto','important');
+  b.style.setProperty('display','inline-flex','important');
+  b.style.setProperty('visibility','visible','important');
+}
+window.jkrnV40SyncDiscard=syncV40;
+window.discardCard=function(){
+  if(!canDiscard())return;
+  const card=selectedCardV40();
+  if(!card){const st=document.getElementById('status');if(st)st.textContent='⚠️ 14 cards vachchayi. Discard cheyyalsina 1 card select cheyyandi.';return;}
+  if(online()){
+    if(window.__jkrnV40DiscardBusy)return;
+    if(!window.onlineSocket||!card.id)return;
+    window.__jkrnV40DiscardBusy=true;
+    window.onlineSocket.emit('discardCard',{cardId:card.id});
+    setTimeout(()=>{window.__jkrnV40DiscardBusy=false;syncV40();},500);
+    return;
   }
-  function handCount(){ return Array.isArray(playerGroups)?playerGroups.flat().filter(Boolean).length:0; }
-  function selectedCard(){
-    if(!Array.isArray(selectedCards)||selectedCards.length!==1)return null;
-    const s=selectedCards[0];
-    if(s&&s.id){const c=playerGroups.flat().find(v=>v&&v.id===s.id);if(c)return c;}
-    const g=playerGroups[s.gIdx];
-    return g&&g[s.cIdx]?g[s.cIdx]:null;
+  let removed=null;
+  for(let gi=0;gi<playerGroups.length&&!removed;gi++){
+    const ci=playerGroups[gi].findIndex(c=>c&&(c.id===card.id||c===card));
+    if(ci>=0)removed=playerGroups[gi].splice(ci,1)[0];
   }
-  function syncFlow(){
-    const d=document.getElementById('discardButton');
-    const dec=document.getElementById('declareButton');
-    if(!d||!dec)return;
-    const afterDraw=myTurn() && !!playerHasDrawn && handCount()===14 && !eliminated();
-    d.disabled=!afterDraw;
-    dec.disabled=!afterDraw;
-    d.classList.toggle('jkrn-flow-ready',afterDraw);
-    dec.classList.toggle('jkrn-flow-ready',afterDraw);
-    d.classList.toggle('jkrn-flow-disabled',!afterDraw);
-    dec.classList.toggle('jkrn-flow-disabled',!afterDraw);
-    d.style.setProperty('display','inline-flex','important');
-    dec.style.setProperty('display','inline-flex','important');
-  }
-  function markSelected(){
-    document.querySelectorAll('#playerGroupsContainer .card.jkrn-discard-selected').forEach(e=>e.classList.remove('jkrn-discard-selected'));
-    const c=selectedCard();
-    if(!c)return;
-    document.querySelectorAll('#playerGroupsContainer .card').forEach(el=>{
-      if(el.dataset && el.dataset.cardId===c.id)el.classList.add('jkrn-discard-selected');
-    });
-  }
-  /* Keep the existing card-selection system; only add visual feedback. */
-  const oldSelect=window.selectCard;
-  if(typeof oldSelect==='function'&&!oldSelect.__jkrnFlowWrap){
-    window.selectCard=function(g,c){
-      const r=oldSelect.apply(this,arguments);
-      setTimeout(function(){markSelected();syncFlow();},0);
-      return r;
-    };
-    window.selectCard.__jkrnFlowWrap=true;
-  }
-  /* One clean discard path. In online mode the server moves the card to OPEN DISCARD.
-     In local mode the card is removed from the 14-card hand and pushed to discardPile. */
-  const baseDiscard=window.discardCard;
-  window.discardCard=function(){
-    if(!myTurn()||!playerHasDrawn||handCount()!==14||eliminated())return;
-    const c=selectedCard();
-    if(!c){
-      const st=document.getElementById('status');
-      if(st)st.innerText='⚠️ 14 cards unnayi. Mundu 1 card select chesi DISCARD press cheyyandi.';
-      return;
-    }
-    if(online()){
-      if(!window.onlineSocket||!c.id)return;
-      window.onlineSocket.emit('discardCard',{cardId:c.id});
-      return;
-    }
-    let removed=null;
-    for(let gi=0;gi<playerGroups.length&&!removed;gi++){
-      const idx=playerGroups[gi].findIndex(v=>v&&(v.id===c.id||v===c));
-      if(idx>=0)removed=playerGroups[gi].splice(idx,1)[0];
-    }
-    if(!removed)return;
-    if(Array.isArray(discardPile))discardPile.push(removed);
-    playerGroups=playerGroups.filter(g=>g&&g.length);
-    selectedCards=[];playerHasDrawn=false;
-    try{if(typeof playSound==='function')playSound('discard')}catch(e){}
-    if(typeof updateUI==='function')updateUI();
-    if(typeof nextTurn==='function')nextTurn();
-  };
-  /* Declare is allowed only after the 14th card is drawn. The existing online
-     declare validation still requires the one discard card to be selected. */
-  const baseDeclare=window.declareGame;
-  window.declareGame=function(){
-    if(!myTurn()||!playerHasDrawn||handCount()!==14||eliminated())return;
-    const c=selectedCard();
-    if(!c){
-      const st=document.getElementById('status');
-      if(st)st.innerText='⚠️ DECLARE cheyyadaniki 14 cards lo discard cheyyalsina 1 card select cheyyandi.';
-      return;
-    }
-    if(typeof baseDeclare==='function')return baseDeclare.apply(this,arguments);
-  };
-  const oldUpdate=window.updateUI;
-  if(typeof oldUpdate==='function'&&!oldUpdate.__jkrnFlowFinal){
-    window.updateUI=function(){
-      const r=oldUpdate.apply(this,arguments);
-      syncFlow();markSelected();
-      return r;
-    };
-    window.updateUI.__jkrnFlowFinal=true;
-  }
-  document.addEventListener('DOMContentLoaded',function(){syncFlow();markSelected()});
-  window.addEventListener('load',function(){syncFlow();markSelected()});
-  window.jkrnAfterDrawFlowSync=syncFlow;
+  if(!removed)return;
+  discardPile.push(removed);
+  playerGroups=playerGroups.filter(g=>g&&g.length);
+  selectedCards=[]; playerHasDrawn=false;
+  try{playSound('discard');}catch(e){}
+  updateUI();
+  if(typeof nextTurn==='function')nextTurn();
+};
+// Re-sync after EVERY server state, including the 2nd/3rd/4th turns.
+if(window.onlineSocket && window.onlineSocket.on){
+  window.onlineSocket.on('gameState',function(){setTimeout(syncV40,0);});
+}
+const oldApply=window.applyOnlineState;
+if(typeof oldApply==='function'&&!oldApply.__jkrnV40){
+  window.applyOnlineState=function(st){const r=oldApply.apply(this,arguments);setTimeout(syncV40,0);return r;};
+  window.applyOnlineState.__jkrnV40=true;
+}
+const oldUpdate=window.updateUI;
+if(typeof oldUpdate==='function'&&!oldUpdate.__jkrnV40){
+  window.updateUI=function(){const r=oldUpdate.apply(this,arguments);syncV40();return r;};
+  window.updateUI.__jkrnV40=true;
+}
+document.addEventListener('click',function(e){if(e.target.closest('#discardButton'))setTimeout(syncV40,0);},true);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',syncV40,{once:true});else syncV40();
+window.addEventListener('load',syncV40);
 })();
 </script>
-
 </body>
 </html>
-
-<!-- JKRN FINAL DISCARD MOVE FIX V39 -->
-<style id="jkrn-v39-discard-fix">
-#discardButton{
-  display:inline-flex!important;
-  visibility:visible!important;
-  pointer-events:auto!important;
-  z-index:70000!important;
-}
-#discardButton.jkrn-v39-ready{
-  opacity:1!important;
-  background:linear-gradient(180deg,#42a5f5,#1565c0)!important;
-  border:2px solid #fff!important;
-  box-shadow:0 0 18px rgba(33,150,243,.95),0 5px 12px rgba(0,0,0,.65)!important;
-  cursor:pointer!important;
-}
-#discardButton.jkrn-v39-disabled{opacity:.42!important;cursor:not-allowed!important;}
-</style>
-<script id="jkrn-v39-discard-fix-js">
-(function(){
-  'use strict';
-  function online(){ return !!window.__realRoomStarted; }
-  function seat(){ return Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : 0; }
-  function myTurn(){
-    if(typeof gameOver!=='undefined' && gameOver) return false;
-    return currentPlayer===seat() && !(Array.isArray(droppedThisDeal)&&droppedThisDeal[seat()]);
-  }
-  function eliminated(){
-    if(online() && typeof window.__onlineEliminated==='boolean') return window.__onlineEliminated;
-    return typeof isEliminated==='function' ? !!isEliminated(0) : false;
-  }
-  function handCount(){ return Array.isArray(playerGroups) ? playerGroups.flat().filter(Boolean).length : 0; }
-  function getSelected(){
-    if(!Array.isArray(selectedCards) || selectedCards.length!==1) return null;
-    const s=selectedCards[0];
-    if(s && s.id){
-      const found=playerGroups.flat().find(c=>c && c.id===s.id);
-      if(found) return found;
-    }
-    const g=playerGroups[s.gIdx];
-    return g && g[s.cIdx] ? g[s.cIdx] : null;
-  }
-  function sync(){
-    const b=document.getElementById('discardButton'); if(!b)return;
-    const ready=myTurn() && !!playerHasDrawn && handCount()===14 && !eliminated();
-    b.disabled=!ready;
-    b.classList.toggle('jkrn-v39-ready',ready);
-    b.classList.toggle('jkrn-v39-disabled',!ready);
-    b.style.setProperty('display','inline-flex','important');
-    b.style.setProperty('visibility','visible','important');
-    b.style.setProperty('pointer-events','auto','important');
-  }
-  window.discardCard=function(){
-    if(!myTurn() || !playerHasDrawn || handCount()!==14 || eliminated()) return;
-    const card=getSelected();
-    if(!card){
-      const st=document.getElementById('status');
-      if(st) st.innerText='⚠️ 14 cards ఉన్నాయి — discard చేయాల్సిన 1 card ను ముందుగా select చేయండి.';
-      return;
-    }
-    if(online()){
-      if(!window.onlineSocket || !card.id)return;
-      window.onlineSocket.emit('discardCard',{cardId:card.id});
-      return;
-    }
-    let removed=null;
-    for(let gi=0;gi<playerGroups.length && !removed;gi++){
-      const idx=playerGroups[gi].findIndex(c=>c && (c.id===card.id || c===card));
-      if(idx>=0) removed=playerGroups[gi].splice(idx,1)[0];
-    }
-    if(!removed)return;
-    if(Array.isArray(discardPile))discardPile.push(removed);
-    playerGroups=playerGroups.filter(g=>g&&g.length);
-    selectedCards=[];
-    playerHasDrawn=false;
-    try{if(typeof playSound==='function')playSound('discard');}catch(e){}
-    if(typeof updateUI==='function')updateUI();
-    if(typeof nextTurn==='function')nextTurn();
-  };
-  function hook(){
-    const b=document.getElementById('discardButton');
-    if(!b)return;
-    b.onclick=function(e){e.preventDefault();e.stopPropagation();window.discardCard();};
-    sync();
-  }
-  const oldUpdate=window.updateUI;
-  if(typeof oldUpdate==='function'&&!oldUpdate.__jkrnV39){
-    function wrapped(){const r=oldUpdate.apply(this,arguments);sync();return r;}
-    wrapped.__jkrnV39=true;
-    window.updateUI=wrapped;
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hook,{once:true});else hook();
-  window.addEventListener('load',hook,{once:true});
-  window.jkrnV39SyncDiscard=sync;
-})();
-</script>
