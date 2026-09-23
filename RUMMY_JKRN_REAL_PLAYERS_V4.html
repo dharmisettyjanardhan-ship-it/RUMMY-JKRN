@@ -3935,7 +3935,6 @@ function openGlobalScoreboardModal() {
 
   window.addEventListener("load", keepClosedDeckStatic);
   document.addEventListener("DOMContentLoaded", keepClosedDeckStatic);
-  setInterval(keepClosedDeckStatic, 500);
 })();
 </script>
 
@@ -3960,7 +3959,6 @@ function openGlobalScoreboardModal() {
     setTimeout(moveMyCardsToMiddle, 100);
     setTimeout(moveMyCardsToMiddle, 500);
   });
-  setInterval(moveMyCardsToMiddle, 400);
 })();
 </script>
 
@@ -3990,7 +3988,6 @@ function openGlobalScoreboardModal() {
     setTimeout(fixMyHand, 100);
     setTimeout(fixMyHand, 500);
   });
-  setInterval(fixMyHand, 500);
 })();
 </script>
 
@@ -4381,7 +4378,7 @@ button[onclick*="groupSelected"] {
   window.jkrnLeave=function(){if(confirm('Leave this game?')){if(window.onlineSocket&&window.onlineRoomId)window.onlineSocket.emit('leaveRoom');else location.reload();}};
   window.jkrnSendChat=function(){const i=document.getElementById('jkrnChatInput');const t=(i.value||'').trim();if(!t)return;if(window.onlineSocket&&window.onlineRoomId)window.onlineSocket.emit('chatMessage',{text:t});i.value='';};
   function hook(){if(!window.onlineSocket)return; if(window.__v7optHook)return;window.__v7optHook=true;window.onlineSocket.on('chatMessage',m=>{const l=document.getElementById('jkrnChatLog');if(l){l.innerHTML+='<div><b>'+String(m.name).replace(/[<>]/g,'')+':</b> '+String(m.text).replace(/[<>]/g,'')+'</div>';l.scrollTop=l.scrollHeight;}});window.onlineSocket.on('leftRoom',()=>{window.onlineRoomId=null;document.getElementById('jkrnChat').style.display='none';alert('You left the room.');location.reload();});window.onlineSocket.on('dealResult',r=>{const w=document.getElementById('jkrnWinner');w.textContent=r.valid?'🏆 '+r.winnerName+' WON!':'❌ WRONG SHOW — '+r.loserName;w.style.display='flex';setTimeout(()=>w.style.display='none',3500);});}
-  setInterval(hook,500);window.addEventListener('load',hook);
+window.addEventListener('load',hook);
 })();
 </script>
 <script id="jkrn-v7-room-link">(function(){const q=new URLSearchParams(location.search);const r=q.get('room');if(r){setTimeout(()=>{const x=document.getElementById('onlineRoom');if(x)x.value=r;},500);}})();</script>
@@ -4921,7 +4918,6 @@ function install(){
 function boot(){install();}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 window.addEventListener('load',boot);
-new MutationObserver(boot).observe(document.documentElement,{childList:true,subtree:true});
 })();
 </script>
 
@@ -5136,15 +5132,6 @@ new MutationObserver(boot).observe(document.documentElement,{childList:true,subt
     if(window.onlineSocket) installSocketHandlers();
   }
 
-  // Re-apply when the original socket is created or the buttons are rendered.
-  const observer = new MutationObserver(function(){
-    installDiscardHandler();
-    installSocketHandlers();
-    syncBottomHand();
-    syncActionButtons();
-  });
-  observer.observe(document.documentElement, {childList:true, subtree:true});
-
   if(document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', boot, {once:true});
   } else {
@@ -5251,7 +5238,6 @@ new MutationObserver(boot).observe(document.documentElement,{childList:true,subt
   function boot(){ install(); socket(); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
   window.addEventListener('load',boot);
-  new MutationObserver(boot).observe(document.documentElement,{childList:true,subtree:true});
 })();
 </script>
 
@@ -5488,7 +5474,6 @@ new MutationObserver(boot).observe(document.documentElement,{childList:true,subt
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
   else boot();
   window.addEventListener('load',boot);
-  setInterval(function(){ensureDrawButtons();hookSocket();sync();},500);
 })();
 </script>
 
@@ -5611,7 +5596,6 @@ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded'
 else boot();
 window.addEventListener('load',boot);
 window.addEventListener('resize',position);
-setInterval(boot,300);
 })();
 </script>
 
@@ -5673,75 +5657,7 @@ setInterval(boot,300);
 }
 </style>
 
-<script id="jkrn-v47-actions-js">
-(function(){
-'use strict';
 
-function original(id){ return document.getElementById(id); }
-
-function make(){
-  let bar=document.getElementById('jkrnActionBar');
-  if(!bar){
-    bar=document.createElement('div');
-    bar.id='jkrnActionBar';
-    bar.innerHTML=
-      '<button id="jkrnV47Drop" type="button">DROP</button>'+
-      '<button id="jkrnV47Sort" type="button">AUTO SORT</button>'+
-      '<button id="jkrnV47Discard" type="button">DISCARD</button>'+
-      '<button id="jkrnV47Declare" type="button">DECLARE</button>';
-    document.body.appendChild(bar);
-
-    const map=[
-      ['jkrnV47Drop','dropButton'],
-      ['jkrnV47Sort','autoSortButton'],
-      ['jkrnV47Discard','discardButton'],
-      ['jkrnV47Declare','declareButton']
-    ];
-
-    map.forEach(function(pair){
-      const proxy=document.getElementById(pair[0]);
-      proxy.addEventListener('click',function(e){
-        e.preventDefault(); e.stopPropagation();
-        const real=original(pair[1]);
-        if(!real || real.disabled) return;
-        real.click();
-      });
-    });
-  }
-  sync();
-}
-
-function sync(){
-  const pairs=[
-    ['jkrnV47Drop','dropButton'],
-    ['jkrnV47Sort','autoSortButton'],
-    ['jkrnV47Discard','discardButton'],
-    ['jkrnV47Declare','declareButton']
-  ];
-  pairs.forEach(function(p){
-    const proxy=document.getElementById(p[0]);
-    const real=original(p[1]);
-    if(!proxy) return;
-    if(real){
-      proxy.disabled=!!real.disabled;
-      proxy.title=real.disabled ? 'Not available now' : p[1];
-    }else{
-      proxy.disabled=true;
-    }
-  });
-}
-
-function boot(){
-  make();
-  sync();
-}
-if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
-else boot();
-window.addEventListener('load',boot);
-setInterval(sync,250);
-new MutationObserver(sync).observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:['disabled','class','style']});
-})();
-</script>
 
 
 <!-- JKRN V48: MODERN TABLE + OPEN DECK + MOVABLE HAND -->
@@ -5916,7 +5832,6 @@ function boot(){
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
 else boot();
 window.addEventListener('load',boot);
-setInterval(boot,500);
 })();
 </script>
 
@@ -5945,6 +5860,48 @@ setInterval(boot,500);
     document.addEventListener('DOMContentLoaded',openLobbyReliably,{once:true});
   }else openLobbyReliably();
   window.addEventListener('load',openLobbyReliably);
+})();
+</script>
+
+
+<!-- JKRN V50: anti-freeze / lightweight UI sync -->
+<style id="jkrn-v50-safe-css">
+#jkrnActionBar,#jkrnDrawControls,#jkrnHandMover{
+  contain:layout paint style;
+}
+</style>
+<script id="jkrn-v50-safe-js">
+(function(){
+'use strict';
+function syncOnce(){
+  try{
+    var pairs=[
+      ['jkrnV47Drop','dropButton'],
+      ['jkrnV47Sort','autoSortButton'],
+      ['jkrnV47Discard','discardButton'],
+      ['jkrnV47Declare','declareButton']
+    ];
+    pairs.forEach(function(p){
+      var a=document.getElementById(p[0]), b=document.getElementById(p[1]);
+      if(a && b) a.disabled=!!b.disabled;
+    });
+  }catch(e){}
+}
+function boot(){
+  try{
+    var login=document.getElementById('loginScreen');
+    var lobby=document.getElementById('onlineLobby');
+    if(lobby && (!login || login.classList.contains('hidden'))){
+      lobby.classList.remove('hidden');
+      lobby.style.visibility='visible';
+      lobby.style.opacity='1';
+    }
+    syncOnce();
+  }catch(e){}
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot,{once:true});
+else boot();
+window.addEventListener('load',boot,{once:true});
 })();
 </script>
 
@@ -7697,7 +7654,6 @@ function install(){
 function boot(){install();}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 window.addEventListener('load',boot);
-new MutationObserver(boot).observe(document.documentElement,{childList:true,subtree:true});
 })();
 </script>
 
@@ -7911,15 +7867,6 @@ new MutationObserver(boot).observe(document.documentElement,{childList:true,subt
     if(window.onlineSocket) installSocketHandlers();
   }
 
-  // Re-apply when the original socket is created or the buttons are rendered.
-  const observer = new MutationObserver(function(){
-    installDiscardHandler();
-    installSocketHandlers();
-    syncBottomHand();
-    syncActionButtons();
-  });
-  observer.observe(document.documentElement, {childList:true, subtree:true});
-
   if(document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', boot, {once:true});
   } else {
@@ -8026,7 +7973,6 @@ new MutationObserver(boot).observe(document.documentElement,{childList:true,subt
   function boot(){ install(); socket(); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
   window.addEventListener('load',boot);
-  new MutationObserver(boot).observe(document.documentElement,{childList:true,subtree:true});
 })();
 </script>
 
@@ -8263,7 +8209,6 @@ new MutationObserver(boot).observe(document.documentElement,{childList:true,subt
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
   else boot();
   window.addEventListener('load',boot);
-  setInterval(function(){ensureDrawButtons();hookSocket();sync();},500);
 })();
 </script>
 
@@ -8386,7 +8331,6 @@ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded'
 else boot();
 window.addEventListener('load',boot);
 window.addEventListener('resize',position);
-setInterval(boot,300);
 })();
 </script>
 
@@ -8448,75 +8392,7 @@ setInterval(boot,300);
 }
 </style>
 
-<script id="jkrn-v47-actions-js">
-(function(){
-'use strict';
 
-function original(id){ return document.getElementById(id); }
-
-function make(){
-  let bar=document.getElementById('jkrnActionBar');
-  if(!bar){
-    bar=document.createElement('div');
-    bar.id='jkrnActionBar';
-    bar.innerHTML=
-      '<button id="jkrnV47Drop" type="button">DROP</button>'+
-      '<button id="jkrnV47Sort" type="button">AUTO SORT</button>'+
-      '<button id="jkrnV47Discard" type="button">DISCARD</button>'+
-      '<button id="jkrnV47Declare" type="button">DECLARE</button>';
-    document.body.appendChild(bar);
-
-    const map=[
-      ['jkrnV47Drop','dropButton'],
-      ['jkrnV47Sort','autoSortButton'],
-      ['jkrnV47Discard','discardButton'],
-      ['jkrnV47Declare','declareButton']
-    ];
-
-    map.forEach(function(pair){
-      const proxy=document.getElementById(pair[0]);
-      proxy.addEventListener('click',function(e){
-        e.preventDefault(); e.stopPropagation();
-        const real=original(pair[1]);
-        if(!real || real.disabled) return;
-        real.click();
-      });
-    });
-  }
-  sync();
-}
-
-function sync(){
-  const pairs=[
-    ['jkrnV47Drop','dropButton'],
-    ['jkrnV47Sort','autoSortButton'],
-    ['jkrnV47Discard','discardButton'],
-    ['jkrnV47Declare','declareButton']
-  ];
-  pairs.forEach(function(p){
-    const proxy=document.getElementById(p[0]);
-    const real=original(p[1]);
-    if(!proxy) return;
-    if(real){
-      proxy.disabled=!!real.disabled;
-      proxy.title=real.disabled ? 'Not available now' : p[1];
-    }else{
-      proxy.disabled=true;
-    }
-  });
-}
-
-function boot(){
-  make();
-  sync();
-}
-if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
-else boot();
-window.addEventListener('load',boot);
-setInterval(sync,250);
-new MutationObserver(sync).observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:['disabled','class','style']});
-})();
-</script>
 
 
 <!-- JKRN V48: MODERN TABLE + OPEN DECK + MOVABLE HAND -->
@@ -8691,7 +8567,6 @@ function boot(){
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
 else boot();
 window.addEventListener('load',boot);
-setInterval(boot,500);
 })();
 </script>
 
@@ -8720,6 +8595,48 @@ setInterval(boot,500);
     document.addEventListener('DOMContentLoaded',openLobbyReliably,{once:true});
   }else openLobbyReliably();
   window.addEventListener('load',openLobbyReliably);
+})();
+</script>
+
+
+<!-- JKRN V50: anti-freeze / lightweight UI sync -->
+<style id="jkrn-v50-safe-css">
+#jkrnActionBar,#jkrnDrawControls,#jkrnHandMover{
+  contain:layout paint style;
+}
+</style>
+<script id="jkrn-v50-safe-js">
+(function(){
+'use strict';
+function syncOnce(){
+  try{
+    var pairs=[
+      ['jkrnV47Drop','dropButton'],
+      ['jkrnV47Sort','autoSortButton'],
+      ['jkrnV47Discard','discardButton'],
+      ['jkrnV47Declare','declareButton']
+    ];
+    pairs.forEach(function(p){
+      var a=document.getElementById(p[0]), b=document.getElementById(p[1]);
+      if(a && b) a.disabled=!!b.disabled;
+    });
+  }catch(e){}
+}
+function boot(){
+  try{
+    var login=document.getElementById('loginScreen');
+    var lobby=document.getElementById('onlineLobby');
+    if(lobby && (!login || login.classList.contains('hidden'))){
+      lobby.classList.remove('hidden');
+      lobby.style.visibility='visible';
+      lobby.style.opacity='1';
+    }
+    syncOnce();
+  }catch(e){}
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot,{once:true});
+else boot();
+window.addEventListener('load',boot,{once:true});
 })();
 </script>
 
