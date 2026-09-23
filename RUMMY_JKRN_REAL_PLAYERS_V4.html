@@ -6568,3 +6568,99 @@ window.addEventListener('load',syncV38,{once:true});
 
 </body>
 </html>
+
+<!-- JKRN FINAL DISCARD MOVE FIX V39 -->
+<style id="jkrn-v39-discard-fix">
+#discardButton{
+  display:inline-flex!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+  z-index:70000!important;
+}
+#discardButton.jkrn-v39-ready{
+  opacity:1!important;
+  background:linear-gradient(180deg,#42a5f5,#1565c0)!important;
+  border:2px solid #fff!important;
+  box-shadow:0 0 18px rgba(33,150,243,.95),0 5px 12px rgba(0,0,0,.65)!important;
+  cursor:pointer!important;
+}
+#discardButton.jkrn-v39-disabled{opacity:.42!important;cursor:not-allowed!important;}
+</style>
+<script id="jkrn-v39-discard-fix-js">
+(function(){
+  'use strict';
+  function online(){ return !!window.__realRoomStarted; }
+  function seat(){ return Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : 0; }
+  function myTurn(){
+    if(typeof gameOver!=='undefined' && gameOver) return false;
+    return currentPlayer===seat() && !(Array.isArray(droppedThisDeal)&&droppedThisDeal[seat()]);
+  }
+  function eliminated(){
+    if(online() && typeof window.__onlineEliminated==='boolean') return window.__onlineEliminated;
+    return typeof isEliminated==='function' ? !!isEliminated(0) : false;
+  }
+  function handCount(){ return Array.isArray(playerGroups) ? playerGroups.flat().filter(Boolean).length : 0; }
+  function getSelected(){
+    if(!Array.isArray(selectedCards) || selectedCards.length!==1) return null;
+    const s=selectedCards[0];
+    if(s && s.id){
+      const found=playerGroups.flat().find(c=>c && c.id===s.id);
+      if(found) return found;
+    }
+    const g=playerGroups[s.gIdx];
+    return g && g[s.cIdx] ? g[s.cIdx] : null;
+  }
+  function sync(){
+    const b=document.getElementById('discardButton'); if(!b)return;
+    const ready=myTurn() && !!playerHasDrawn && handCount()===14 && !eliminated();
+    b.disabled=!ready;
+    b.classList.toggle('jkrn-v39-ready',ready);
+    b.classList.toggle('jkrn-v39-disabled',!ready);
+    b.style.setProperty('display','inline-flex','important');
+    b.style.setProperty('visibility','visible','important');
+    b.style.setProperty('pointer-events','auto','important');
+  }
+  window.discardCard=function(){
+    if(!myTurn() || !playerHasDrawn || handCount()!==14 || eliminated()) return;
+    const card=getSelected();
+    if(!card){
+      const st=document.getElementById('status');
+      if(st) st.innerText='⚠️ 14 cards ఉన్నాయి — discard చేయాల్సిన 1 card ను ముందుగా select చేయండి.';
+      return;
+    }
+    if(online()){
+      if(!window.onlineSocket || !card.id)return;
+      window.onlineSocket.emit('discardCard',{cardId:card.id});
+      return;
+    }
+    let removed=null;
+    for(let gi=0;gi<playerGroups.length && !removed;gi++){
+      const idx=playerGroups[gi].findIndex(c=>c && (c.id===card.id || c===card));
+      if(idx>=0) removed=playerGroups[gi].splice(idx,1)[0];
+    }
+    if(!removed)return;
+    if(Array.isArray(discardPile))discardPile.push(removed);
+    playerGroups=playerGroups.filter(g=>g&&g.length);
+    selectedCards=[];
+    playerHasDrawn=false;
+    try{if(typeof playSound==='function')playSound('discard');}catch(e){}
+    if(typeof updateUI==='function')updateUI();
+    if(typeof nextTurn==='function')nextTurn();
+  };
+  function hook(){
+    const b=document.getElementById('discardButton');
+    if(!b)return;
+    b.onclick=function(e){e.preventDefault();e.stopPropagation();window.discardCard();};
+    sync();
+  }
+  const oldUpdate=window.updateUI;
+  if(typeof oldUpdate==='function'&&!oldUpdate.__jkrnV39){
+    function wrapped(){const r=oldUpdate.apply(this,arguments);sync();return r;}
+    wrapped.__jkrnV39=true;
+    window.updateUI=wrapped;
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hook,{once:true});else hook();
+  window.addEventListener('load',hook,{once:true});
+  window.jkrnV39SyncDiscard=sync;
+})();
+</script>
