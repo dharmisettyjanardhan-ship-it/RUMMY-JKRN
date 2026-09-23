@@ -5162,6 +5162,99 @@ new MutationObserver(boot).observe(document.documentElement,{childList:true,subt
 })();
 </script>
 
+
+<!-- JKRN V44: STRICT ONLINE TURN FLOW
+     DRAW (OPEN or CLOSED) -> 14 CARDS -> SELECT ONE -> DISCARD -> OPEN CARD -> NEXT PLAYER -->
+<script id="jkrn-v44-strict-turn-flow">
+(function(){
+  'use strict';
+  function online(){ return !!window.__realRoomStarted && !!window.onlineSocket; }
+  function me(){ return Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : -1; }
+  function myTurn(){ return online() && Number(window.currentPlayer) === me(); }
+  function drawn(){ return !!window.playerHasDrawn; }
+  function hand(){ return Array.isArray(window.playerGroups) ? window.playerGroups.flat().filter(Boolean) : []; }
+  function selected(){
+    if(!Array.isArray(window.selectedCards) || window.selectedCards.length!==1) return null;
+    const s=window.selectedCards[0];
+    if(s && s.id){ const c=hand().find(x=>x && x.id===s.id); if(c) return c; }
+    const g=window.playerGroups && window.playerGroups[s.gIdx];
+    return g && g[s.cIdx] ? g[s.cIdx] : null;
+  }
+  function status(t){ const e=document.getElementById('status'); if(e) e.textContent=t; }
+  function sync(){
+    const n=hand().length;
+    const drawOK=myTurn() && !drawn();
+    const discardOK=myTurn() && drawn() && n===14;
+    const d=document.querySelector('#centerArea .draw-pile');
+    const o=document.getElementById('discardPile');
+    if(d){ d.style.pointerEvents=drawOK?'auto':'none'; d.style.opacity=drawOK?'1':'.55'; d.title=drawOK?'CLOSED DECK: Draw one card':'Wait for your turn'; }
+    if(o){ o.style.pointerEvents=drawOK?'auto':'none'; o.style.opacity=drawOK?'1':'.55'; o.title=drawOK?'OPEN CARD: Take this card':'Wait for your turn'; }
+    const b=document.getElementById('discardButton');
+    if(b){ b.disabled=!discardOK; b.style.pointerEvents=discardOK?'auto':'none'; b.style.opacity=discardOK?'1':'.45'; }
+  }
+  function drawClosed(e){
+    if(!online()) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    if(!myTurn() || drawn()) return status('Wait for your turn.');
+    window.onlineSocket.emit('drawDeck');
+    status('Closed card taking...');
+  }
+  function drawOpen(e){
+    if(!online()) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    if(!myTurn() || drawn()) return status('Wait for your turn.');
+    const dp=document.getElementById('discardPile');
+    if(!dp || !window.__onlineState || !window.__onlineState.discardTop) return status('OPEN card empty.');
+    window.onlineSocket.emit('drawDiscard');
+    status('Open card taking...');
+  }
+  function doDiscard(e){
+    if(!online()) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    if(!myTurn()) return status('Wait for your turn.');
+    if(!drawn()) return status('First DRAW OPEN or CLOSED card.');
+    if(hand().length!==14) return status('You must have 14 cards before DISCARD.');
+    const c=selected();
+    if(!c || !c.id) return status('14 cards vachchayi. DISCARD cheyyadaniki 1 card select cheyyandi.');
+    window.onlineSocket.emit('discardCard',{cardId:c.id});
+    status('Discarding card...');
+  }
+  function install(){
+    const d=document.querySelector('#centerArea .draw-pile');
+    const o=document.getElementById('discardPile');
+    const b=document.getElementById('discardButton');
+    if(d && !d.__v44){ d.__v44=1; d.addEventListener('click',drawClosed,true); }
+    if(o && !o.__v44){ o.__v44=1; o.addEventListener('click',drawOpen,true); }
+    if(b && !b.__v44){ b.__v44=1; b.addEventListener('click',doDiscard,true); }
+    sync();
+  }
+  function socket(){
+    const s=window.onlineSocket;
+    if(!s || s.__v44) return;
+    s.__v44=1;
+    s.on('onlineActionAck',function(m){
+      if(m && m.action==='draw') status('14 cards. Select ONE card and press DISCARD.');
+      sync();
+    });
+    s.on('discardUpdated',function(d){
+      if(d && d.card && typeof window.jkrnV43PaintDiscard==='function') window.jkrnV43PaintDiscard(d.card);
+      sync();
+    });
+    s.on('turnChanged',function(){ sync(); });
+    s.on('gameState',function(st){
+      setTimeout(function(){
+        if(st && st.discardTop && typeof window.jkrnV43PaintDiscard==='function') window.jkrnV43PaintDiscard(st.discardTop);
+        sync();
+      },0);
+    });
+  }
+  function boot(){ install(); socket(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+  window.addEventListener('load',boot);
+  new MutationObserver(boot).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body>
 </html>
 
@@ -7148,6 +7241,99 @@ new MutationObserver(boot).observe(document.documentElement,{childList:true,subt
     syncBottomHand();
     syncActionButtons();
   };
+})();
+</script>
+
+
+<!-- JKRN V44: STRICT ONLINE TURN FLOW
+     DRAW (OPEN or CLOSED) -> 14 CARDS -> SELECT ONE -> DISCARD -> OPEN CARD -> NEXT PLAYER -->
+<script id="jkrn-v44-strict-turn-flow">
+(function(){
+  'use strict';
+  function online(){ return !!window.__realRoomStarted && !!window.onlineSocket; }
+  function me(){ return Number.isInteger(window.__onlineMyIndex) ? Number(window.__onlineMyIndex) : -1; }
+  function myTurn(){ return online() && Number(window.currentPlayer) === me(); }
+  function drawn(){ return !!window.playerHasDrawn; }
+  function hand(){ return Array.isArray(window.playerGroups) ? window.playerGroups.flat().filter(Boolean) : []; }
+  function selected(){
+    if(!Array.isArray(window.selectedCards) || window.selectedCards.length!==1) return null;
+    const s=window.selectedCards[0];
+    if(s && s.id){ const c=hand().find(x=>x && x.id===s.id); if(c) return c; }
+    const g=window.playerGroups && window.playerGroups[s.gIdx];
+    return g && g[s.cIdx] ? g[s.cIdx] : null;
+  }
+  function status(t){ const e=document.getElementById('status'); if(e) e.textContent=t; }
+  function sync(){
+    const n=hand().length;
+    const drawOK=myTurn() && !drawn();
+    const discardOK=myTurn() && drawn() && n===14;
+    const d=document.querySelector('#centerArea .draw-pile');
+    const o=document.getElementById('discardPile');
+    if(d){ d.style.pointerEvents=drawOK?'auto':'none'; d.style.opacity=drawOK?'1':'.55'; d.title=drawOK?'CLOSED DECK: Draw one card':'Wait for your turn'; }
+    if(o){ o.style.pointerEvents=drawOK?'auto':'none'; o.style.opacity=drawOK?'1':'.55'; o.title=drawOK?'OPEN CARD: Take this card':'Wait for your turn'; }
+    const b=document.getElementById('discardButton');
+    if(b){ b.disabled=!discardOK; b.style.pointerEvents=discardOK?'auto':'none'; b.style.opacity=discardOK?'1':'.45'; }
+  }
+  function drawClosed(e){
+    if(!online()) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    if(!myTurn() || drawn()) return status('Wait for your turn.');
+    window.onlineSocket.emit('drawDeck');
+    status('Closed card taking...');
+  }
+  function drawOpen(e){
+    if(!online()) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    if(!myTurn() || drawn()) return status('Wait for your turn.');
+    const dp=document.getElementById('discardPile');
+    if(!dp || !window.__onlineState || !window.__onlineState.discardTop) return status('OPEN card empty.');
+    window.onlineSocket.emit('drawDiscard');
+    status('Open card taking...');
+  }
+  function doDiscard(e){
+    if(!online()) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    if(!myTurn()) return status('Wait for your turn.');
+    if(!drawn()) return status('First DRAW OPEN or CLOSED card.');
+    if(hand().length!==14) return status('You must have 14 cards before DISCARD.');
+    const c=selected();
+    if(!c || !c.id) return status('14 cards vachchayi. DISCARD cheyyadaniki 1 card select cheyyandi.');
+    window.onlineSocket.emit('discardCard',{cardId:c.id});
+    status('Discarding card...');
+  }
+  function install(){
+    const d=document.querySelector('#centerArea .draw-pile');
+    const o=document.getElementById('discardPile');
+    const b=document.getElementById('discardButton');
+    if(d && !d.__v44){ d.__v44=1; d.addEventListener('click',drawClosed,true); }
+    if(o && !o.__v44){ o.__v44=1; o.addEventListener('click',drawOpen,true); }
+    if(b && !b.__v44){ b.__v44=1; b.addEventListener('click',doDiscard,true); }
+    sync();
+  }
+  function socket(){
+    const s=window.onlineSocket;
+    if(!s || s.__v44) return;
+    s.__v44=1;
+    s.on('onlineActionAck',function(m){
+      if(m && m.action==='draw') status('14 cards. Select ONE card and press DISCARD.');
+      sync();
+    });
+    s.on('discardUpdated',function(d){
+      if(d && d.card && typeof window.jkrnV43PaintDiscard==='function') window.jkrnV43PaintDiscard(d.card);
+      sync();
+    });
+    s.on('turnChanged',function(){ sync(); });
+    s.on('gameState',function(st){
+      setTimeout(function(){
+        if(st && st.discardTop && typeof window.jkrnV43PaintDiscard==='function') window.jkrnV43PaintDiscard(st.discardTop);
+        sync();
+      },0);
+    });
+  }
+  function boot(){ install(); socket(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+  window.addEventListener('load',boot);
+  new MutationObserver(boot).observe(document.documentElement,{childList:true,subtree:true});
 })();
 </script>
 
