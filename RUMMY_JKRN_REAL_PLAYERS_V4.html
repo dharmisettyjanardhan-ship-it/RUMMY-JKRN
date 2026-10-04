@@ -5932,3 +5932,87 @@ window.jkrnV15JokerRules={
   setInterval(installProfiles,1000);
 })();
 </script>
+
+
+<style id="jkrn-final-round-scoreboard-ui">
+/* Round scoreboard: 10s countdown + explicit CLOSE. */
+#resultModal .modal-box{position:relative!important;}
+#jkrnScoreClose{position:absolute;right:12px;top:10px;z-index:20;width:32px;height:32px;border-radius:50%;border:1px solid #ffd700;background:#3a0d0d;color:#fff;font-weight:900;cursor:pointer;font-size:18px;line-height:28px;}
+#jkrnScoreCountdown{font-size:12px;color:#ffd700;font-weight:900;margin-top:4px;}
+/* User requested no visible Wild Joker / Printed Joker / hand-name labels. Keep the actual joker card logic. */
+#centerArea .pile-container:first-child .pile-label,
+#printedJokerLabel,
+.joker-pile + .printed-joker-display{display:none!important;}
+.card-group .group-status-badge{display:none!important;}
+/* Circular profile picture on every occupied player seat. */
+.opp-avatar,.opp-avatar img,.player-profile-img{border-radius:50%!important;object-fit:cover!important;}
+.opp-avatar{overflow:hidden!important;}
+</style>
+<script id="jkrn-final-round-flow-v10">
+(function(){
+  function ensureClose(){
+    const box=document.querySelector('#resultModal .modal-box');
+    if(!box || document.getElementById('jkrnScoreClose')) return;
+    const b=document.createElement('button');
+    b.id='jkrnScoreClose'; b.type='button'; b.textContent='×'; b.title='Close scoreboard';
+    b.onclick=function(){
+      if(window.__onlineLastResult && window.onlineSocket && window.onlineRoomId){
+        if(window._sbCountdown) clearInterval(window._sbCountdown);
+        document.getElementById('resultModal')?.classList.remove('active');
+        window.__onlineLastResult=null; gameOver=false;
+        window.onlineSocket.emit('nextDeal');
+      } else if(typeof closeResultModalAndStartNext==='function') closeResultModalAndStartNext();
+    };
+    box.appendChild(b);
+    const h=document.getElementById('resultModalHeader');
+    if(h && !document.getElementById('jkrnScoreCountdown')){
+      const c=document.createElement('div');c.id='jkrnScoreCountdown';h.insertAdjacentElement('afterend',c);
+    }
+  }
+  const oldShow=window.showDealResultModal;
+  if(typeof oldShow==='function'){
+    window.showDealResultModal=function(title){
+      const r=oldShow.apply(this,arguments);
+      setTimeout(function(){
+        ensureClose();
+        let cd=10;
+        const c=document.getElementById('jkrnScoreCountdown');
+        const b=document.getElementById('nextDealBtn');
+        if(c)c.textContent='Next game in '+cd+'s';
+        if(b)b.textContent='NEXT DEAL ('+cd+')';
+        if(window._sbCountdown)clearInterval(window._sbCountdown);
+        window._sbCountdown=setInterval(function(){
+          cd--;
+          if(c)c.textContent=cd>0?('Next game in '+cd+'s'):'Starting next game…';
+          if(b)b.textContent=cd>0?('NEXT DEAL ('+cd+')'):'NEXT DEAL';
+          if(cd<=0){clearInterval(window._sbCountdown);if(typeof closeResultModalAndStartNext==='function')closeResultModalAndStartNext();}
+        },1000);
+      },0);
+      return r;
+    };
+  }
+  /* If a later script redefines showDealResultModal, patch it again after load. */
+  window.addEventListener('load',function(){
+    ensureClose();
+    const modal=document.getElementById('resultModal');
+    if(modal && !modal.__jkrnCloseBound){modal.__jkrnCloseBound=true;}
+  });
+  /* Occupied seats only: show the player avatar and keep it circular. */
+  function refreshSeatProfiles(){
+    const players=window.__onlineRoomPlayers||[];
+    for(let i=0;i<players.length;i++){
+      const seat=document.getElementById('opp'+(i+2));
+      if(!seat)continue;
+      seat.style.display='flex';
+      const av=seat.querySelector('.opp-avatar');
+      if(av){av.style.borderRadius='50%';av.style.overflow='hidden';}
+    }
+    for(let i=players.length;i<5;i++){
+      const seat=document.getElementById('opp'+(i+2));
+      if(seat && !(players[i])) seat.style.display='none';
+    }
+  }
+  setInterval(refreshSeatProfiles,500);
+  document.addEventListener('DOMContentLoaded',refreshSeatProfiles);
+})();
+</script>
