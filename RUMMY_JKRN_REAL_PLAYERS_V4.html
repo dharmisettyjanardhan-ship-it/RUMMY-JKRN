@@ -47,7 +47,7 @@ h1 { margin: 0; color: #ffd700; font-size: 18px; }
     border: 2px solid #555; width: 185px; box-shadow: 0 4px 8px rgba(0,0,0,0.5);
     transition: border 0.3s ease, box-shadow 0.3s ease;
 }
-.opp-box.active-turn { border: 2px solid #555 !important; box-shadow: 0 4px 8px rgba(0,0,0,.5) !important; }
+.opp-box.active-turn { border: 3px solid #00ff00 !important; box-shadow: 0 0 20px #00ff00; }
 .opp-box.eliminated { 
     opacity: 0.35 !important; 
     filter: grayscale(100%); 
@@ -71,18 +71,6 @@ h1 { margin: 0; color: #ffd700; font-size: 18px; }
 .opp-details { margin-left: 8px; text-align: left; }
 .opp-name { font-size: 11px; color: #fff; margin: 0; white-space: nowrap; }
 .opp-score { font-size: 11px; color: #ffd700; font-weight: bold; margin: 0; }
-/* TOTAL SCORE BADGE - fixed beside each profile photo */
-.opp-score-badge,.player-score-badge{
-    position:absolute; left:50%; bottom:-8px; transform:translateX(-50%);
-    min-width:38px; padding:2px 6px; border-radius:10px;
-    background:rgba(0,0,0,.96); border:1px solid #ffd700;
-    color:#ffd700; font-size:9px; line-height:12px; font-weight:900;
-    text-align:center; white-space:nowrap; z-index:20;
-    box-shadow:0 2px 5px rgba(0,0,0,.65);
-}
-.opp-score-badge .score-value,.player-score-badge .score-value{color:#fff;font-weight:1000;}
-.opp-avatar-container,.player-avatar-container{overflow:visible!important;}
-
 .opp-action { font-size: 9px; color: #00ff00; margin: 0; font-style: italic; }
 .dealer-badge { font-size: 9px; background: #ff9800; color: #000; padding: 1px 4px; border-radius: 4px; font-weight: bold; margin-left: 4px; }
 .elim-badge { font-size: 9px; background: #d32f2f; color: #fff; padding: 1px 4px; border-radius: 4px; font-weight: bold; margin-left: 4px; }
@@ -127,7 +115,7 @@ h1 { margin: 0; color: #ffd700; font-size: 18px; }
     background: rgba(0,0,0,0.85); padding: 4px 14px; border-radius: 12px; margin-bottom: 4px; font-size: 12px; font-weight: bold; 
     border: 2px solid #555; display: flex; align-items: center; gap: 10px;
 }
-.player-info.active-turn { border: 2px solid #555 !important; box-shadow: none !important; }
+.player-info.active-turn { border: 3px solid #00ff00 !important; box-shadow: 0 0 15px #00ff00; }
 .player-info.eliminated { 
     opacity: 0.4 !important; 
     border: 2px solid #d32f2f !important;
@@ -2192,10 +2180,7 @@ button[data-action="discard"], button[data-action="declare"],
     <div class="modal-box">
         <h2 id="resultModalHeader" style="color: #ffd700; font-size: 22px; text-transform: uppercase;">SCORE BOARD</h2>
         <div id="resultModalContent"></div>
-        <div style="display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;">
-<button class="continue-btn-glow" id="nextDealBtn" onclick="closeResultModalAndStartNext()">Continue (10)</button>
-<button class="continue-btn-glow" id="scoreBoardCloseBtn" type="button" style="background:linear-gradient(to bottom,#777,#333);padding:10px 22px;" onclick="document.getElementById('resultModal').classList.remove('active');">✕ CLOSE</button>
-</div>
+        <button class="continue-btn-glow" id="nextDealBtn" onclick="closeResultModalAndStartNext()">Continue (7)</button>
     </div>
 </div>
 
@@ -2223,11 +2208,11 @@ button[data-action="discard"], button[data-action="declare"],
         <div id="status">Determining Dealer...</div>
     </div>
 
-    <div class="opp-box" id="opp2"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-score-badge">TOTAL <span class="score-value" id="score-badge-p2">0</span></div><div class="opp-timer" id="timer-p2">60s</div></div><div class="opp-details"><p class="opp-name">Player 2 <span id="dealer-tag-p2" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p2" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p2">0</span></p><p class="opp-action" id="action-p2">Waiting...</p></div></div>
-    <div class="opp-box" id="opp3"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-score-badge">TOTAL <span class="score-value" id="score-badge-p3">0</span></div><div class="opp-timer" id="timer-p3">60s</div></div><div class="opp-details"><p class="opp-name">Player 3 <span id="dealer-tag-p3" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p3" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p3">0</span></p><p class="opp-action" id="action-p3">Waiting...</p></div></div>
-    <div class="opp-box" id="opp4"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-score-badge">TOTAL <span class="score-value" id="score-badge-p4">0</span></div><div class="opp-timer" id="timer-p4">60s</div></div><div class="opp-details"><p class="opp-name">Player 4 <span id="dealer-tag-p4" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p4" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p4">0</span></p><p class="opp-action" id="action-p4">Waiting...</p></div></div>
-    <div class="opp-box" id="opp5"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-score-badge">TOTAL <span class="score-value" id="score-badge-p5">0</span></div><div class="opp-timer" id="timer-p5">60s</div></div><div class="opp-details"><p class="opp-name">Player 5 <span id="dealer-tag-p5" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p5" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p5">0</span></p><p class="opp-action" id="action-p5">Waiting...</p></div></div>
-    <div class="opp-box" id="opp6"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-score-badge">TOTAL <span class="score-value" id="score-badge-p6">0</span></div><div class="opp-timer" id="timer-p6">60s</div></div><div class="opp-details"><p class="opp-name">Player 6 <span id="dealer-tag-p6" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p6" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p6">0</span></p><p class="opp-action" id="action-p6">Waiting...</p></div></div>
+    <div class="opp-box" id="opp2"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p2">60s</div></div><div class="opp-details"><p class="opp-name">Player 2 <span id="dealer-tag-p2" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p2" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p2">0</span></p><p class="opp-action" id="action-p2">Waiting...</p></div></div>
+    <div class="opp-box" id="opp3"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p3">60s</div></div><div class="opp-details"><p class="opp-name">Player 3 <span id="dealer-tag-p3" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p3" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p3">0</span></p><p class="opp-action" id="action-p3">Waiting...</p></div></div>
+    <div class="opp-box" id="opp4"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p4">60s</div></div><div class="opp-details"><p class="opp-name">Player 4 <span id="dealer-tag-p4" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p4" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p4">0</span></p><p class="opp-action" id="action-p4">Waiting...</p></div></div>
+    <div class="opp-box" id="opp5"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p5">60s</div></div><div class="opp-details"><p class="opp-name">Player 5 <span id="dealer-tag-p5" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p5" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p5">0</span></p><p class="opp-action" id="action-p5">Waiting...</p></div></div>
+    <div class="opp-box" id="opp6"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p6">60s</div></div><div class="opp-details"><p class="opp-name">Player 6 <span id="dealer-tag-p6" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p6" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p6">0</span></p><p class="opp-action" id="action-p6">Waiting...</p></div></div>
 
     <div class="center-area" id="centerArea">
         <div class="pile-container">
@@ -2255,11 +2240,7 @@ button[data-action="discard"], button[data-action="declare"],
 
     <div class="player-area" id="playerArea">
         <div class="player-info" id="playerInfoBox">
-            <div class="player-avatar-container" style="position:relative;width:38px;height:38px;flex:0 0 38px;">
-                <div class="opp-avatar">👤</div>
-                <div class="player-score-badge">TOTAL <span class="score-value" id="score-badge-p1">0</span></div>
-            </div>
-            <span class="jkrn-me-name">YOU <span id="dealer-tag-p1" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p1" class="elim-badge" style="display:none;">OUT</span></span>
+            <span>👤 YOU <span id="dealer-tag-p1" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p1" class="elim-badge" style="display:none;">OUT</span> | Score: <span id="score-p1" style="color:#00ff00;">0</span> / <span id="poolLimitLabel">201</span></span>
             <span class="player-timer" id="timer-p1">⏳ <span id="timeLeft">60</span>s</span>
         </div>
         <div class="groups-container" id="playerGroupsContainer"></div>
@@ -2625,8 +2606,6 @@ function updateDealerBadges() {
 }
 
 function checkAndRefillDeck() {
-    /* ONLINE MODE: deck/discard are server-authoritative. */
-    if (window.__realRoomStarted) return;
     if(deck.length === 0 && discardPile.length > 1) {
         let topCard = discardPile.pop();
         deck = shuffle(discardPile);
@@ -2741,8 +2720,6 @@ function getGroupBadgeInfo(group) {
 }
 
 function startTurnTimer() {
-    /* ONLINE MODE: server owns the turn timer. Never start local computer turns. */
-    if (window.__realRoomStarted) { return; }
     if (turnTimer) { clearInterval(turnTimer); turnTimer = null; }
     if (gameOver || !gameStarted) return;
 
@@ -2801,8 +2778,6 @@ function updateAllPlayerTimers() {
 }
 
 function runComputerTurn() {
-    /* ONLINE MODE: every seat is a real player; never run local AI. */
-    if (window.__realRoomStarted) return;
     const compIdx = currentPlayer;
     const actionEl = document.getElementById(`action-p${compIdx+1}`);
     if (actionEl) actionEl.innerText = "Thinking...";
@@ -3555,7 +3530,7 @@ function showDealResultModal(titleText) {
 
     header.innerText = titleText;
 
-    let cd = 10;
+    let cd = 7;
     nextBtn.innerText = `Continue (${cd})`;
     clearInterval(window._sbCountdown);
     window._sbCountdown = setInterval(() => {
@@ -4543,27 +4518,12 @@ button[onclick*="groupSelected"] {
     if(Array.isArray(me)) rebuildLocalGroups(me);
     selectedCards=[];
     if(typeof updateUI==='function') updateUI();
-    enforceOnlineActionButtons(st);
     onlineRenderOpponent(st);
     onlineStartTurnTimer(st.turnEndsAt);
   }
-  function enforceOnlineActionButtons(st){
-    if(!st || !st.started) return;
-    const myTurn = Number(st.currentPlayer) === Number(st.myIndex);
-    const drawn = !!st.playerHasDrawn;
-    const eliminated = !!(st.eliminated && st.players?.[st.myIndex] && st.eliminated[st.players[st.myIndex].id]);
-    const hand = st.hands?.[st.myIndex];
-    const count = Array.isArray(hand) ? hand.length : 0;
-    const canFinish = myTurn && drawn && count === 14 && !eliminated;
-    const discardBtn=document.getElementById('discardButton');
-    const declareBtn=document.getElementById('declareButton');
-    if(discardBtn){ discardBtn.style.setProperty('display',canFinish?'inline-flex':'none','important'); discardBtn.disabled=!canFinish || selectedCards.length!==1; }
-    if(declareBtn){ declareBtn.style.setProperty('display',canFinish?'inline-flex':'none','important'); declareBtn.disabled=!canFinish; }
-  }
-
   function onlineRenderOpponent(st){
     const meName=(st.players[st.myIndex]||{}).name||'YOU';
-    (st.players||[]).forEach(pl=>{ const h=st.hands[pl.index]; const count=Array.isArray(h)?h.length:(h&&h.count)||0; const el=document.getElementById('action-p'+(pl.index+1)); if(el)el.textContent=(st.currentPlayer===pl.index?'Playing':'Waiting')+' • '+count+' cards'; const nameEl=document.querySelector('#player-name-p'+(pl.index+1)); if(nameEl)nameEl.textContent=pl.index===st.myIndex?'YOU':pl.name; const scoreEl=document.getElementById('score-p'+(pl.index+1)); if(scoreEl&&st.scores&&st.scores[pl.id]!=null)scoreEl.textContent=st.scores[pl.id]; const scoreBadge=document.getElementById('score-badge-p'+(pl.index+1)); if(scoreBadge&&st.scores&&st.scores[pl.id]!=null)scoreBadge.textContent=st.scores[pl.id]; const box=document.getElementById('opp'+(pl.index+1)); if(box)box.classList.toggle('active-turn',st.currentPlayer===pl.index); });
+    (st.players||[]).forEach(pl=>{ const h=st.hands[pl.index]; const count=Array.isArray(h)?h.length:(h&&h.count)||0; const el=document.getElementById('action-p'+(pl.index+1)); if(el)el.textContent=(st.currentPlayer===pl.index?'Playing':'Waiting')+' • '+count+' cards'; const nameEl=document.querySelector('#player-name-p'+(pl.index+1)); if(nameEl)nameEl.textContent=pl.index===st.myIndex?'YOU':pl.name; const scoreEl=document.getElementById('score-p'+(pl.index+1)); if(scoreEl&&st.scores&&st.scores[pl.id]!=null)scoreEl.textContent=st.scores[pl.id]; const box=document.getElementById('opp'+(pl.index+1)); if(box)box.classList.toggle('active-turn',st.currentPlayer===pl.index); });
     document.title='POOL RUMMY • '+meName+' • '+(st.players||[]).length+' PLAYERS';
   }
   function onlineStartTurnTimer(endAt){
@@ -4603,16 +4563,10 @@ button[onclick*="groupSelected"] {
     ensureOnlineSocket();
     if(window.__realV2Hooked)return; window.__realV2Hooked=true;
     onlineSocket.on('gameState',applyOnlineState);
-    onlineSocket.on('realGameStarted',d=>{if(!window.__realRoomStarted)startOnlineGameUI(d); window.__realRoomStarted=true; gameOver=false; gameStarted=true; if(d&&Number.isInteger(d.currentPlayer))currentPlayer=d.currentPlayer; if(d&&d.firstChoice)showFirstDrawChoice(d); if(typeof updateUI==='function')updateUI();});
+    onlineSocket.on('realGameStarted',d=>{if(!window.__realRoomStarted)startOnlineGameUI(d); gameOver=false; gameStarted=true; if(d&&Number.isInteger(d.currentPlayer))currentPlayer=d.currentPlayer; if(d&&d.firstChoice)showFirstDrawChoice(d); if(typeof updateUI==='function')updateUI();});
     onlineSocket.on('onlineActionError',m=>{const st=document.getElementById('status');if(st)st.innerText='⚠️ '+((m&&m.message)||'Action not allowed');});
     onlineSocket.on('onlineActionAck',m=>{const st=document.getElementById('status');if(st&&m&&m.action==='draw')st.innerText='Card received. Select one card to discard.';if(m&&m.action==='draw'){const stage=document.getElementById('dealerTossStage');if(stage)stage.classList.remove('active');}});
-    onlineSocket.on('dealResult',r=>{if(r&&r.wrongShow){const st=document.getElementById('status');if(st)st.innerText='❌ Wrong Show: '+r.loserName+' +80 | 🏆 '+r.winnerName+' Win 0 | NEXT DEAL';}});
-    onlineSocket.on('dealResult',r=>{ window.__onlineRoomStarted=false; window.__realRoomStarted=false; window.__onlineLastResult=r; gameOver=true; if(r.scores){(window.__onlineRoomPlayers||[]).forEach(pl=>{if(r.scores[pl.id]!=null)gameScores['Player '+(pl.index+1)]=Number(r.scores[pl.id])||0;});} (window.__onlineRoomPlayers||[]).forEach(pl=>{const pts=Number(r.roundPoints?.[pl.id]||0); const dropped=pts>0 && r.valid && pl.id!==r.winnerId && !(r.penalties||[]).some(x=>x.playerId===pl.id); playerDealStatus[pl.index]={result:pl.id===r.winnerId?'Winner':(dropped?'Drop':'Lost'),points:pts}; droppedThisDeal[pl.index]=dropped;}); const msg=r.wrongShow
-      ? ('❌ WRONG SHOW — '+r.loserName+' +80 | 🏆 '+r.winnerName+' WIN 0')
-      : (r.valid?('🏆 '+r.winnerName+' SHOW / ROUND COMPLETE'):('❌ INVALID DECLARATION — '+(r.reason||'Please arrange 13 cards correctly')));
-    if(typeof showDealResultModal==='function')showDealResultModal(msg);
-    const b=document.getElementById('nextDealBtn');
-    if(b){b.innerText=r.matchWinner?'MATCH FINISHED':'NEXT DEAL';b.onclick=r.matchWinner?(()=>location.reload()):onlineNextDeal;} });
+    onlineSocket.on('dealResult',r=>{ window.__onlineRoomStarted=false; window.__realRoomStarted=false; window.__onlineLastResult=r; gameOver=true; if(r.scores){(window.__onlineRoomPlayers||[]).forEach(pl=>{if(r.scores[pl.id]!=null)gameScores['Player '+(pl.index+1)]=Number(r.scores[pl.id])||0;});} (window.__onlineRoomPlayers||[]).forEach(pl=>{const pts=Number(r.roundPoints?.[pl.id]||0); const dropped=pts>0 && r.valid && pl.id!==r.winnerId && !(r.penalties||[]).some(x=>x.playerId===pl.id); playerDealStatus[pl.index]={result:pl.id===r.winnerId?'Winner':(dropped?'Drop':'Lost'),points:pts}; droppedThisDeal[pl.index]=dropped;}); const msg=r.valid?('🏆 '+r.winnerName+' SHOW / ROUND COMPLETE'):('❌ INVALID DECLARATION — '+(r.reason||'Please arrange 13 cards correctly')); if(typeof showDealResultModal==='function')showDealResultModal(msg); const b=document.getElementById('nextDealBtn'); if(b){b.innerText=r.matchWinner?'MATCH FINISHED':'NEXT DEAL';b.onclick=r.matchWinner?(()=>location.reload()):onlineNextDeal;} });
     onlineSocket.on('poolFinished',r=>{alert('🏆 Match finished!');location.reload();});
   }
   const oldDraw=window.drawCard, oldDrawDiscard=window.drawFromDiscard, oldDiscard=window.discardCard, oldGroup=window.groupSelectedCards, oldDeclare=window.declareGame; window.__originalDeclareGame=oldDeclare;
@@ -5794,15 +5748,6 @@ window.jkrnV15JokerRules={
   #opp2{top:3%!important;}
 }
 </style>
-<style id="jkrn-2player-rim-seat">
-/* 2-player seating: opponent profile sits ON the top table rim, not inside the felt. */
-@media (min-width: 601px){
-  #opp2.jkrn-rim-seat{top:-35px !important;left:50% !important;right:auto !important;transform:translateX(-50%) !important;z-index:70 !important;}
-}
-@media (max-width: 600px){
-  #opp2.jkrn-rim-seat{top:-30px !important;left:50% !important;right:auto !important;transform:translateX(-50%) !important;z-index:70 !important;}
-}
-</style>
 <script id="jkrn-v23-turn-seat-controls">
 (function(){
   const MAX=6;
@@ -5818,19 +5763,10 @@ window.jkrnV15JokerRules={
     for(let i=2;i<=MAX;i++){
       const el=document.getElementById('opp'+i); if(!el)continue;
       el.style.display=(i<=n)?'flex':'none';
-      el.classList.remove('jkrn-rim-seat');
     }
     /* 2-player: YOU bottom, Computer 1 top. */
     if(n===2){
-      const e=document.getElementById('opp2');
-      if(e){
-        e.style.left='50%';
-        e.style.setProperty('top','-35px','important');
-        e.style.right='auto';
-        e.style.transform='translateX(-50%)';
-        e.style.zIndex='70';
-        e.classList.add('jkrn-rim-seat');
-      }
+      const e=document.getElementById('opp2'); if(e){e.style.left='50%';e.style.top='5%';e.style.right='auto';e.style.transform='translateX(-50%)';}
       return;
     }
     /* 4-player: top, left, right around YOU. */
@@ -6076,212 +6012,7 @@ window.jkrnV15JokerRules={
       if(seat && !(players[i])) seat.style.display='none';
     }
   }
-  /* Profiles are refreshed from socket gameState/roomUpdate events only. */
+  setInterval(refreshSeatProfiles,500);
   document.addEventListener('DOMContentLoaded',refreshSeatProfiles);
-})();
-</script>
-
-
-<style id="jkrn-final-2player-rim-css">
-/* FINAL 2-player seat: opponent profile is centered on the TOP table rim. */
-#opp2.jkrn-2p-rim-seat{
-  top:-45px !important; left:50% !important; right:auto !important;
-  transform:translateX(-50%) !important; z-index:5000 !important;
-}
-#opp3.jkrn-2p-hidden,#opp4.jkrn-2p-hidden,#opp5.jkrn-2p-hidden,#opp6.jkrn-2p-hidden{display:none !important;}
-@media(max-width:600px){
-  #opp2.jkrn-2p-rim-seat{top:-38px !important;}
-}
-</style>
-<script id="jkrn-final-2player-rim-fix-v2">
-(function(){
-  function syncSeats(){
-    const boxes=[2,3,4,5,6].map(i=>document.getElementById('opp'+i)).filter(Boolean);
-    const all=Array.isArray(window.__onlineRoomPlayers)?window.__onlineRoomPlayers:[];
-    const my=Number.isInteger(window.__onlineMyIndex)?window.__onlineMyIndex:0;
-    const opponents=all.filter(p=>p && p.index!==my && p.connected!==false);
-    const n=opponents.length;
-
-    /* Always clear old seat classes first. */
-    boxes.forEach(b=>{
-      b.classList.remove('jkrn-2p-rim-seat','jkrn-2p-hidden');
-      b.style.removeProperty('left'); b.style.removeProperty('right');
-      b.style.removeProperty('top'); b.style.removeProperty('transform');
-    });
-
-    /* No live online opponent data: leave the normal layout alone. */
-    if(!window.__realRoomStarted && !window.__onlineRoomPlayers) return;
-
-    /* Hide every opponent box first. This prevents old seat positions from
-       showing a ghost player (the previous script was doing exactly that). */
-    boxes.forEach(b=>{b.style.display='none';});
-
-    opponents.forEach((p,i)=>{
-      const box=boxes[i];
-      if(!box) return;
-      box.style.display='flex';
-      const name=box.querySelector('.opp-name');
-      if(name){
-        const dealer=(p.index===window.__onlineDealerIndex)?'inline-block':'none';
-        name.innerHTML=`${p.name||('Player '+(i+2))} <span class="dealer-badge" style="display:${dealer}">DEALER</span><span class="elim-badge" style="display:none">OUT</span>`;
-      }
-      const av=box.querySelector('.opp-avatar');
-      if(av && !av.querySelector('img')) av.textContent='👤';
-    });
-
-    if(n===1){
-      /* Exactly two players: YOU bottom, opponent opposite on the rim. */
-      const e=boxes[0];
-      if(e){
-        e.classList.add('jkrn-2p-rim-seat');
-        e.style.display='flex';
-      }
-      return;
-    }
-
-    /* 3/4/5/6 players: place occupied opponents around the ellipse. */
-    const pos={
-      1:[['50%','-45px','auto','translateX(-50%)']],
-      2:[['50%','-45px','auto','translateX(-50%)'],['auto','35%','3%','none']],
-      3:[['50%','-45px','auto','translateX(-50%)'],['3%','35%','auto','none'],['auto','35%','3%','none']],
-      4:[['15%','5%','auto','none'],['50%','-45px','auto','translateX(-50%)'],['auto','5%','15%','none'],['50%','35%','auto','translateX(-50%)']],
-      5:[['3%','35%','auto','none'],['15%','5%','auto','none'],['50%','-45px','auto','translateX(-50%)'],['auto','5%','15%','none'],['auto','35%','3%','none']]
-    };
-    const layout=pos[Math.min(5,n)]||pos[5];
-    opponents.forEach((p,i)=>{
-      const e=boxes[i], m=layout[i]; if(!e||!m)return;
-      e.style.display='flex'; e.style.left=m[0]; e.style.top=m[1]; e.style.right=m[2]; e.style.transform=m[3];
-    });
-  }
-
-  window.jkrnFinalSyncSeats=syncSeats;
-  document.addEventListener('DOMContentLoaded',syncSeats);
-  window.addEventListener('load',syncSeats);
-  /* Stable event-driven seats: no 300ms DOM rewrites that can cause visual flicker. */
-})();
-</script>
-<!-- JKRN FINAL 2-PLAYER RIM SEATING FIX V2 -->
-
-<style id="jkrn-no-player-blink-v1">
-/* ONLINE: active player highlight must stay steady, never blink/pulse. */
-.opp-box.active-turn,.player-info.active-turn{animation:none!important;transition:none!important;box-shadow:none!important;border-color:rgba(255,215,0,.38)!important;}
-.opp-box.active-turn .opp-timer{animation:none!important;}
-</style>
-
-<style id="jkrn-total-score-profile-v2">
-/* Player profile/score must NEVER blink or pulse. Active-turn class is logic-only. */
-.opp-box,.player-info,.opp-avatar,.opp-score-badge,.player-score-badge{
-  animation:none!important;
-}
-.opp-box.active-turn,.player-info.active-turn{
-  animation:none!important;
-  transition:none!important;
-  border-color:rgba(255,215,0,.38)!important;
-  box-shadow:0 5px 14px rgba(0,0,0,.5)!important;
-}
-.opp-box.active-turn .opp-timer,.player-info.active-turn .player-timer{animation:none!important;}
-</style>
-
-
-<!-- JKRN FINAL ONLINE SEAT + POOL 201 FINISH PATCH V11 -->
-<style id="jkrn-final-no-flicker-v11">
-.opp-box,.player-info,.opp-avatar,.opp-score-badge,.player-score-badge,.opp-timer,.player-timer{animation:none!important;}
-.opp-box.active-turn,.player-info.active-turn{animation:none!important;transition:none!important;}
-#jkrnFinalFireworks{position:absolute;inset:0;overflow:hidden;pointer-events:none;border-radius:18px;}
-.jkrn-burst{position:absolute;width:8px;height:8px;border-radius:50%;background:#ffd700;box-shadow:0 0 14px #ffd700;animation:jkrnBurst 1.5s ease-out forwards;}
-@keyframes jkrnBurst{0%{transform:translate(0,0) scale(.5);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.05);opacity:0}}
-#jkrnFinalCongrats{font-size:clamp(18px,3vw,30px);font-weight:1000;color:#ffd700;text-shadow:0 0 14px #ff9800;margin:4px 0 8px;}
-#jkrnFinalCountdown{font-size:18px;font-weight:1000;color:#fff;background:rgba(0,0,0,.45);display:inline-block;padding:5px 14px;border-radius:18px;border:1px solid #ffd700;}
-</style>
-<script id="jkrn-final-online-v11">
-(function(){
-  function playerAvatar(name){
-    const n=String(name||'Player').trim();
-    return n ? n.charAt(0).toUpperCase() : '👤';
-  }
-  function syncAuthoritativeSeats(st){
-    if(!st || !Array.isArray(st.players)) return;
-    window.__onlineRoomPlayers=st.players;
-    window.__onlineMyIndex=Number(st.myIndex);
-    const my=Number(st.myIndex);
-    const me=st.players.find(p=>Number(p.index)===my);
-    const pInfo=document.getElementById('playerInfoBox');
-    if(pInfo && me){
-      const nameSpan=pInfo.querySelector('.jkrn-me-name');
-      if(nameSpan) nameSpan.innerHTML=`${me.name||'YOU'} <small style="color:#aaa">(YOU)</small> <span id="dealer-tag-p1" class="dealer-badge" style="display:${me.index===st.dealerIndex?'inline-block':'none'}">DEALER</span><span id="elim-tag-p1" class="elim-badge" style="display:${st.eliminated?.[me.id]?'inline-block':'none'}">OUT</span>`;
-      const av=pInfo.querySelector('.opp-avatar'); if(av) av.textContent=playerAvatar(me.name);
-      const sc=pInfo.querySelector('#score-badge-p1'); if(sc) sc.textContent=Number(st.scores?.[me.id]||0);
-      pInfo.classList.toggle('active-turn',Number(st.currentPlayer)===my && !st.eliminated?.[me.id] && !st.dropped?.[me.id]);
-      pInfo.classList.toggle('eliminated',!!st.eliminated?.[me.id]);
-      const tm=pInfo.querySelector('.player-timer'); if(tm){tm.style.display=Number(st.currentPlayer)===my && st.started?'inline-block':'none';}
-    }
-    const boxes=[2,3,4,5,6].map(i=>document.getElementById('opp'+i)).filter(Boolean);
-    boxes.forEach(b=>b.style.display='none');
-    const opponents=st.players.filter(p=>Number(p.index)!==my && p.connected!==false);
-    const pos={
-      1:[['50%','-45px','auto','translateX(-50%)']],
-      2:[['50%','-45px','auto','translateX(-50%)'],['auto','35%','3%','none']],
-      3:[['50%','-45px','auto','translateX(-50%)'],['3%','35%','auto','none'],['auto','35%','3%','none']],
-      4:[['15%','5%','auto','none'],['50%','-45px','auto','translateX(-50%)'],['auto','5%','15%','none'],['50%','35%','auto','translateX(-50%)']],
-      5:[['3%','35%','auto','none'],['15%','5%','auto','none'],['50%','-45px','auto','translateX(-50%)'],['auto','5%','15%','none'],['auto','35%','3%','none']]
-    };
-    const layout=pos[Math.min(5,opponents.length)]||pos[5];
-    opponents.forEach((pl,i)=>{
-      const box=boxes[i], m=layout[i]; if(!box||!m)return;
-      box.style.display='flex'; box.style.left=m[0]; box.style.top=m[1]; box.style.right=m[2]; box.style.transform=m[3];
-      const av=box.querySelector('.opp-avatar'); if(av)av.textContent=playerAvatar(pl.name);
-      const name=box.querySelector('.opp-name'); if(name)name.innerHTML=`${pl.name||'Player'} <span class="dealer-badge" style="display:${pl.index===st.dealerIndex?'inline-block':'none'}">DEALER</span><span class="elim-badge" style="display:${st.eliminated?.[pl.id]?'inline-block':'none'}">OUT</span>`;
-      const score=box.querySelector('.score-value'); if(score)score.textContent=Number(st.scores?.[pl.id]||0);
-      const score2=box.querySelector(`#score-p${pl.index+1}`); if(score2)score2.textContent=Number(st.scores?.[pl.id]||0);
-      const action=box.querySelector('.opp-action'); if(action)action.textContent=st.eliminated?.[pl.id]?'ELIMINATED':st.dropped?.[pl.id]?'DROP':Number(st.currentPlayer)===Number(pl.index)?'YOUR TURN':'Waiting';
-      const timer=box.querySelector('.opp-timer'); if(timer){timer.style.display=Number(st.currentPlayer)===Number(pl.index)&&st.started?'block':'none';timer.textContent=Number(st.currentPlayer)===Number(pl.index)?`⏳ ${Math.max(0,Math.ceil(((st.turnEndsAt||0)-Date.now())/1000))}s`:'60s';}
-      box.classList.toggle('active-turn',Number(st.currentPlayer)===Number(pl.index)&&!!st.started);
-    });
-  }
-
-  function fireFinalCelebration(){
-    const layer=document.getElementById('jkrnFinalFireworks'); if(!layer)return;
-    layer.innerHTML='';
-    for(let b=0;b<8;b++){
-      const cx=10+Math.random()*80, cy=18+Math.random()*55;
-      for(let i=0;i<22;i++){
-        const d=document.createElement('i'); d.className='jkrn-burst'; d.style.left=cx+'%'; d.style.top=cy+'%';
-        const a=(Math.PI*2*i/22), r=45+Math.random()*75; d.style.setProperty('--dx',Math.cos(a)*r+'px'); d.style.setProperty('--dy',Math.sin(a)*r+'px'); d.style.animationDelay=(Math.random()*.25)+'s'; layer.appendChild(d);
-      }
-    }
-  }
-  function showFinalPoolResult(r){
-    const modal=document.getElementById('resultModal'), box=modal?.querySelector('.modal-box'), header=document.getElementById('resultModalHeader'), content=document.getElementById('resultModalContent'), btn=document.getElementById('nextDealBtn');
-    if(!modal||!box||!header||!content)return;
-    if(window._sbCountdown)clearInterval(window._sbCountdown);
-    let layer=document.getElementById('jkrnFinalFireworks'); if(!layer){layer=document.createElement('div');layer.id='jkrnFinalFireworks';box.prepend(layer);}
-    header.innerHTML='🏆 201 POOL MATCH COMPLETE';
-    const winner=r.winnerName||r.result?.winnerName||'Winner';
-    let html=`<div id="jkrnFinalCongrats">🎉 Congratulations ${winner}! 🎉<br><span style="font-size:15px;color:#fff">🏆 You are the 201 Pool Winner</span></div>`;
-    html+='<div class="sb-table-wrap"><table class="sb-table"><thead><tr><th style="text-align:left;padding-left:15px">Players</th><th>Round</th><th>Total Score</th><th>Result</th></tr></thead><tbody>';
-    const players=window.__onlineRoomPlayers||[];
-    players.slice().sort((a,b)=>Number(r.scores?.[a.id]||0)-Number(r.scores?.[b.id]||0)).forEach(pl=>{
-      const total=Number(r.scores?.[pl.id]||0), win=pl.id===r.winnerId||pl.name===winner;
-      const pts=Number(r.roundPoints?.[pl.id]||0);
-      html+=`<tr class="sb-row ${win?'winner-row':''}"><td class="sb-player-cell"><div class="sb-avatar">${playerAvatar(pl.name)}</div><span class="sb-name">${pl.name||'Player'}</span></td><td class="sb-pts">${pts}</td><td class="sb-score">${total}</td><td class="${win?'sb-res-winner':'sb-res-lost'}">${win?'🏆 WINNER':(total>=201?'ELIMINATED':'LOST')}</td></tr>`;
-    });
-    html+='</tbody></table></div><div id="jkrnFinalCountdown">Closing in 10s</div>';
-    content.innerHTML=html; btn.style.display='none'; modal.classList.add('active'); fireFinalCelebration();
-    let cd=10; const c=document.getElementById('jkrnFinalCountdown');
-    window._jkrnFinalClose=setInterval(()=>{cd--;if(c)c.textContent=cd>0?`Closing in ${cd}s`:'Closing…';if(cd<=0){clearInterval(window._jkrnFinalClose);modal.classList.remove('active');}},1000);
-  }
-
-  function bind(){
-    if(!window.onlineSocket || window.__jkrnFinalV11)return false;
-    window.__jkrnFinalV11=true;
-    window.onlineSocket.on('gameState',syncAuthoritativeSeats);
-    window.onlineSocket.on('roomUpdate',d=>{ if(d?.players) window.__onlineRoomPlayers=d.players; });
-    window.onlineSocket.on('realGameStarted',d=>{setTimeout(()=>{if(window.__onlineState)syncAuthoritativeSeats(window.__onlineState);},0);});
-    window.onlineSocket.on('poolFinished',r=>{showFinalPoolResult(r||{});});
-    window.onlineSocket.on('dealResult',r=>{ if(r?.matchWinner){setTimeout(()=>showFinalPoolResult({scores:r.scores||{},roundPoints:r.roundPoints||{},winnerId:r.winnerId,winnerName:r.matchWinner,result:r}),50); } });
-    return true;
-  }
-  const wait=setInterval(()=>{if(bind())clearInterval(wait);},100);
-  setTimeout(()=>clearInterval(wait),15000);
 })();
 </script>
