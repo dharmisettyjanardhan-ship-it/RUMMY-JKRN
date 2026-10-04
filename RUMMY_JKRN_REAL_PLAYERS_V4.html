@@ -2180,7 +2180,10 @@ button[data-action="discard"], button[data-action="declare"],
     <div class="modal-box">
         <h2 id="resultModalHeader" style="color: #ffd700; font-size: 22px; text-transform: uppercase;">SCORE BOARD</h2>
         <div id="resultModalContent"></div>
-        <button class="continue-btn-glow" id="nextDealBtn" onclick="closeResultModalAndStartNext()">Continue (7)</button>
+        <div style="display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;">
+<button class="continue-btn-glow" id="nextDealBtn" onclick="closeResultModalAndStartNext()">Continue (10)</button>
+<button class="continue-btn-glow" id="scoreBoardCloseBtn" type="button" style="background:linear-gradient(to bottom,#777,#333);padding:10px 22px;" onclick="document.getElementById('resultModal').classList.remove('active');">✕ CLOSE</button>
+</div>
     </div>
 </div>
 
@@ -3530,7 +3533,7 @@ function showDealResultModal(titleText) {
 
     header.innerText = titleText;
 
-    let cd = 7;
+    let cd = 10;
     nextBtn.innerText = `Continue (${cd})`;
     clearInterval(window._sbCountdown);
     window._sbCountdown = setInterval(() => {
@@ -4566,7 +4569,13 @@ button[onclick*="groupSelected"] {
     onlineSocket.on('realGameStarted',d=>{if(!window.__realRoomStarted)startOnlineGameUI(d); gameOver=false; gameStarted=true; if(d&&Number.isInteger(d.currentPlayer))currentPlayer=d.currentPlayer; if(d&&d.firstChoice)showFirstDrawChoice(d); if(typeof updateUI==='function')updateUI();});
     onlineSocket.on('onlineActionError',m=>{const st=document.getElementById('status');if(st)st.innerText='⚠️ '+((m&&m.message)||'Action not allowed');});
     onlineSocket.on('onlineActionAck',m=>{const st=document.getElementById('status');if(st&&m&&m.action==='draw')st.innerText='Card received. Select one card to discard.';if(m&&m.action==='draw'){const stage=document.getElementById('dealerTossStage');if(stage)stage.classList.remove('active');}});
-    onlineSocket.on('dealResult',r=>{ window.__onlineRoomStarted=false; window.__realRoomStarted=false; window.__onlineLastResult=r; gameOver=true; if(r.scores){(window.__onlineRoomPlayers||[]).forEach(pl=>{if(r.scores[pl.id]!=null)gameScores['Player '+(pl.index+1)]=Number(r.scores[pl.id])||0;});} (window.__onlineRoomPlayers||[]).forEach(pl=>{const pts=Number(r.roundPoints?.[pl.id]||0); const dropped=pts>0 && r.valid && pl.id!==r.winnerId && !(r.penalties||[]).some(x=>x.playerId===pl.id); playerDealStatus[pl.index]={result:pl.id===r.winnerId?'Winner':(dropped?'Drop':'Lost'),points:pts}; droppedThisDeal[pl.index]=dropped;}); const msg=r.valid?('🏆 '+r.winnerName+' SHOW / ROUND COMPLETE'):('❌ INVALID DECLARATION — '+(r.reason||'Please arrange 13 cards correctly')); if(typeof showDealResultModal==='function')showDealResultModal(msg); const b=document.getElementById('nextDealBtn'); if(b){b.innerText=r.matchWinner?'MATCH FINISHED':'NEXT DEAL';b.onclick=r.matchWinner?(()=>location.reload()):onlineNextDeal;} });
+    onlineSocket.on('dealResult',r=>{if(r&&r.wrongShow){const st=document.getElementById('status');if(st)st.innerText='❌ Wrong Show: '+r.loserName+' +80 | 🏆 '+r.winnerName+' Win 0 | NEXT DEAL';}});
+    onlineSocket.on('dealResult',r=>{ window.__onlineRoomStarted=false; window.__realRoomStarted=false; window.__onlineLastResult=r; gameOver=true; if(r.scores){(window.__onlineRoomPlayers||[]).forEach(pl=>{if(r.scores[pl.id]!=null)gameScores['Player '+(pl.index+1)]=Number(r.scores[pl.id])||0;});} (window.__onlineRoomPlayers||[]).forEach(pl=>{const pts=Number(r.roundPoints?.[pl.id]||0); const dropped=pts>0 && r.valid && pl.id!==r.winnerId && !(r.penalties||[]).some(x=>x.playerId===pl.id); playerDealStatus[pl.index]={result:pl.id===r.winnerId?'Winner':(dropped?'Drop':'Lost'),points:pts}; droppedThisDeal[pl.index]=dropped;}); const msg=r.wrongShow
+      ? ('❌ WRONG SHOW — '+r.loserName+' +80 | 🏆 '+r.winnerName+' WIN 0')
+      : (r.valid?('🏆 '+r.winnerName+' SHOW / ROUND COMPLETE'):('❌ INVALID DECLARATION — '+(r.reason||'Please arrange 13 cards correctly')));
+    if(typeof showDealResultModal==='function')showDealResultModal(msg);
+    const b=document.getElementById('nextDealBtn');
+    if(b){b.innerText=r.matchWinner?'MATCH FINISHED':'NEXT DEAL';b.onclick=r.matchWinner?(()=>location.reload()):onlineNextDeal;} });
     onlineSocket.on('poolFinished',r=>{alert('🏆 Match finished!');location.reload();});
   }
   const oldDraw=window.drawCard, oldDrawDiscard=window.drawFromDiscard, oldDiscard=window.discardCard, oldGroup=window.groupSelectedCards, oldDeclare=window.declareGame; window.__originalDeclareGame=oldDeclare;
@@ -5748,6 +5757,15 @@ window.jkrnV15JokerRules={
   #opp2{top:3%!important;}
 }
 </style>
+<style id="jkrn-2player-rim-seat">
+/* 2-player seating: opponent profile sits ON the top table rim, not inside the felt. */
+@media (min-width: 601px){
+  #opp2.jkrn-rim-seat{top:-35px !important;left:50% !important;right:auto !important;transform:translateX(-50%) !important;z-index:70 !important;}
+}
+@media (max-width: 600px){
+  #opp2.jkrn-rim-seat{top:-30px !important;left:50% !important;right:auto !important;transform:translateX(-50%) !important;z-index:70 !important;}
+}
+</style>
 <script id="jkrn-v23-turn-seat-controls">
 (function(){
   const MAX=6;
@@ -5763,10 +5781,19 @@ window.jkrnV15JokerRules={
     for(let i=2;i<=MAX;i++){
       const el=document.getElementById('opp'+i); if(!el)continue;
       el.style.display=(i<=n)?'flex':'none';
+      el.classList.remove('jkrn-rim-seat');
     }
     /* 2-player: YOU bottom, Computer 1 top. */
     if(n===2){
-      const e=document.getElementById('opp2'); if(e){e.style.left='50%';e.style.top='5%';e.style.right='auto';e.style.transform='translateX(-50%)';}
+      const e=document.getElementById('opp2');
+      if(e){
+        e.style.left='50%';
+        e.style.setProperty('top','-35px','important');
+        e.style.right='auto';
+        e.style.transform='translateX(-50%)';
+        e.style.zIndex='70';
+        e.classList.add('jkrn-rim-seat');
+      }
       return;
     }
     /* 4-player: top, left, right around YOU. */
