@@ -28,7 +28,7 @@ function addPlayerToRoom(room, socket, name){
 }
 
 app.use(express.static(__dirname));
-app.get('/', (req,res)=>res.sendFile(path.join(__dirname,'RUMMY_JKRN_REAL_PLAYERS_V4.html')));
+app.get('/', (req,res)=>res.sendFile(path.join(__dirname,'index.html')));
 
 const suits = [
   {s:'♥',c:'red'}, {s:'♦',c:'red'}, {s:'♣',c:'black'}, {s:'♠',c:'black'}
@@ -175,20 +175,37 @@ function startTurn(room){
 function dropPlayer(room,p,points,automatic=false){
   if(!room.started||!p||room.dropped?.[p.id]||room.eliminated?.[p.id])return false;
   if(!room.dropped)room.dropped={}; if(!room.roundPoints)room.roundPoints={};
-  room.dropped[p.id]=true; room.roundPoints[p.id]=points; room.scores[p.id]=(room.scores[p.id]||0)+points;
+  const previousTotal=Number(room.scores[p.id]||0);
+  const totalScore=previousTotal+Number(points||0);
+  room.dropped[p.id]=true;
+  room.roundPoints[p.id]=Number(points||0);
+  room.scores[p.id]=totalScore;
+  const limit=eliminationScore(room);
+  if(totalScore>=limit) room.eliminated[p.id]=true;
   if(room.turnTimer)clearTimeout(room.turnTimer); if(room.graceTimer)clearTimeout(room.graceTimer);
   p.hand=[];
   const remaining=activePlayers(room).filter(x=>!room.dropped[x.id]);
   if(remaining.length<=1){ finishRoundByDrop(room); return true; }
   room.currentPlayer=nextActiveIndex(room,p.index); room.playerHasDrawn=false; room.turnPhase='draw'; room.turnEndsAt=Date.now()+60000; room.graceEndsAt=0;
   room.turnTimer=setTimeout(()=>endTurn(room),60000);
-  io.to(room.id).emit('playerDropped',{playerId:p.id,index:p.index,name:p.name,points,automatic}); broadcastState(room); return true;
+  io.to(room.id).emit('playerDropped',{playerId:p.id,index:p.index,name:p.name,points:Number(points||0),previousTotal,totalScore,eliminated:!!room.eliminated[p.id],automatic});
+  broadcastState(room); return true;
 }
 function finishRoundByDrop(room){
   if(room.turnTimer)clearTimeout(room.turnTimer);if(room.graceTimer)clearTimeout(room.graceTimer);
-  const winner=activePlayers(room).find(p=>!room.dropped[p.id]);
-  room.started=false; room.result={valid:true,winnerId:winner?.id||null,winnerName:winner?.name||'Remaining Player',penalties:[],roundPoints:room.roundPoints||{},scores:room.scores,matchWinner:activePlayers(room).find(p=>(room.scores[p.id]||0)>=room.poolLimit)?.name||null};
+  const limit=eliminationScore(room);
+  const eliminatedThisRound=[];
+  for(const pl of room.playersList){
+    if((room.scores[pl.id]||0)>=limit && !room.eliminated?.[pl.id]) room.eliminated[pl.id]=true;
+    if(room.eliminated?.[pl.id]) eliminatedThisRound.push({playerId:pl.id,name:pl.name,totalScore:Number(room.scores[pl.id]||0),eliminationScore:limit});
+  }
+  const winner=activePlayers(room).find(p=>!room.dropped?.[p.id]);
+  const active=activePlayers(room);
+  const penalties=room.playersList.filter(pl=>Number(room.roundPoints?.[pl.id]||0)>0).map(pl=>({playerId:pl.id,name:pl.name,roundScore:Number(room.roundPoints[pl.id]||0),previousTotal:Number(room.scores[pl.id]||0)-Number(room.roundPoints[pl.id]||0),totalScore:Number(room.scores[pl.id]||0)}));
+  room.started=false;
+  room.result={valid:true,winnerId:winner?.id||null,winnerName:winner?.name||'Remaining Player',penalties,roundPoints:room.roundPoints||{},scores:room.scores,eliminated:eliminatedThisRound,eliminationScore:limit,matchWinner:active.length===1?active[0].name:null};
   io.to(room.id).emit('dealResult',room.result); broadcastState(room);
+  if(active.length<=1) io.to(room.id).emit('poolFinished',{scores:room.scores,result:room.result});
 }
 function startToss(room){
   const d=shuffle(makeDeck().filter(c=>!c.isPrintedJoker));
@@ -338,7 +355,7 @@ io.on('connection',socket=>{
     const room=rooms.get(socket.roomId),p=room&&room.players.get(socket.id);
     if(!room||!p||!room.started||room.eliminated?.[p.id]||room.dropped?.[p.id]||p.index!==room.currentPlayer)return socket.emit('onlineActionError',{message:'Drop is not available.'});
     if(room.playerHasDrawn)return socket.emit('onlineActionError',{message:'After drawing, DROP/MIDDLE DROP is not allowed this turn.'});
-    const points=room.hasDrawnEver?.[p.id]?50:25; dropPlayer(room,p,points,false);
+    const points=room.hasDrawnEver?.[p.id]?50:20; dropPlayer(room,p,points,false);
   });
   socket.on('declare',({groupIds,discardId})=>{
     const room=rooms.get(socket.roomId),p=room&&room.players.get(socket.id);
@@ -381,10 +398,11 @@ io.on('connection',socket=>{
           scores:room.scores,
           eliminated:room.eliminated[p.id]?[{playerId:p.id,name:p.name,totalScore:room.scores[p.id],eliminationScore:limit}]:[],
           eliminationScore:limit,
-          matchWinner:null
+          matchWinner:activePlayers(room).length===1?activePlayers(room)[0].name:null
         };
         io.to(room.id).emit('dealResult',room.result);
         broadcastState(room);
+        if(room.result.matchWinner) io.to(room.id).emit('poolFinished',{scores:room.scores,result:room.result});
         return;
       }
       // Wrong-show player is HOLD for this deal. They are NOT removed from the match
