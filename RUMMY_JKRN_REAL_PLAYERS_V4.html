@@ -6043,3 +6043,84 @@ window.jkrnV15JokerRules={
   document.addEventListener('DOMContentLoaded',refreshSeatProfiles);
 })();
 </script>
+
+
+<style id="jkrn-final-2player-rim-css">
+/* FINAL 2-player seat: opponent profile is centered on the TOP table rim. */
+#opp2.jkrn-2p-rim-seat{
+  top:-45px !important; left:50% !important; right:auto !important;
+  transform:translateX(-50%) !important; z-index:5000 !important;
+}
+#opp3.jkrn-2p-hidden,#opp4.jkrn-2p-hidden,#opp5.jkrn-2p-hidden,#opp6.jkrn-2p-hidden{display:none !important;}
+@media(max-width:600px){
+  #opp2.jkrn-2p-rim-seat{top:-38px !important;}
+}
+</style>
+<script id="jkrn-final-2player-rim-fix-v2">
+(function(){
+  function syncSeats(){
+    const boxes=[2,3,4,5,6].map(i=>document.getElementById('opp'+i)).filter(Boolean);
+    const all=Array.isArray(window.__onlineRoomPlayers)?window.__onlineRoomPlayers:[];
+    const my=Number.isInteger(window.__onlineMyIndex)?window.__onlineMyIndex:0;
+    const opponents=all.filter(p=>p && p.index!==my && p.connected!==false);
+    const n=opponents.length;
+
+    /* Always clear old seat classes first. */
+    boxes.forEach(b=>{
+      b.classList.remove('jkrn-2p-rim-seat','jkrn-2p-hidden');
+      b.style.removeProperty('left'); b.style.removeProperty('right');
+      b.style.removeProperty('top'); b.style.removeProperty('transform');
+    });
+
+    /* No live online opponent data: leave the normal layout alone. */
+    if(!window.__realRoomStarted && !window.__onlineRoomPlayers) return;
+
+    /* Hide every opponent box first. This prevents old seat positions from
+       showing a ghost player (the previous script was doing exactly that). */
+    boxes.forEach(b=>{b.style.display='none';});
+
+    opponents.forEach((p,i)=>{
+      const box=boxes[i];
+      if(!box) return;
+      box.style.display='flex';
+      const name=box.querySelector('.opp-name');
+      if(name){
+        const dealer=(p.index===window.__onlineDealerIndex)?'inline-block':'none';
+        name.innerHTML=`${p.name||('Player '+(i+2))} <span class="dealer-badge" style="display:${dealer}">DEALER</span><span class="elim-badge" style="display:none">OUT</span>`;
+      }
+      const av=box.querySelector('.opp-avatar');
+      if(av && !av.querySelector('img')) av.textContent='👤';
+    });
+
+    if(n===1){
+      /* Exactly two players: YOU bottom, opponent opposite on the rim. */
+      const e=boxes[0];
+      if(e){
+        e.classList.add('jkrn-2p-rim-seat');
+        e.style.display='flex';
+      }
+      return;
+    }
+
+    /* 3/4/5/6 players: place occupied opponents around the ellipse. */
+    const pos={
+      1:[['50%','-45px','auto','translateX(-50%)']],
+      2:[['50%','-45px','auto','translateX(-50%)'],['auto','35%','3%','none']],
+      3:[['50%','-45px','auto','translateX(-50%)'],['3%','35%','auto','none'],['auto','35%','3%','none']],
+      4:[['15%','5%','auto','none'],['50%','-45px','auto','translateX(-50%)'],['auto','5%','15%','none'],['50%','35%','auto','translateX(-50%)']],
+      5:[['3%','35%','auto','none'],['15%','5%','auto','none'],['50%','-45px','auto','translateX(-50%)'],['auto','5%','15%','none'],['auto','35%','3%','none']]
+    };
+    const layout=pos[Math.min(5,n)]||pos[5];
+    opponents.forEach((p,i)=>{
+      const e=boxes[i], m=layout[i]; if(!e||!m)return;
+      e.style.display='flex'; e.style.left=m[0]; e.style.top=m[1]; e.style.right=m[2]; e.style.transform=m[3];
+    });
+  }
+
+  window.jkrnFinalSyncSeats=syncSeats;
+  document.addEventListener('DOMContentLoaded',syncSeats);
+  window.addEventListener('load',syncSeats);
+  setInterval(syncSeats,300);
+})();
+</script>
+<!-- JKRN FINAL 2-PLAYER RIM SEATING FIX V2 -->
