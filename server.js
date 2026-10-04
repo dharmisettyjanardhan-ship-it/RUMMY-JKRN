@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 const http = require('http');
 const express = require('express');
 const { Server } = require('socket.io');
@@ -28,7 +29,7 @@ function addPlayerToRoom(room, socket, name){
 }
 
 app.use(express.static(__dirname));
-app.get('/', (req,res)=>res.sendFile(path.join(__dirname,'RUMMY_JKRN_PROFILE_SCORE_NO_BLINK_FINAL.html')));
+app.get('/', (req,res)=>{ const a=path.join(__dirname,'index.html'); const b=path.join(__dirname,'RUMMY_JKRN_PROFILE_SCORE_NO_BLINK_FINAL.html'); res.sendFile(fs.existsSync(a)?a:b); });
 
 const suits = [
   {s:'♥',c:'red'}, {s:'♦',c:'red'}, {s:'♣',c:'black'}, {s:'♠',c:'black'}
