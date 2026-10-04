@@ -345,7 +345,31 @@ io.on('connection',socket=>{
     if(!room||!p||!room.started||room.eliminated?.[p.id]||room.dropped?.[p.id]||p.index!==room.currentPlayer||!room.playerHasDrawn)return socket.emit('onlineActionError',{message:'Show is allowed only after drawing.'});
     const check=validateShow(room,p,groupIds,discardId);
     if(!check.ok){
-      return socket.emit('onlineActionError',{message:'Invalid Declaration: '+check.reason});
+      // WRONG SHOW: charge 80 points, keep the match running, and pass the turn.
+      // A wrong declaration must NOT end the deal.
+      const wrongPoints=80;
+      if(!room.roundPoints) room.roundPoints={};
+      room.roundPoints[p.id]=wrongPoints;
+      room.scores[p.id]=Number(room.scores[p.id]||0)+wrongPoints;
+      const limit=eliminationScore(room);
+      if(room.scores[p.id]>=limit) room.eliminated[p.id]=true;
+      p.hand=[];
+      if(room.turnTimer) clearTimeout(room.turnTimer);
+      if(room.graceTimer) clearTimeout(room.graceTimer);
+      const next=nextActiveIndex(room,p.index);
+      const active=activePlayers(room);
+      if(active.length<=1){
+        room.started=false;
+        room.result={valid:false,wrongShow:true,winnerId:active[0]?.id||null,winnerName:active[0]?.name||null,wrongShowPlayerId:p.id,wrongShowPlayerName:p.name,reason:check.reason,roundPoints:room.roundPoints,scores:room.scores,eliminationScore:limit,matchWinner:active[0]?.name||null};
+        io.to(room.id).emit('dealResult',room.result); broadcastState(room);
+        io.to(room.id).emit('poolFinished',{scores:room.scores,result:room.result});
+        return;
+      }
+      room.currentPlayer=next; room.playerHasDrawn=false; room.turnPhase='draw'; room.graceEndsAt=0; room.turnEndsAt=Date.now()+30000;
+      room.turnTimer=setTimeout(()=>endTurn(room),30000);
+      io.to(room.id).emit('wrongShow',{playerId:p.id,name:p.name,points:wrongPoints,totalScore:room.scores[p.id],reason:check.reason,eliminated:!!room.eliminated[p.id],nextPlayer:room.currentPlayer});
+      broadcastState(room);
+      return;
     }
     const penalties=[];
     // Scoring: winner gets 0. Every other active player gets the value of
