@@ -352,6 +352,41 @@ io.on('connection',socket=>{
       room.roundPoints[p.id]=wrongPoints;
       room.scores[p.id]=Number(room.scores[p.id]||0)+wrongPoints;
       const limit=eliminationScore(room);
+
+      // TWO-PLAYER SPECIAL RULE:
+      // If exactly two players are still active in this deal and one makes a
+      // wrong SHOW, the other player immediately wins this deal with 0 points.
+      // The wrong-show player gets +80. Show the scoreboard, then allow NEXT DEAL.
+      const twoActive = activePlayers(room).filter(x=>!room.dropped?.[x.id] && x.id!==p.id);
+      if(twoActive.length===1){
+        const winner=twoActive[0];
+        room.roundPoints[winner.id]=0;
+        room.scores[winner.id]=Number(room.scores[winner.id]||0);
+        if(room.scores[p.id]>=limit) room.eliminated[p.id]=true;
+        if(!room.dropped) room.dropped={};
+        room.dropped[p.id]=true;
+        p.hand=[];
+        if(room.turnTimer)clearTimeout(room.turnTimer);
+        if(room.graceTimer)clearTimeout(room.graceTimer);
+        room.started=false;
+        room.result={
+          valid:true,
+          wrongShow:true,
+          winnerId:winner.id,
+          winnerName:winner.name,
+          loserId:p.id,
+          loserName:p.name,
+          penalties:[{playerId:p.id,name:p.name,roundScore:80,previousTotal:Number(room.scores[p.id]||0)-80,totalScore:room.scores[p.id]}],
+          roundPoints:room.roundPoints,
+          scores:room.scores,
+          eliminated:room.eliminated[p.id]?[{playerId:p.id,name:p.name,totalScore:room.scores[p.id],eliminationScore:limit}]:[],
+          eliminationScore:limit,
+          matchWinner:null
+        };
+        io.to(room.id).emit('dealResult',room.result);
+        broadcastState(room);
+        return;
+      }
       // Wrong-show player is HOLD for this deal. They are NOT removed from the match
       // unless their accumulated pool score has reached 201. They can play again
       // in the next deal when they are still below the pool limit.
