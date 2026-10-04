@@ -352,22 +352,23 @@ io.on('connection',socket=>{
       room.roundPoints[p.id]=wrongPoints;
       room.scores[p.id]=Number(room.scores[p.id]||0)+wrongPoints;
       const limit=eliminationScore(room);
+      // Wrong-show player is HOLD for this deal. They are NOT removed from the match
+      // unless their accumulated pool score has reached 201. They can play again
+      // in the next deal when they are still below the pool limit.
       if(room.scores[p.id]>=limit) room.eliminated[p.id]=true;
+      if(!room.dropped) room.dropped={};
+      room.dropped[p.id]=true;
       p.hand=[];
       if(room.turnTimer) clearTimeout(room.turnTimer);
       if(room.graceTimer) clearTimeout(room.graceTimer);
       const next=nextActiveIndex(room,p.index);
-      const active=activePlayers(room);
-      if(active.length<=1){
-        room.started=false;
-        room.result={valid:false,wrongShow:true,winnerId:active[0]?.id||null,winnerName:active[0]?.name||null,wrongShowPlayerId:p.id,wrongShowPlayerName:p.name,reason:check.reason,roundPoints:room.roundPoints,scores:room.scores,eliminationScore:limit,matchWinner:active[0]?.name||null};
-        io.to(room.id).emit('dealResult',room.result); broadcastState(room);
-        io.to(room.id).emit('poolFinished',{scores:room.scores,result:room.result});
-        return;
-      }
+      const activeThisDeal=activePlayers(room).filter(x=>!room.dropped?.[x.id]);
+      // Even when only one active player remains, keep the deal alive so that
+      // player can finish with a valid SHOW. Only a genuine DROP-all situation
+      // is handled by the normal drop-round logic.
       room.currentPlayer=next; room.playerHasDrawn=false; room.turnPhase='draw'; room.graceEndsAt=0; room.turnEndsAt=Date.now()+60000;
       room.turnTimer=setTimeout(()=>endTurn(room),60000);
-      io.to(room.id).emit('wrongShow',{playerId:p.id,name:p.name,points:wrongPoints,totalScore:room.scores[p.id],reason:check.reason,eliminated:!!room.eliminated[p.id],nextPlayer:room.currentPlayer});
+      io.to(room.id).emit('wrongShow',{playerId:p.id,name:p.name,points:wrongPoints,totalScore:room.scores[p.id],reason:check.reason,eliminated:!!room.eliminated[p.id],held:true,nextPlayer:room.currentPlayer});
       broadcastState(room);
       return;
     }
