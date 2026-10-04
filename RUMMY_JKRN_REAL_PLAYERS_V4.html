@@ -3129,8 +3129,7 @@ function updateUI() {
     }
     const groupBtn = document.getElementById("groupButton");
     if (groupBtn) {
-        const localIdx = (window.__realRoomStarted && Number.isInteger(window.__onlineMyIndex)) ? Number(window.__onlineMyIndex) : 0;
-        const canGroup = selectedCards.length >= 2 && !((window.__realRoomStarted && window.__onlineEliminated) ? true : isEliminated(localIdx));
+        const canGroup = selectedCards.length >= 2 && !isEliminated(0);
         groupBtn.style.display = canGroup ? "inline-flex" : "none";
         groupBtn.style.visibility = canGroup ? "visible" : "hidden";
         groupBtn.disabled = !canGroup;
@@ -3138,7 +3137,7 @@ function updateUI() {
     }
 
     const dropBtn = document.getElementById("dropButton");
-    if(dropBtn) dropBtn.disabled = (window.__realRoomStarted && window.__onlineEliminated) || currentPlayer !== onlineSeat;
+    if(dropBtn) dropBtn.disabled = isEliminated(0);
 }
 
 function displayPlayer() {
@@ -3442,8 +3441,8 @@ function dropGame() {
     if (currentPlayer !== 0 || isEliminated(0) || gameOver) return;
 
     // STRICT DROP RULE:
-    // First/Initial Drop = 20; Middle Drop after lifting in a later turn = 50.
-    const dropPoints = (typeof hasLiftedThisDeal !== "undefined" && hasLiftedThisDeal) ? 50 : 20;
+    // First Drop = 25; Middle Drop after lifting = 50.
+    const dropPoints = (typeof hasLiftedThisDeal !== "undefined" && hasLiftedThisDeal) ? 50 : 25;
 
     gameScores["Player 1"] += dropPoints;
     playerDealStatus[0] = {result: "Drop", points: dropPoints};
@@ -3533,34 +3532,6 @@ function showDealResultModal(titleText) {
     const nextBtn = document.getElementById("nextDealBtn");
 
     header.innerText = titleText;
-
-    /* ONLINE FINAL SCOREBOARD: server is the only source of truth for totals. */
-    if (window.__onlineLastResult && window.__onlineRoomPlayers && window.__onlineRoomPlayers.length) {
-        const r = window.__onlineLastResult;
-        const players = window.__onlineRoomPlayers;
-        const scores = r.scores || {};
-        const rounds = r.roundPoints || {};
-        const elimMap = new Map((r.eliminated || []).map(x => [x.playerId, x]));
-        let onlineHtml = `<div class="sb-table-wrap"><table class="sb-table"><thead><tr><th style="text-align:left;padding-left:15px;">PLAYER</th><th>ROUND POINTS</th><th>RESULT</th><th>TOTAL SCORE</th></tr></thead><tbody>`;
-        players.forEach(pl => {
-            const score = Number(scores[pl.id] || 0);
-            const pts = Number(rounds[pl.id] || 0);
-            const isWinner = pl.id === r.winnerId;
-            const isElim = elimMap.has(pl.id) || !!(window.__onlineState?.eliminated?.[pl.id]);
-            const isDrop = !isWinner && pts > 0 && (r.penalties || []).some(x => x.playerId === pl.id && Number(x.roundScore) === pts) && !r.wrongShow;
-            const result = isWinner ? 'WINNER • 0' : (isElim ? 'OUT' : (isDrop ? 'DROP' : (r.wrongShow && pl.id===r.loserId ? 'WRONG SHOW' : 'LOST')));
-            const cls = isWinner ? 'sb-res-winner' : (isElim ? 'sb-res-elim' : (isDrop ? 'sb-res-drop' : 'sb-res-lost'));
-            onlineHtml += `<tr class="sb-row ${isWinner?'winner-row':''} ${isElim?'elim-row':''}"><td><div class="sb-player-cell"><div class="sb-avatar">${onlineAvatarForPlayer(pl)}</div><div class="sb-name">${safePlayerName(pl.name)}${pl.index===window.__onlineMyIndex?' <span class="you-tag">(YOU)</span>':''}</div></div></td><td class="sb-pts">+${pts}</td><td class="${cls}">${result}</td><td class="sb-score">${score} / ${r.eliminationScore || 201}</td></tr>`;
-        });
-        onlineHtml += `</tbody></table></div>`;
-        contentDiv.innerHTML = onlineHtml;
-        window.__jkrnFinalMatch = !!r.matchWinner;
-        if (r.matchWinner) {
-            header.innerText = `🏆 CONGRATULATIONS ${r.matchWinner} — 201 POOL WINNER 🏆`;
-            window.__jkrnStartBlast = true;
-            setTimeout(jkrnBlastCelebration, 30);
-        }
-    }
 
     let cd = 10;
     nextBtn.innerText = `Continue (${cd})`;
@@ -3659,27 +3630,9 @@ function showDealResultModal(titleText) {
     modal.classList.add("active");
 }
 
-function jkrnBlastCelebration(){
-    let old=document.getElementById('jkrnBlastOverlay'); if(old)old.remove();
-    const ov=document.createElement('div'); ov.id='jkrnBlastOverlay';
-    ov.style.cssText='position:fixed;inset:0;z-index:10050;pointer-events:none;overflow:hidden;background:radial-gradient(circle,rgba(255,215,0,.18),transparent 45%);';
-    const colors=['#ffd700','#00ff66','#00bfff','#ff4081','#ffffff','#ff9800'];
-    for(let i=0;i<90;i++){
-      const p=document.createElement('i'); p.style.cssText=`position:absolute;width:7px;height:7px;border-radius:50%;left:${45+Math.random()*10}%;top:${35+Math.random()*15}%;background:${colors[i%colors.length]};box-shadow:0 0 12px currentColor;animation:jkrnBlast ${1.1+Math.random()*1.6}s ease-out forwards;animation-delay:${Math.random()*.45}s;--x:${(Math.random()-.5)*120}vw;--y:${(Math.random()-.5)*100}vh;`; ov.appendChild(p);
-    }
-    document.body.appendChild(ov);
-}
-
 function closeResultModalAndStartNext() {
     clearInterval(window._sbCountdown);
-    const modal=document.getElementById("resultModal");
-    if(window.__jkrnFinalMatch){
-        if(modal)modal.classList.remove("active");
-        window.__jkrnFinalMatch=false; window.__onlineLastResult=null; gameOver=true;
-        const blast=document.getElementById('jkrnBlastOverlay'); if(blast)blast.remove();
-        return;
-    }
-    if(modal)modal.classList.remove("active");
+    document.getElementById("resultModal").classList.remove("active");
     if(window.__onlineLastResult && window.onlineSocket && window.onlineRoomId){
         window.__onlineLastResult=null; gameOver=false;
         window.onlineSocket.emit('nextDeal');
@@ -4541,55 +4494,6 @@ button[onclick*="groupSelected"] {
       el.textContent='-';
     }
   }
-  function onlineVisualSeatForPlayer(playerIndex, myIndex, total){
-    if(playerIndex===myIndex) return 0; // bottom/local profile
-    const others=[];
-    for(let i=0;i<total;i++) if(i!==myIndex) others.push(i);
-    const pos=others.indexOf(playerIndex);
-    return pos>=0 ? pos+1 : -1; // 1..5 => opp2..opp6
-  }
-  function safePlayerName(name){return String(name||'Player').replace(/[<>]/g,'');}
-  function onlineAvatarForPlayer(pl){return (pl&&pl.avatar)?String(pl.avatar):'👤';}
-  function syncOnlineVisualSeats(st){
-    const players=st.players||[]; const my=Number(st.myIndex); const total=players.length;
-    window.__onlineVisualMap={};
-    players.forEach(pl=>{window.__onlineVisualMap[pl.index]=onlineVisualSeatForPlayer(pl.index,my,total);});
-
-    const me=players[my];
-    const pi=document.getElementById('playerInfoBox');
-    if(pi && me){
-      const score=Number(st.scores?.[me.id]||0);
-      const elim=!!st.eliminated?.[me.id];
-      const dealer=plIndexEquals(me.index,st.dealerIndex);
-      pi.innerHTML=`<span class="jkrn-local-profile"><span class="jkrn-profile-avatar">${onlineAvatarForPlayer(me)}</span><span class="jkrn-profile-text"><b>${safePlayerName(me.name)}</b> <span class="you-tag">(YOU)</span>${dealer?'<span class="dealer-badge">DEALER</span>':''}${elim?'<span class="elim-badge">OUT</span>':''}<span class="jkrn-profile-score">TOTAL: <b id="score-p1">${score}</b> / <span id="poolLimitLabel">${st.poolLimit||201}</span></span></span></span><span class="player-timer" id="timer-p1">⏳ <span id="timeLeft">60</span>s</span>`;
-      pi.classList.toggle('active-turn',st.currentPlayer===my);
-      pi.classList.toggle('eliminated',elim);
-    }
-
-    for(let seat=2;seat<=6;seat++){
-      const box=document.getElementById('opp'+seat); if(!box)continue;
-      box.style.display='none'; box.classList.remove('active-turn','eliminated');
-      const old=box.querySelector('.opp-avatar'); if(old)old.textContent='👤';
-      const n=box.querySelector('.opp-name'); if(n)n.textContent='Waiting...';
-      const sc=box.querySelector('.opp-score'); if(sc)sc.innerHTML='Score: <span id="score-p'+seat+'">0</span>';
-      const act=box.querySelector('.opp-action'); if(act)act.textContent='Waiting';
-      const timer=box.querySelector('.opp-timer'); if(timer)timer.textContent='60s';
-    }
-    players.forEach(pl=>{
-      if(pl.index===my) return;
-      const seat=onlineVisualSeatForPlayer(pl.index,my,total); if(seat<1) return;
-      const box=document.getElementById('opp'+(seat+1)); if(!box)return;
-      const score=Number(st.scores?.[pl.id]||0); const dropped=!!st.dropped?.[pl.id]; const elim=!!st.eliminated?.[pl.id];
-      box.style.display='flex'; box.dataset.onlineIndex=String(pl.index);
-      box.classList.toggle('active-turn',st.currentPlayer===pl.index); box.classList.toggle('eliminated',elim);
-      const av=box.querySelector('.opp-avatar'); if(av)av.textContent=onlineAvatarForPlayer(pl);
-      const name=box.querySelector('.opp-name'); if(name)name.innerHTML=`${safePlayerName(pl.name)} ${pl.index===st.dealerIndex?'<span class="dealer-badge">DEALER</span>':''}${elim?'<span class="elim-badge">OUT</span>':''}`;
-      const scoreEl=box.querySelector('.opp-score'); if(scoreEl)scoreEl.innerHTML=`TOTAL SCORE: <span id="score-p${seat+1}">${score}</span> / ${st.poolLimit||201}`;
-      const action=box.querySelector('.opp-action'); if(action)action.textContent=elim?'ELIMINATED':dropped?`HOLD • +${Number(st.roundPoints?.[pl.id]||0)}`:(st.currentPlayer===pl.index?'PLAYING':'WAITING');
-      const timer=box.querySelector('.opp-timer'); if(timer)timer.textContent='60s';
-    });
-  }
-  function plIndexEquals(a,b){return Number(a)===Number(b);}
   function applyOnlineState(st){
     if(!st)return;
     window.__onlineMyIndex=st.myIndex;
@@ -4600,40 +4504,36 @@ button[onclick*="groupSelected"] {
     const lr=document.getElementById('liveRound'); if(lr)lr.textContent=st.roundNumber||1;
     const lt=document.getElementById('liveTurn'); if(lt)lt.textContent=st.currentPlayerName||((st.currentPlayer!=null)?'Player '+(st.currentPlayer+1):'-');
     const lj=document.getElementById('liveJoker'); if(lj)lj.textContent=st.wildJoker?(String(st.wildJoker.rank)+' '+String(st.wildJoker.suit)):'-';
-    const meId=st.players?.[st.myIndex]?.id; const rs=document.getElementById('liveRoundScore'); if(rs)rs.textContent=Number(st.currentRoundScores?.[meId]||st.roundPoints?.[meId]||0);
+    const meId=st.players?.[st.myIndex]?.id; const rs=document.getElementById('liveRoundScore'); if(rs)rs.textContent=Number(st.currentRoundScores?.[meId]||0);
     const ts=document.getElementById('liveTotalScore'); if(ts)ts.textContent=Number(st.scores?.[meId]||0);
-    currentPlayer=st.currentPlayer; playerHasDrawn=!!st.playerHasDrawn;
-    deck=Array(Math.max(0,st.deckCount)).fill(null); discardPile=st.discardTop?[st.discardTop]:[]; wildJoker=st.wildJoker||null; renderOnlineWildJoker(wildJoker);
-    window.__onlineDealerIndex=st.dealerIndex;
-    window.__onlineEliminated=!!(st.eliminated&&meId&&st.eliminated[meId]); window.__onlineDropped=!!(st.dropped&&meId&&st.dropped[meId]);
-    if(st.scores){(st.players||[]).forEach(pl=>{if(st.scores[pl.id]!=null)gameScores['Player '+(pl.index+1)]=Number(st.scores[pl.id])||0;});}
-    syncOnlineVisualSeats(st);
-    const me=st.hands[st.myIndex]; if(Array.isArray(me)) rebuildLocalGroups(me);
-    selectedCards=[]; if(typeof updateUI==='function') updateUI();
+    currentPlayer=st.currentPlayer;
+    playerHasDrawn=!!st.playerHasDrawn;
+    deck=Array(Math.max(0,st.deckCount)).fill(null);
+    discardPile=st.discardTop?[st.discardTop]:[];
+    wildJoker=st.wildJoker||null;
+    renderOnlineWildJoker(wildJoker);
+    window.__onlineDealerIndex=st.dealerIndex; (st.players||[]).forEach(pl=>{const tag=document.getElementById('dealer-tag-p'+(pl.index+1));if(tag)tag.style.display=pl.index===st.dealerIndex?'inline-block':'none';});
+    window.__onlineEliminated=!!(st.eliminated&&st.myIndex!=null&&st.players[st.myIndex]&&st.eliminated[st.players[st.myIndex].id]); window.__onlineDropped=!!(st.dropped&&st.myIndex!=null&&st.players[st.myIndex]&&st.dropped[st.players[st.myIndex].id]);
+    if(st.scores){(st.players||[]).forEach(pl=>{if(st.scores[pl.id]!=null){gameScores['Player '+(pl.index+1)]=Number(st.scores[pl.id])||0;}});}
+    (st.players||[]).forEach(pl=>{const drop=!!st.dropped?.[pl.id],elim=!!st.eliminated?.[pl.id]; const a=document.getElementById('action-p'+(pl.index+1));if(a)a.textContent=elim?'ELIMINATED':drop?'DROP +'+(Number(st.roundPoints?.[pl.id])||0):st.currentPlayer===pl.index?(st.turnPhase==='grace'?'15 MIN GRACE':'YOUR TURN'):'Waiting'; const tag=document.getElementById('elim-tag-p'+(pl.index+1));if(tag)tag.style.display=elim?'inline-block':'none';});
+    if(st.scores){ Object.entries(st.scores).forEach(([pid,score])=>{ const pl=(st.players||[]).find(x=>x.id===pid); if(pl&&pl.index>=0){ const el=document.getElementById('score-p'+(pl.index+1)); if(el)el.textContent=score; } }); }
+    const me=st.hands[st.myIndex];
+    if(Array.isArray(me)) rebuildLocalGroups(me);
+    selectedCards=[];
+    if(typeof updateUI==='function') updateUI();
+    onlineRenderOpponent(st);
     onlineStartTurnTimer(st.turnEndsAt);
   }
-  function onlineRenderOpponent(st){ syncOnlineVisualSeats(st); }
+  function onlineRenderOpponent(st){
+    const meName=(st.players[st.myIndex]||{}).name||'YOU';
+    (st.players||[]).forEach(pl=>{ const h=st.hands[pl.index]; const count=Array.isArray(h)?h.length:(h&&h.count)||0; const el=document.getElementById('action-p'+(pl.index+1)); if(el)el.textContent=(st.currentPlayer===pl.index?'Playing':'Waiting')+' • '+count+' cards'; const nameEl=document.querySelector('#player-name-p'+(pl.index+1)); if(nameEl)nameEl.textContent=pl.index===st.myIndex?'YOU':pl.name; const scoreEl=document.getElementById('score-p'+(pl.index+1)); if(scoreEl&&st.scores&&st.scores[pl.id]!=null)scoreEl.textContent=st.scores[pl.id]; const box=document.getElementById('opp'+(pl.index+1)); if(box)box.classList.toggle('active-turn',st.currentPlayer===pl.index); });
+    document.title='POOL RUMMY • '+meName+' • '+(st.players||[]).length+' PLAYERS';
+  }
   function onlineStartTurnTimer(endAt){
     if(window.__onlineTurnTimer)clearInterval(window.__onlineTurnTimer);
     const phase=window.__onlineState?.turnPhase||'draw'; const grace=phase==='grace';
-    function tick(){
-      const target=grace?(window.__onlineState?.graceEndsAt||0):(endAt||0);
-      const left=Math.max(0,Math.ceil((target-Date.now())/1000)); timeLeft=left;
-      const my=Number(window.__onlineMyIndex); const st=window.__onlineState||{}; const players=st.players||[]; const total=players.length;
-      const pi=document.getElementById('playerInfoBox'); if(pi)pi.classList.toggle('active-turn',st.currentPlayer===my);
-      const localTimer=document.getElementById('timer-p1'); if(localTimer){localTimer.textContent=`⏳ ${left}s`; localTimer.style.display=st.currentPlayer===my?'inline-block':'none';}
-      players.forEach(pl=>{
-        if(pl.index===my)return; const seat=onlineVisualSeatForPlayer(pl.index,my,total); if(seat<1)return;
-        const box=document.getElementById('opp'+(seat+1)); if(!box)return;
-        const active=st.currentPlayer===pl.index; box.classList.toggle('active-turn',active);
-        const timer=box.querySelector('.opp-timer'); if(timer){timer.textContent=active?`⏳ ${left}s`:'60s';timer.style.display=active?'block':'none';}
-      });
-      const el=document.getElementById('timeLeft'); if(el)el.textContent=left;
-      const live=document.getElementById('liveTimer'); if(live){live.textContent=left;live.classList.toggle('urgent',left<=5);}
-      const pi2=document.getElementById('playerInfoBox'); if(pi2)pi2.classList.toggle('grace-timer',grace);
-      if(left<=0)clearInterval(window.__onlineTurnTimer);
-    }
-    tick(); window.__onlineTurnTimer=setInterval(tick,250);
+    function tick(){const target=grace?(window.__onlineState?.graceEndsAt||0):(endAt||0);const left=Math.max(0,Math.ceil((target-Date.now())/1000));timeLeft=left;const el=document.getElementById('timeLeft');if(el)el.textContent=left>=60?`${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}`:left;const live=document.getElementById('liveTimer');if(live){live.textContent=left;live.classList.toggle('urgent',left<=5);}const pi=document.getElementById('playerInfoBox');if(pi)pi.classList.toggle('grace-timer',grace);if(typeof updateAllPlayerTimers==='function')updateAllPlayerTimers();if(left<=0)clearInterval(window.__onlineTurnTimer);}
+    tick();window.__onlineTurnTimer=setInterval(tick,250);
   }
 
   function onlineDeclare(){
@@ -4673,11 +4573,10 @@ button[onclick*="groupSelected"] {
     onlineSocket.on('dealResult',r=>{ window.__onlineRoomStarted=false; window.__realRoomStarted=false; window.__onlineLastResult=r; gameOver=true; if(r.scores){(window.__onlineRoomPlayers||[]).forEach(pl=>{if(r.scores[pl.id]!=null)gameScores['Player '+(pl.index+1)]=Number(r.scores[pl.id])||0;});} (window.__onlineRoomPlayers||[]).forEach(pl=>{const pts=Number(r.roundPoints?.[pl.id]||0); const dropped=pts>0 && r.valid && pl.id!==r.winnerId && !(r.penalties||[]).some(x=>x.playerId===pl.id); playerDealStatus[pl.index]={result:pl.id===r.winnerId?'Winner':(dropped?'Drop':'Lost'),points:pts}; droppedThisDeal[pl.index]=dropped;}); const msg=r.wrongShow
       ? ('❌ WRONG SHOW — '+r.loserName+' +80 | 🏆 '+r.winnerName+' WIN 0')
       : (r.valid?('🏆 '+r.winnerName+' SHOW / ROUND COMPLETE'):('❌ INVALID DECLARATION — '+(r.reason||'Please arrange 13 cards correctly')));
-    window.__jkrnFinalMatch=!!r.matchWinner;
     if(typeof showDealResultModal==='function')showDealResultModal(msg);
     const b=document.getElementById('nextDealBtn');
-    if(b){b.innerText=r.matchWinner?'MATCH FINISHED':'NEXT DEAL';b.onclick=closeResultModalAndStartNext;} });
-    onlineSocket.on('poolFinished',r=>{window.__jkrnFinalMatch=true; window.__onlineLastResult=r?.result||window.__onlineLastResult; if(r?.scores)window.__jkrnFinalScores=r.scores;});
+    if(b){b.innerText=r.matchWinner?'MATCH FINISHED':'NEXT DEAL';b.onclick=r.matchWinner?(()=>location.reload()):onlineNextDeal;} });
+    onlineSocket.on('poolFinished',r=>{alert('🏆 Match finished!');location.reload();});
   }
   const oldDraw=window.drawCard, oldDrawDiscard=window.drawFromDiscard, oldDiscard=window.discardCard, oldGroup=window.groupSelectedCards, oldDeclare=window.declareGame; window.__originalDeclareGame=oldDeclare;
   window.drawCard=function(){
@@ -4858,20 +4757,6 @@ button[onclick*="groupSelected"] {
 })();
 </script>
 
-
-<style id="jkrn-online-profile-final-fix">
-/* Online player identity/timer fix: stable profiles, no blinking/pulsing. */
-#playerInfoBox,#playerInfoBox.active-turn,.opp-box,.opp-box.active-turn,.opp-timer,.player-timer{animation:none!important;transition:none!important;}
-.jkrn-local-profile{display:flex;align-items:center;gap:7px;text-align:left;}
-.jkrn-profile-avatar{width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#333;border:2px solid #ffd700;font-size:21px;overflow:hidden;}
-.jkrn-profile-text{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
-.jkrn-profile-score{color:#ffd700;margin-left:4px;}
-.you-tag{color:#00ff66;font-size:10px;}
-</style>
-
-<style id="jkrn-blast-css">
-@keyframes jkrnBlast{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--x),var(--y)) rotate(720deg) scale(.2);opacity:0}}
-</style>
 </body>
 </html>
 
