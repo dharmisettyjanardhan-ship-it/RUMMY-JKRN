@@ -28,7 +28,7 @@ function addPlayerToRoom(room, socket, name){
 }
 
 app.use(express.static(__dirname));
-app.get('/', (req,res)=>res.sendFile(path.join(__dirname,'RUMMY_JKRN_REAL_PLAYERS_V4.html')));
+app.get('/', (req,res)=>res.sendFile(path.join(__dirname,'RUMMY_JKRN_PROFILE_SCORE_NO_BLINK_FINAL.html')));
 
 const suits = [
   {s:'♥',c:'red'}, {s:'♦',c:'red'}, {s:'♣',c:'black'}, {s:'♠',c:'black'}
@@ -187,8 +187,9 @@ function dropPlayer(room,p,points,automatic=false){
 function finishRoundByDrop(room){
   if(room.turnTimer)clearTimeout(room.turnTimer);if(room.graceTimer)clearTimeout(room.graceTimer);
   const winner=activePlayers(room).find(p=>!room.dropped[p.id]);
-  room.started=false; room.result={valid:true,winnerId:winner?.id||null,winnerName:winner?.name||'Remaining Player',penalties:[],roundPoints:room.roundPoints||{},scores:room.scores,matchWinner:activePlayers(room).find(p=>(room.scores[p.id]||0)>=room.poolLimit)?.name||null};
+  room.started=false; const winnerName=winner?.name||'Remaining Player'; room.result={valid:true,winnerId:winner?.id||null,winnerName,penalties:[],roundPoints:room.roundPoints||{},scores:room.scores,matchWinner:winnerName,final:true};
   io.to(room.id).emit('dealResult',room.result); broadcastState(room);
+  io.to(room.id).emit('poolFinished',{final:true,winnerId:winner?.id||null,winnerName,scores:room.scores,roundPoints:room.roundPoints||{},result:room.result});
 }
 function startToss(room){
   const d=shuffle(makeDeck().filter(c=>!c.isPrintedJoker));
@@ -435,9 +436,11 @@ io.on('connection',socket=>{
     room.started=false; if(room.turnTimer)clearTimeout(room.turnTimer);
     const active=activePlayers(room);
     const matchWinner=active.length===1?active[0].name:null;
-    room.result={valid:true,winnerId:p.id,winnerName:p.name,penalties,roundPoints:room.roundPoints,scores:room.scores,eliminated:eliminatedThisRound,eliminationScore:limit,matchWinner};
+    room.result={valid:true,winnerId:p.id,winnerName:p.name,penalties,roundPoints:room.roundPoints,scores:room.scores,eliminated:eliminatedThisRound,eliminationScore:limit,matchWinner,final:active.length<=1};
     io.to(room.id).emit('dealResult',room.result);broadcastState(room);
-    if(active.length<=1){io.to(room.id).emit('poolFinished',{scores:room.scores,result:room.result});}
+    if(active.length<=1){
+      io.to(room.id).emit('poolFinished',{final:true,winnerId:p.id,winnerName:p.name,scores:room.scores,roundPoints:room.roundPoints,eliminationScore:limit,result:room.result});
+    }
   });
   socket.on('nextDeal',()=>{
     const room=rooms.get(socket.roomId);if(!room||room.started||room.playersList.length<2)return;
