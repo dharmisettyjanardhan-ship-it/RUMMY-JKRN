@@ -153,8 +153,8 @@ function endTurn(room){
   if(room.graceTimer)clearTimeout(room.graceTimer);
   room.turnTimer=room.graceTimer=null;
   const next=nextActiveIndex(room,room.currentPlayer);
-  room.currentPlayer=next; room.playerHasDrawn=false; room.turnPhase='draw'; room.graceEndsAt=0; room.turnEndsAt=Date.now()+30000;
-  room.turnTimer=setTimeout(()=>endTurn(room),30000);
+  room.currentPlayer=next; room.playerHasDrawn=false; room.turnPhase='draw'; room.graceEndsAt=0; room.turnEndsAt=Date.now()+60000;
+  room.turnTimer=setTimeout(()=>endTurn(room),60000);
   broadcastState(room);
 }
 function startGraceTimer(room){
@@ -169,8 +169,8 @@ function startGraceTimer(room){
 }
 function startTurn(room){
   if(room.turnTimer)clearTimeout(room.turnTimer); if(room.graceTimer)clearTimeout(room.graceTimer);
-  room.graceTimer=null; room.playerHasDrawn=false; room.turnPhase='draw'; room.graceEndsAt=0; room.turnEndsAt=Date.now()+30000;
-  room.turnTimer=setTimeout(()=>endTurn(room),30000); broadcastState(room);
+  room.graceTimer=null; room.playerHasDrawn=false; room.turnPhase='draw'; room.graceEndsAt=0; room.turnEndsAt=Date.now()+60000;
+  room.turnTimer=setTimeout(()=>endTurn(room),60000); broadcastState(room);
 }
 function dropPlayer(room,p,points,automatic=false){
   if(!room.started||!p||room.dropped?.[p.id]||room.eliminated?.[p.id])return false;
@@ -180,8 +180,8 @@ function dropPlayer(room,p,points,automatic=false){
   p.hand=[];
   const remaining=activePlayers(room).filter(x=>!room.dropped[x.id]);
   if(remaining.length<=1){ finishRoundByDrop(room); return true; }
-  room.currentPlayer=nextActiveIndex(room,p.index); room.playerHasDrawn=false; room.turnPhase='draw'; room.turnEndsAt=Date.now()+30000; room.graceEndsAt=0;
-  room.turnTimer=setTimeout(()=>endTurn(room),30000);
+  room.currentPlayer=nextActiveIndex(room,p.index); room.playerHasDrawn=false; room.turnPhase='draw'; room.turnEndsAt=Date.now()+60000; room.graceEndsAt=0;
+  room.turnTimer=setTimeout(()=>endTurn(room),60000);
   io.to(room.id).emit('playerDropped',{playerId:p.id,index:p.index,name:p.name,points,automatic}); broadcastState(room); return true;
 }
 function finishRoundByDrop(room){
@@ -238,7 +238,7 @@ function dealAfterToss(room,choice,firstOverride=null){
   const open=room.deck.pop(); if(open)room.discard.push(open);
   room.started=true; room.currentPlayer=first; room.playerHasDrawn=false; room.turnPhase='firstChoice'; room.hasDrawnEver={};
   room.playersList.forEach(p=>room.hasDrawnEver[p.id]=false);
-  room.turnEndsAt=Date.now()+30000;
+  room.turnEndsAt=Date.now()+60000;
   io.to(room.id).emit('realGameStarted',{roomId:room.id,players:publicPlayers(room),dealerIndex:room.dealerIndex,currentPlayer:first,dealNumber:room.dealNumber,firstChoice:true});
   broadcastState(room);
 }
@@ -365,8 +365,8 @@ io.on('connection',socket=>{
         io.to(room.id).emit('poolFinished',{scores:room.scores,result:room.result});
         return;
       }
-      room.currentPlayer=next; room.playerHasDrawn=false; room.turnPhase='draw'; room.graceEndsAt=0; room.turnEndsAt=Date.now()+30000;
-      room.turnTimer=setTimeout(()=>endTurn(room),30000);
+      room.currentPlayer=next; room.playerHasDrawn=false; room.turnPhase='draw'; room.graceEndsAt=0; room.turnEndsAt=Date.now()+60000;
+      room.turnTimer=setTimeout(()=>endTurn(room),60000);
       io.to(room.id).emit('wrongShow',{playerId:p.id,name:p.name,points:wrongPoints,totalScore:room.scores[p.id],reason:check.reason,eliminated:!!room.eliminated[p.id],nextPlayer:room.currentPlayer});
       broadcastState(room);
       return;
@@ -634,9 +634,9 @@ function jkrnV18Drop(room, p, automatic=false){
   room.currentPlayer=nextActiveIndex(room,p.index);
   room.playerHasDrawn=false;
   room.turnPhase='draw';
-  room.turnEndsAt=Date.now()+30000;
+  room.turnEndsAt=Date.now()+60000;
   room.graceEndsAt=0;
-  room.turnTimer=setTimeout(()=>endTurn(room),30000);
+  room.turnTimer=setTimeout(()=>endTurn(room),60000);
   broadcastState(room);
   return true;
 }
