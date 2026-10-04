@@ -1,5 +1,4 @@
 const path = require('path');
-const fs = require('fs');
 const http = require('http');
 const express = require('express');
 const { Server } = require('socket.io');
@@ -29,7 +28,7 @@ function addPlayerToRoom(room, socket, name){
 }
 
 app.use(express.static(__dirname));
-app.get('/', (req,res)=>{ const a=path.join(__dirname,'index.html'); const b=path.join(__dirname,'RUMMY_JKRN_PROFILE_SCORE_NO_BLINK_FINAL.html'); res.sendFile(fs.existsSync(a)?a:b); });
+app.get('/', (req,res)=>res.sendFile(path.join(__dirname,'RUMMY_JKRN_REAL_PLAYERS_V4.html')));
 
 const suits = [
   {s:'♥',c:'red'}, {s:'♦',c:'red'}, {s:'♣',c:'black'}, {s:'♠',c:'black'}
@@ -188,9 +187,8 @@ function dropPlayer(room,p,points,automatic=false){
 function finishRoundByDrop(room){
   if(room.turnTimer)clearTimeout(room.turnTimer);if(room.graceTimer)clearTimeout(room.graceTimer);
   const winner=activePlayers(room).find(p=>!room.dropped[p.id]);
-  room.started=false; const winnerName=winner?.name||'Remaining Player'; room.result={valid:true,winnerId:winner?.id||null,winnerName,penalties:[],roundPoints:room.roundPoints||{},scores:room.scores,matchWinner:winnerName,final:true};
+  room.started=false; room.result={valid:true,winnerId:winner?.id||null,winnerName:winner?.name||'Remaining Player',penalties:[],roundPoints:room.roundPoints||{},scores:room.scores,matchWinner:activePlayers(room).find(p=>(room.scores[p.id]||0)>=room.poolLimit)?.name||null};
   io.to(room.id).emit('dealResult',room.result); broadcastState(room);
-  io.to(room.id).emit('poolFinished',{final:true,winnerId:winner?.id||null,winnerName,scores:room.scores,roundPoints:room.roundPoints||{},result:room.result});
 }
 function startToss(room){
   const d=shuffle(makeDeck().filter(c=>!c.isPrintedJoker));
@@ -354,41 +352,6 @@ io.on('connection',socket=>{
       room.roundPoints[p.id]=wrongPoints;
       room.scores[p.id]=Number(room.scores[p.id]||0)+wrongPoints;
       const limit=eliminationScore(room);
-
-      // TWO-PLAYER SPECIAL RULE:
-      // If exactly two players are still active in this deal and one makes a
-      // wrong SHOW, the other player immediately wins this deal with 0 points.
-      // The wrong-show player gets +80. Show the scoreboard, then allow NEXT DEAL.
-      const twoActive = activePlayers(room).filter(x=>!room.dropped?.[x.id] && x.id!==p.id);
-      if(twoActive.length===1){
-        const winner=twoActive[0];
-        room.roundPoints[winner.id]=0;
-        room.scores[winner.id]=Number(room.scores[winner.id]||0);
-        if(room.scores[p.id]>=limit) room.eliminated[p.id]=true;
-        if(!room.dropped) room.dropped={};
-        room.dropped[p.id]=true;
-        p.hand=[];
-        if(room.turnTimer)clearTimeout(room.turnTimer);
-        if(room.graceTimer)clearTimeout(room.graceTimer);
-        room.started=false;
-        room.result={
-          valid:true,
-          wrongShow:true,
-          winnerId:winner.id,
-          winnerName:winner.name,
-          loserId:p.id,
-          loserName:p.name,
-          penalties:[{playerId:p.id,name:p.name,roundScore:80,previousTotal:Number(room.scores[p.id]||0)-80,totalScore:room.scores[p.id]}],
-          roundPoints:room.roundPoints,
-          scores:room.scores,
-          eliminated:room.eliminated[p.id]?[{playerId:p.id,name:p.name,totalScore:room.scores[p.id],eliminationScore:limit}]:[],
-          eliminationScore:limit,
-          matchWinner:null
-        };
-        io.to(room.id).emit('dealResult',room.result);
-        broadcastState(room);
-        return;
-      }
       // Wrong-show player is HOLD for this deal. They are NOT removed from the match
       // unless their accumulated pool score has reached 201. They can play again
       // in the next deal when they are still below the pool limit.
@@ -437,11 +400,9 @@ io.on('connection',socket=>{
     room.started=false; if(room.turnTimer)clearTimeout(room.turnTimer);
     const active=activePlayers(room);
     const matchWinner=active.length===1?active[0].name:null;
-    room.result={valid:true,winnerId:p.id,winnerName:p.name,penalties,roundPoints:room.roundPoints,scores:room.scores,eliminated:eliminatedThisRound,eliminationScore:limit,matchWinner,final:active.length<=1};
+    room.result={valid:true,winnerId:p.id,winnerName:p.name,penalties,roundPoints:room.roundPoints,scores:room.scores,eliminated:eliminatedThisRound,eliminationScore:limit,matchWinner};
     io.to(room.id).emit('dealResult',room.result);broadcastState(room);
-    if(active.length<=1){
-      io.to(room.id).emit('poolFinished',{final:true,winnerId:p.id,winnerName:p.name,scores:room.scores,roundPoints:room.roundPoints,eliminationScore:limit,result:room.result});
-    }
+    if(active.length<=1){io.to(room.id).emit('poolFinished',{scores:room.scores,result:room.result});}
   });
   socket.on('nextDeal',()=>{
     const room=rooms.get(socket.roomId);if(!room||room.started||room.playersList.length<2)return;
