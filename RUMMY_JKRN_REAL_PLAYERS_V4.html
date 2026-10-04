@@ -47,7 +47,7 @@ h1 { margin: 0; color: #ffd700; font-size: 18px; }
     border: 2px solid #555; width: 185px; box-shadow: 0 4px 8px rgba(0,0,0,0.5);
     transition: border 0.3s ease, box-shadow 0.3s ease;
 }
-.opp-box.active-turn { border: 2px solid #63ff78 !important; box-shadow: 0 0 10px rgba(0,255,90,.45); }
+.opp-box.active-turn { border: 2px solid #555 !important; box-shadow: 0 4px 8px rgba(0,0,0,.5) !important; }
 .opp-box.eliminated { 
     opacity: 0.35 !important; 
     filter: grayscale(100%); 
@@ -71,6 +71,18 @@ h1 { margin: 0; color: #ffd700; font-size: 18px; }
 .opp-details { margin-left: 8px; text-align: left; }
 .opp-name { font-size: 11px; color: #fff; margin: 0; white-space: nowrap; }
 .opp-score { font-size: 11px; color: #ffd700; font-weight: bold; margin: 0; }
+/* TOTAL SCORE BADGE - fixed beside each profile photo */
+.opp-score-badge,.player-score-badge{
+    position:absolute; left:50%; bottom:-8px; transform:translateX(-50%);
+    min-width:38px; padding:2px 6px; border-radius:10px;
+    background:rgba(0,0,0,.96); border:1px solid #ffd700;
+    color:#ffd700; font-size:9px; line-height:12px; font-weight:900;
+    text-align:center; white-space:nowrap; z-index:20;
+    box-shadow:0 2px 5px rgba(0,0,0,.65);
+}
+.opp-score-badge .score-value,.player-score-badge .score-value{color:#fff;font-weight:1000;}
+.opp-avatar-container,.player-avatar-container{overflow:visible!important;}
+
 .opp-action { font-size: 9px; color: #00ff00; margin: 0; font-style: italic; }
 .dealer-badge { font-size: 9px; background: #ff9800; color: #000; padding: 1px 4px; border-radius: 4px; font-weight: bold; margin-left: 4px; }
 .elim-badge { font-size: 9px; background: #d32f2f; color: #fff; padding: 1px 4px; border-radius: 4px; font-weight: bold; margin-left: 4px; }
@@ -115,7 +127,7 @@ h1 { margin: 0; color: #ffd700; font-size: 18px; }
     background: rgba(0,0,0,0.85); padding: 4px 14px; border-radius: 12px; margin-bottom: 4px; font-size: 12px; font-weight: bold; 
     border: 2px solid #555; display: flex; align-items: center; gap: 10px;
 }
-.player-info.active-turn { border: 2px solid #63ff78 !important; box-shadow: 0 0 8px rgba(0,255,90,.35); }
+.player-info.active-turn { border: 2px solid #555 !important; box-shadow: none !important; }
 .player-info.eliminated { 
     opacity: 0.4 !important; 
     border: 2px solid #d32f2f !important;
@@ -2211,11 +2223,11 @@ button[data-action="discard"], button[data-action="declare"],
         <div id="status">Determining Dealer...</div>
     </div>
 
-    <div class="opp-box" id="opp2"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p2">60s</div></div><div class="opp-details"><p class="opp-name">Player 2 <span id="dealer-tag-p2" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p2" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p2">0</span></p><p class="opp-action" id="action-p2">Waiting...</p></div></div>
-    <div class="opp-box" id="opp3"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p3">60s</div></div><div class="opp-details"><p class="opp-name">Player 3 <span id="dealer-tag-p3" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p3" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p3">0</span></p><p class="opp-action" id="action-p3">Waiting...</p></div></div>
-    <div class="opp-box" id="opp4"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p4">60s</div></div><div class="opp-details"><p class="opp-name">Player 4 <span id="dealer-tag-p4" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p4" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p4">0</span></p><p class="opp-action" id="action-p4">Waiting...</p></div></div>
-    <div class="opp-box" id="opp5"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p5">60s</div></div><div class="opp-details"><p class="opp-name">Player 5 <span id="dealer-tag-p5" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p5" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p5">0</span></p><p class="opp-action" id="action-p5">Waiting...</p></div></div>
-    <div class="opp-box" id="opp6"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-timer" id="timer-p6">60s</div></div><div class="opp-details"><p class="opp-name">Player 6 <span id="dealer-tag-p6" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p6" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p6">0</span></p><p class="opp-action" id="action-p6">Waiting...</p></div></div>
+    <div class="opp-box" id="opp2"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-score-badge">TOTAL <span class="score-value" id="score-badge-p2">0</span></div><div class="opp-timer" id="timer-p2">60s</div></div><div class="opp-details"><p class="opp-name">Player 2 <span id="dealer-tag-p2" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p2" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p2">0</span></p><p class="opp-action" id="action-p2">Waiting...</p></div></div>
+    <div class="opp-box" id="opp3"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-score-badge">TOTAL <span class="score-value" id="score-badge-p3">0</span></div><div class="opp-timer" id="timer-p3">60s</div></div><div class="opp-details"><p class="opp-name">Player 3 <span id="dealer-tag-p3" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p3" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p3">0</span></p><p class="opp-action" id="action-p3">Waiting...</p></div></div>
+    <div class="opp-box" id="opp4"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-score-badge">TOTAL <span class="score-value" id="score-badge-p4">0</span></div><div class="opp-timer" id="timer-p4">60s</div></div><div class="opp-details"><p class="opp-name">Player 4 <span id="dealer-tag-p4" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p4" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p4">0</span></p><p class="opp-action" id="action-p4">Waiting...</p></div></div>
+    <div class="opp-box" id="opp5"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-score-badge">TOTAL <span class="score-value" id="score-badge-p5">0</span></div><div class="opp-timer" id="timer-p5">60s</div></div><div class="opp-details"><p class="opp-name">Player 5 <span id="dealer-tag-p5" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p5" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p5">0</span></p><p class="opp-action" id="action-p5">Waiting...</p></div></div>
+    <div class="opp-box" id="opp6"><div class="opp-avatar-container"><div class="opp-avatar">🤖</div><div class="opp-score-badge">TOTAL <span class="score-value" id="score-badge-p6">0</span></div><div class="opp-timer" id="timer-p6">60s</div></div><div class="opp-details"><p class="opp-name">Player 6 <span id="dealer-tag-p6" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p6" class="elim-badge" style="display:none;">OUT</span></p><p class="opp-score">Score: <span id="score-p6">0</span></p><p class="opp-action" id="action-p6">Waiting...</p></div></div>
 
     <div class="center-area" id="centerArea">
         <div class="pile-container">
@@ -2243,7 +2255,11 @@ button[data-action="discard"], button[data-action="declare"],
 
     <div class="player-area" id="playerArea">
         <div class="player-info" id="playerInfoBox">
-            <span>👤 YOU <span id="dealer-tag-p1" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p1" class="elim-badge" style="display:none;">OUT</span> | Score: <span id="score-p1" style="color:#00ff00;">0</span> / <span id="poolLimitLabel">201</span></span>
+            <div class="player-avatar-container" style="position:relative;width:38px;height:38px;flex:0 0 38px;">
+                <div class="opp-avatar">👤</div>
+                <div class="player-score-badge">TOTAL <span class="score-value" id="score-badge-p1">0</span></div>
+            </div>
+            <span>YOU <span id="dealer-tag-p1" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p1" class="elim-badge" style="display:none;">OUT</span></span>
             <span class="player-timer" id="timer-p1">⏳ <span id="timeLeft">60</span>s</span>
         </div>
         <div class="groups-container" id="playerGroupsContainer"></div>
@@ -4547,7 +4563,7 @@ button[onclick*="groupSelected"] {
 
   function onlineRenderOpponent(st){
     const meName=(st.players[st.myIndex]||{}).name||'YOU';
-    (st.players||[]).forEach(pl=>{ const h=st.hands[pl.index]; const count=Array.isArray(h)?h.length:(h&&h.count)||0; const el=document.getElementById('action-p'+(pl.index+1)); if(el)el.textContent=(st.currentPlayer===pl.index?'Playing':'Waiting')+' • '+count+' cards'; const nameEl=document.querySelector('#player-name-p'+(pl.index+1)); if(nameEl)nameEl.textContent=pl.index===st.myIndex?'YOU':pl.name; const scoreEl=document.getElementById('score-p'+(pl.index+1)); if(scoreEl&&st.scores&&st.scores[pl.id]!=null)scoreEl.textContent=st.scores[pl.id]; const box=document.getElementById('opp'+(pl.index+1)); if(box)box.classList.toggle('active-turn',st.currentPlayer===pl.index); });
+    (st.players||[]).forEach(pl=>{ const h=st.hands[pl.index]; const count=Array.isArray(h)?h.length:(h&&h.count)||0; const el=document.getElementById('action-p'+(pl.index+1)); if(el)el.textContent=(st.currentPlayer===pl.index?'Playing':'Waiting')+' • '+count+' cards'; const nameEl=document.querySelector('#player-name-p'+(pl.index+1)); if(nameEl)nameEl.textContent=pl.index===st.myIndex?'YOU':pl.name; const scoreEl=document.getElementById('score-p'+(pl.index+1)); if(scoreEl&&st.scores&&st.scores[pl.id]!=null)scoreEl.textContent=st.scores[pl.id]; const scoreBadge=document.getElementById('score-badge-p'+(pl.index+1)); if(scoreBadge&&st.scores&&st.scores[pl.id]!=null)scoreBadge.textContent=st.scores[pl.id]; const box=document.getElementById('opp'+(pl.index+1)); if(box)box.classList.toggle('active-turn',st.currentPlayer===pl.index); });
     document.title='POOL RUMMY • '+meName+' • '+(st.players||[]).length+' PLAYERS';
   }
   function onlineStartTurnTimer(endAt){
@@ -6148,6 +6164,20 @@ window.jkrnV15JokerRules={
 
 <style id="jkrn-no-player-blink-v1">
 /* ONLINE: active player highlight must stay steady, never blink/pulse. */
-.opp-box.active-turn,.player-info.active-turn{animation:none!important;transition:none!important;box-shadow:0 0 8px rgba(99,255,120,.35)!important;}
+.opp-box.active-turn,.player-info.active-turn{animation:none!important;transition:none!important;box-shadow:none!important;border-color:rgba(255,215,0,.38)!important;}
 .opp-box.active-turn .opp-timer{animation:none!important;}
+</style>
+
+<style id="jkrn-total-score-profile-v2">
+/* Player profile/score must NEVER blink or pulse. Active-turn class is logic-only. */
+.opp-box,.player-info,.opp-avatar,.opp-score-badge,.player-score-badge{
+  animation:none!important;
+}
+.opp-box.active-turn,.player-info.active-turn{
+  animation:none!important;
+  transition:none!important;
+  border-color:rgba(255,215,0,.38)!important;
+  box-shadow:0 5px 14px rgba(0,0,0,.5)!important;
+}
+.opp-box.active-turn .opp-timer,.player-info.active-turn .player-timer{animation:none!important;}
 </style>
