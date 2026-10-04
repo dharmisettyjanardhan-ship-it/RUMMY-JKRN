@@ -2259,7 +2259,7 @@ button[data-action="discard"], button[data-action="declare"],
                 <div class="opp-avatar">👤</div>
                 <div class="player-score-badge">TOTAL <span class="score-value" id="score-badge-p1">0</span></div>
             </div>
-            <span>YOU <span id="dealer-tag-p1" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p1" class="elim-badge" style="display:none;">OUT</span></span>
+            <span class="jkrn-me-name">YOU <span id="dealer-tag-p1" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p1" class="elim-badge" style="display:none;">OUT</span></span>
             <span class="player-timer" id="timer-p1">⏳ <span id="timeLeft">60</span>s</span>
         </div>
         <div class="groups-container" id="playerGroupsContainer"></div>
@@ -6076,7 +6076,7 @@ window.jkrnV15JokerRules={
       if(seat && !(players[i])) seat.style.display='none';
     }
   }
-  setInterval(refreshSeatProfiles,500);
+  /* Profiles are refreshed from socket gameState/roomUpdate events only. */
   document.addEventListener('DOMContentLoaded',refreshSeatProfiles);
 })();
 </script>
@@ -6157,7 +6157,7 @@ window.jkrnV15JokerRules={
   window.jkrnFinalSyncSeats=syncSeats;
   document.addEventListener('DOMContentLoaded',syncSeats);
   window.addEventListener('load',syncSeats);
-  setInterval(syncSeats,300);
+  /* Stable event-driven seats: no 300ms DOM rewrites that can cause visual flicker. */
 })();
 </script>
 <!-- JKRN FINAL 2-PLAYER RIM SEATING FIX V2 -->
@@ -6181,3 +6181,107 @@ window.jkrnV15JokerRules={
 }
 .opp-box.active-turn .opp-timer,.player-info.active-turn .player-timer{animation:none!important;}
 </style>
+
+
+<!-- JKRN FINAL ONLINE SEAT + POOL 201 FINISH PATCH V11 -->
+<style id="jkrn-final-no-flicker-v11">
+.opp-box,.player-info,.opp-avatar,.opp-score-badge,.player-score-badge,.opp-timer,.player-timer{animation:none!important;}
+.opp-box.active-turn,.player-info.active-turn{animation:none!important;transition:none!important;}
+#jkrnFinalFireworks{position:absolute;inset:0;overflow:hidden;pointer-events:none;border-radius:18px;}
+.jkrn-burst{position:absolute;width:8px;height:8px;border-radius:50%;background:#ffd700;box-shadow:0 0 14px #ffd700;animation:jkrnBurst 1.5s ease-out forwards;}
+@keyframes jkrnBurst{0%{transform:translate(0,0) scale(.5);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.05);opacity:0}}
+#jkrnFinalCongrats{font-size:clamp(18px,3vw,30px);font-weight:1000;color:#ffd700;text-shadow:0 0 14px #ff9800;margin:4px 0 8px;}
+#jkrnFinalCountdown{font-size:18px;font-weight:1000;color:#fff;background:rgba(0,0,0,.45);display:inline-block;padding:5px 14px;border-radius:18px;border:1px solid #ffd700;}
+</style>
+<script id="jkrn-final-online-v11">
+(function(){
+  function playerAvatar(name){
+    const n=String(name||'Player').trim();
+    return n ? n.charAt(0).toUpperCase() : '👤';
+  }
+  function syncAuthoritativeSeats(st){
+    if(!st || !Array.isArray(st.players)) return;
+    window.__onlineRoomPlayers=st.players;
+    window.__onlineMyIndex=Number(st.myIndex);
+    const my=Number(st.myIndex);
+    const me=st.players.find(p=>Number(p.index)===my);
+    const pInfo=document.getElementById('playerInfoBox');
+    if(pInfo && me){
+      const nameSpan=pInfo.querySelector('.jkrn-me-name');
+      if(nameSpan) nameSpan.innerHTML=`${me.name||'YOU'} <small style="color:#aaa">(YOU)</small> <span id="dealer-tag-p1" class="dealer-badge" style="display:${me.index===st.dealerIndex?'inline-block':'none'}">DEALER</span><span id="elim-tag-p1" class="elim-badge" style="display:${st.eliminated?.[me.id]?'inline-block':'none'}">OUT</span>`;
+      const av=pInfo.querySelector('.opp-avatar'); if(av) av.textContent=playerAvatar(me.name);
+      const sc=pInfo.querySelector('#score-badge-p1'); if(sc) sc.textContent=Number(st.scores?.[me.id]||0);
+      pInfo.classList.toggle('active-turn',Number(st.currentPlayer)===my && !st.eliminated?.[me.id] && !st.dropped?.[me.id]);
+      pInfo.classList.toggle('eliminated',!!st.eliminated?.[me.id]);
+      const tm=pInfo.querySelector('.player-timer'); if(tm){tm.style.display=Number(st.currentPlayer)===my && st.started?'inline-block':'none';}
+    }
+    const boxes=[2,3,4,5,6].map(i=>document.getElementById('opp'+i)).filter(Boolean);
+    boxes.forEach(b=>b.style.display='none');
+    const opponents=st.players.filter(p=>Number(p.index)!==my && p.connected!==false);
+    const pos={
+      1:[['50%','-45px','auto','translateX(-50%)']],
+      2:[['50%','-45px','auto','translateX(-50%)'],['auto','35%','3%','none']],
+      3:[['50%','-45px','auto','translateX(-50%)'],['3%','35%','auto','none'],['auto','35%','3%','none']],
+      4:[['15%','5%','auto','none'],['50%','-45px','auto','translateX(-50%)'],['auto','5%','15%','none'],['50%','35%','auto','translateX(-50%)']],
+      5:[['3%','35%','auto','none'],['15%','5%','auto','none'],['50%','-45px','auto','translateX(-50%)'],['auto','5%','15%','none'],['auto','35%','3%','none']]
+    };
+    const layout=pos[Math.min(5,opponents.length)]||pos[5];
+    opponents.forEach((pl,i)=>{
+      const box=boxes[i], m=layout[i]; if(!box||!m)return;
+      box.style.display='flex'; box.style.left=m[0]; box.style.top=m[1]; box.style.right=m[2]; box.style.transform=m[3];
+      const av=box.querySelector('.opp-avatar'); if(av)av.textContent=playerAvatar(pl.name);
+      const name=box.querySelector('.opp-name'); if(name)name.innerHTML=`${pl.name||'Player'} <span class="dealer-badge" style="display:${pl.index===st.dealerIndex?'inline-block':'none'}">DEALER</span><span class="elim-badge" style="display:${st.eliminated?.[pl.id]?'inline-block':'none'}">OUT</span>`;
+      const score=box.querySelector('.score-value'); if(score)score.textContent=Number(st.scores?.[pl.id]||0);
+      const score2=box.querySelector(`#score-p${pl.index+1}`); if(score2)score2.textContent=Number(st.scores?.[pl.id]||0);
+      const action=box.querySelector('.opp-action'); if(action)action.textContent=st.eliminated?.[pl.id]?'ELIMINATED':st.dropped?.[pl.id]?'DROP':Number(st.currentPlayer)===Number(pl.index)?'YOUR TURN':'Waiting';
+      const timer=box.querySelector('.opp-timer'); if(timer){timer.style.display=Number(st.currentPlayer)===Number(pl.index)&&st.started?'block':'none';timer.textContent=Number(st.currentPlayer)===Number(pl.index)?`⏳ ${Math.max(0,Math.ceil(((st.turnEndsAt||0)-Date.now())/1000))}s`:'60s';}
+      box.classList.toggle('active-turn',Number(st.currentPlayer)===Number(pl.index)&&!!st.started);
+    });
+  }
+
+  function fireFinalCelebration(){
+    const layer=document.getElementById('jkrnFinalFireworks'); if(!layer)return;
+    layer.innerHTML='';
+    for(let b=0;b<8;b++){
+      const cx=10+Math.random()*80, cy=18+Math.random()*55;
+      for(let i=0;i<22;i++){
+        const d=document.createElement('i'); d.className='jkrn-burst'; d.style.left=cx+'%'; d.style.top=cy+'%';
+        const a=(Math.PI*2*i/22), r=45+Math.random()*75; d.style.setProperty('--dx',Math.cos(a)*r+'px'); d.style.setProperty('--dy',Math.sin(a)*r+'px'); d.style.animationDelay=(Math.random()*.25)+'s'; layer.appendChild(d);
+      }
+    }
+  }
+  function showFinalPoolResult(r){
+    const modal=document.getElementById('resultModal'), box=modal?.querySelector('.modal-box'), header=document.getElementById('resultModalHeader'), content=document.getElementById('resultModalContent'), btn=document.getElementById('nextDealBtn');
+    if(!modal||!box||!header||!content)return;
+    if(window._sbCountdown)clearInterval(window._sbCountdown);
+    let layer=document.getElementById('jkrnFinalFireworks'); if(!layer){layer=document.createElement('div');layer.id='jkrnFinalFireworks';box.prepend(layer);}
+    header.innerHTML='🏆 201 POOL MATCH COMPLETE';
+    const winner=r.winnerName||r.result?.winnerName||'Winner';
+    let html=`<div id="jkrnFinalCongrats">🎉 Congratulations ${winner}! 🎉<br><span style="font-size:15px;color:#fff">🏆 You are the 201 Pool Winner</span></div>`;
+    html+='<div class="sb-table-wrap"><table class="sb-table"><thead><tr><th style="text-align:left;padding-left:15px">Players</th><th>Round</th><th>Total Score</th><th>Result</th></tr></thead><tbody>';
+    const players=window.__onlineRoomPlayers||[];
+    players.slice().sort((a,b)=>Number(r.scores?.[a.id]||0)-Number(r.scores?.[b.id]||0)).forEach(pl=>{
+      const total=Number(r.scores?.[pl.id]||0), win=pl.id===r.winnerId||pl.name===winner;
+      const pts=Number(r.roundPoints?.[pl.id]||0);
+      html+=`<tr class="sb-row ${win?'winner-row':''}"><td class="sb-player-cell"><div class="sb-avatar">${playerAvatar(pl.name)}</div><span class="sb-name">${pl.name||'Player'}</span></td><td class="sb-pts">${pts}</td><td class="sb-score">${total}</td><td class="${win?'sb-res-winner':'sb-res-lost'}">${win?'🏆 WINNER':(total>=201?'ELIMINATED':'LOST')}</td></tr>`;
+    });
+    html+='</tbody></table></div><div id="jkrnFinalCountdown">Closing in 10s</div>';
+    content.innerHTML=html; btn.style.display='none'; modal.classList.add('active'); fireFinalCelebration();
+    let cd=10; const c=document.getElementById('jkrnFinalCountdown');
+    window._jkrnFinalClose=setInterval(()=>{cd--;if(c)c.textContent=cd>0?`Closing in ${cd}s`:'Closing…';if(cd<=0){clearInterval(window._jkrnFinalClose);modal.classList.remove('active');}},1000);
+  }
+
+  function bind(){
+    if(!window.onlineSocket || window.__jkrnFinalV11)return false;
+    window.__jkrnFinalV11=true;
+    window.onlineSocket.on('gameState',syncAuthoritativeSeats);
+    window.onlineSocket.on('roomUpdate',d=>{ if(d?.players) window.__onlineRoomPlayers=d.players; });
+    window.onlineSocket.on('realGameStarted',d=>{setTimeout(()=>{if(window.__onlineState)syncAuthoritativeSeats(window.__onlineState);},0);});
+    window.onlineSocket.on('poolFinished',r=>{showFinalPoolResult(r||{});});
+    window.onlineSocket.on('dealResult',r=>{ if(r?.matchWinner){setTimeout(()=>showFinalPoolResult({scores:r.scores||{},roundPoints:r.roundPoints||{},winnerId:r.winnerId,winnerName:r.matchWinner,result:r}),50); } });
+    return true;
+  }
+  const wait=setInterval(()=>{if(bind())clearInterval(wait);},100);
+  setTimeout(()=>clearInterval(wait),15000);
+})();
+</script>
