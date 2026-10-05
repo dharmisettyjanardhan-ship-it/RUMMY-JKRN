@@ -2101,6 +2101,293 @@ button[data-action="discard"], button[data-action="declare"],
   line-height: 1.1 !important;
 }
 </style>
+
+<style id="jkrn-v11-timer-card-final">
+/* V11 FINAL: stable countdown ring + fully visible player hand */
+.opp-box.active-turn .opp-avatar-container::after{
+  content:"" !important;
+  position:absolute !important;
+  inset:-8px !important;
+  width:auto !important;
+  height:auto !important;
+  border-radius:50% !important;
+  border:4px solid transparent !important;
+  background:conic-gradient(#19ff63 var(--timer-progress,100%), rgba(255,255,255,.16) 0) border-box !important;
+  -webkit-mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0) border-box !important;
+  -webkit-mask-composite:xor !important;
+  mask-composite:exclude !important;
+  animation:none !important;
+  transform:none !important;
+  pointer-events:none !important;
+}
+.opp-box.active-turn .opp-avatar-container::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:-8px !important;
+  border-radius:50% !important;
+  box-shadow:0 0 10px rgba(25,255,99,.35) !important;
+  pointer-events:none !important;
+}
+.opp-timer{font-variant-numeric:tabular-nums !important;}
+
+/* Put the player's 13 cards in a dedicated bottom strip, above controls.
+   They must never hide behind the green table/overlays. */
+#playerArea{
+  position:fixed !important;
+  left:0 !important;
+  right:0 !important;
+  top:auto !important;
+  bottom:64px !important;
+  transform:none !important;
+  width:100vw !important;
+  max-width:none !important;
+  height:178px !important;
+  z-index:30000 !important;
+  pointer-events:none !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:flex-end !important;
+  overflow:visible !important;
+}
+#playerInfoBox{
+  pointer-events:auto !important;
+  position:relative !important;
+  z-index:30002 !important;
+  margin:0 0 4px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:12px !important;
+  white-space:nowrap !important;
+  background:rgba(0,0,0,.82) !important;
+  border:2px solid #ffd700 !important;
+  border-radius:18px !important;
+  padding:5px 12px !important;
+}
+#playerGroupsContainer{
+  pointer-events:auto !important;
+  position:relative !important;
+  z-index:30001 !important;
+  width:min(98vw,1540px) !important;
+  max-width:98vw !important;
+  height:140px !important;
+  min-height:140px !important;
+  overflow:visible !important;
+  display:flex !important;
+  align-items:flex-end !important;
+  justify-content:center !important;
+  flex-wrap:nowrap !important;
+  gap:7px !important;
+  padding:0 4px !important;
+  margin:0 auto !important;
+}
+#playerGroupsContainer .card-group{
+  flex:0 0 auto !important;
+  min-width:0 !important;
+  background:rgba(0,0,0,.20) !important;
+  overflow:visible !important;
+}
+#playerGroupsContainer .cards-in-group{
+  overflow:visible !important;
+  min-height:120px !important;
+  align-items:flex-end !important;
+}
+#playerGroupsContainer .card{
+  width:clamp(62px,5.65vw,91px) !important;
+  min-width:clamp(62px,5.65vw,91px) !important;
+  height:clamp(94px,8.8vw,138px) !important;
+  flex:0 0 auto !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  z-index:30003 !important;
+  position:relative !important;
+  backface-visibility:visible !important;
+  transform-style:flat !important;
+}
+#playerGroupsContainer .cards-in-group .card + .card{
+  margin-left:clamp(-13px,-.75vw,-6px) !important;
+}
+#playerGroupsContainer .card:hover{transform:translateY(-7px) !important;}
+#playerGroupsContainer .card .card-top{
+  font-size:clamp(19px,1.7vw,28px) !important;
+  font-weight:1000 !important;
+}
+#playerGroupsContainer .card .card-center{
+  font-size:clamp(30px,3vw,47px) !important;
+  font-weight:1000 !important;
+}
+/* Controls occupy their own bottom strip, never cover cards. */
+.left-controls,.action-buttons{
+  position:fixed !important;
+  bottom:10px !important;
+  z-index:31000 !important;
+}
+.left-controls{left:14px !important;}
+.action-buttons{right:14px !important;}
+
+@media(max-width:1100px){
+ #playerArea{bottom:58px !important;height:160px !important;}
+ #playerGroupsContainer{height:126px !important;min-height:126px !important;gap:3px !important;}
+ #playerGroupsContainer .card{width:clamp(52px,6vw,72px) !important;min-width:clamp(52px,6vw,72px) !important;height:clamp(79px,8.5vw,108px) !important;}
+ #playerGroupsContainer .cards-in-group{min-height:96px !important;}
+ #playerGroupsContainer .card .card-top{font-size:clamp(16px,1.9vw,23px) !important;}
+ #playerGroupsContainer .card .card-center{font-size:clamp(25px,3vw,38px) !important;}
+}
+@media(max-width:700px){
+ #playerArea{bottom:52px !important;height:135px !important;}
+ #playerGroupsContainer{height:105px !important;min-height:105px !important;overflow-x:auto !important;justify-content:flex-start !important;}
+ #playerGroupsContainer .card{width:54px !important;min-width:54px !important;height:80px !important;}
+ #playerGroupsContainer .card .card-top{font-size:16px !important;}
+ #playerGroupsContainer .card .card-center{font-size:25px !important;}
+ .left-controls,.action-buttons{bottom:7px !important;}
+ .left-controls{left:5px !important}.action-buttons{right:5px !important;}
+}
+</style>
+<script id="jkrn-v11-timer-card-final-js">
+(function(){
+  function updateStableTimerRing(){
+    var total=60;
+    var left=Math.max(0,Number(window.timeLeft||0));
+    var progress=Math.max(0,Math.min(100,(left/total)*100));
+    for(var i=2;i<=6;i++){
+      var box=document.getElementById('opp'+i);
+      var avatar=document.querySelector('#opp'+i+' .opp-avatar-container');
+      var timer=document.getElementById('timer-p'+i);
+      if(!avatar) continue;
+      var active=box && box.classList.contains('active-turn');
+      avatar.style.setProperty('--timer-progress',active?progress+'%':'0%');
+      if(timer && active){
+        timer.textContent=left+'s';
+        timer.style.opacity='1';
+      }
+    }
+    var me=document.getElementById('playerInfoBox');
+    if(me){
+      var activeMe=(typeof currentPlayer!=='undefined' && currentPlayer===0 && typeof gameStarted!=='undefined' && gameStarted);
+      me.style.setProperty('--timer-progress',activeMe?progress+'%':'0%');
+    }
+  }
+  window.addEventListener('load',function(){
+    setInterval(updateStableTimerRing,250);
+    updateStableTimerRing();
+  });
+})();
+</script>
+
+<style id="jkrn-v12-cards-outside-board">
+/* V12: keep the hand below the table on landscape screens.
+   Cards must be fully visible, never half inside the board. */
+@media (orientation: landscape) and (max-height: 900px) {
+  .table{
+    top:44px !important;
+    height:calc(100dvh - 190px) !important;
+    min-height:0 !important;
+    margin:0 !important;
+    overflow:visible !important;
+  }
+
+  /* Keep the centre piles comfortably inside the shortened table. */
+  .center-area{
+    top:42% !important;
+  }
+
+  /* Hand is a separate bottom strip, outside the table. */
+  #playerArea{
+    position:fixed !important;
+    left:50% !important;
+    bottom:3px !important;
+    top:auto !important;
+    transform:translateX(-50%) !important;
+    width:98vw !important;
+    height:auto !important;
+    z-index:6000 !important;
+    overflow:visible !important;
+    pointer-events:none !important;
+  }
+
+  #playerInfoBox{
+    pointer-events:auto !important;
+    margin:0 auto 2px !important;
+    position:relative !important;
+    z-index:6005 !important;
+  }
+
+  #playerGroupsContainer{
+    width:100% !important;
+    max-width:100% !important;
+    height:132px !important;
+    min-height:132px !important;
+    padding:2px 8px 0 !important;
+    gap:10px !important;
+    align-items:flex-end !important;
+    justify-content:center !important;
+    overflow-x:auto !important;
+    overflow-y:visible !important;
+    position:relative !important;
+    z-index:6001 !important;
+    scrollbar-width:none !important;
+  }
+  #playerGroupsContainer::-webkit-scrollbar{display:none !important;}
+
+  #playerGroupsContainer .card-group{
+    min-width:78px !important;
+    padding:2px !important;
+    overflow:visible !important;
+    flex-shrink:0 !important;
+  }
+  #playerGroupsContainer .cards-in-group{
+    min-height:112px !important;
+    height:112px !important;
+    align-items:flex-end !important;
+    overflow:visible !important;
+  }
+  #playerGroupsContainer .card{
+    width:78px !important;
+    min-width:78px !important;
+    height:112px !important;
+    padding:5px 5px 14px !important;
+    font-size:20px !important;
+    overflow:visible !important;
+  }
+  #playerGroupsContainer .card-top{
+    font-size:18px !important;
+    font-weight:1000 !important;
+    line-height:1 !important;
+  }
+  #playerGroupsContainer .card-center{
+    font-size:34px !important;
+  }
+  #playerGroupsContainer .cards-in-group .card + .card{
+    margin-left:-12px !important;
+  }
+  #playerGroupsContainer .card:hover{
+    transform:translateY(-8px) !important;
+  }
+
+  /* Status labels stay attached to the complete cards, not clipped. */
+  #playerGroupsContainer .group-status-badge{
+    position:relative !important;
+    z-index:20 !important;
+    margin-top:3px !important;
+  }
+
+  /* Side controls remain clear of the cards. */
+  .left-controls{
+    position:fixed !important;
+    left:10px !important;
+    bottom:8px !important;
+    z-index:7000 !important;
+  }
+  .action-buttons{
+    position:fixed !important;
+    right:10px !important;
+    bottom:8px !important;
+    z-index:7000 !important;
+  }
+}
+</style>
+
 </head>
 <body onload="initAutoGame()">
 
@@ -2735,7 +3022,7 @@ function startTurnTimer() {
         return;
     }
 
-    timeLeft = 60;
+    timeLeft = 45;
     updateAllPlayerTimers();
     highlightActiveTurn();
 
@@ -2776,7 +3063,7 @@ function updateAllPlayerTimers() {
         if (el) {
             el.innerText = (i - 1 === currentPlayer)
                 ? `⏳ ${timeLeft}s`
-                : "60s";
+                : "45s";
             el.style.opacity = (i - 1 === currentPlayer) ? "1" : "0.65";
         }
     }
@@ -5147,7 +5434,240 @@ button[onclick*="groupSelected"] {
 })();
 </script>
 
+
+<!-- JKRN V13 - SELECTED PLAYER COUNT IS THE ONLY DASHBOARD/GAME COUNT -->
+<style id="jkrn-v13-selected-player-count-css">
+  /* Never show an unused opponent seat. JS controls the exact count. */
+  #opp2,#opp3,#opp4,#opp5,#opp6{visibility:visible;}
+  .jkrn-selected-count-note{
+    margin-top:6px;font-size:11px;font-weight:800;color:#ffd700;
+  }
+</style>
+<script id="jkrn-v13-selected-player-count-js">
+(function(){
+  const MAX=6;
+  function validCount(v){
+    const n=Number(v);
+    return [2,3,4,5,6].includes(n) ? n : 2;
+  }
+
+  // Player selection is the single source of truth for local dashboard/game size.
+  window.selectPlayerCount = function(v){
+    const n=validCount(v);
+    jkrnSelectedPlayers=n;
+    numPlayers=n;
+
+    // Resize per-deal arrays immediately so unused players cannot participate.
+    if(Array.isArray(window.droppedThisDeal)){
+      window.droppedThisDeal.length=n;
+      for(let i=0;i<n;i++) if(typeof window.droppedThisDeal[i]!=='boolean') window.droppedThisDeal[i]=false;
+    }
+    if(Array.isArray(window.playerDealStatus)) window.playerDealStatus.length=n;
+    if(Array.isArray(window.allHands)) window.allHands.length=n;
+
+    document.querySelectorAll('#playerChoiceRow .jkrn-choice').forEach(function(b){
+      b.classList.toggle('active', Number(b.dataset.players)===n);
+    });
+
+    // If a room has already been created, do not allow a local setting change
+    // to contradict the server room capacity.
+    if(window.onlineRoomId && window.__onlineMaxPlayers){
+      const cap=Number(window.__onlineMaxPlayers);
+      if(cap>=2 && cap<=6 && cap!==n){
+        jkrnSelectedPlayers=cap;
+        numPlayers=cap;
+        document.querySelectorAll('#playerChoiceRow .jkrn-choice').forEach(function(b){
+          b.classList.toggle('active', Number(b.dataset.players)===cap);
+        });
+      }
+    }
+
+    if(typeof initializeGameLobby==='function') initializeGameLobby();
+    if(window.jkrnV10 && typeof window.jkrnV10.refresh==='function') window.jkrnV10.refresh();
+    if(typeof updateUI==='function' && window.gameStarted) updateUI();
+    if(typeof updateStartButton==='function') updateStartButton();
+  };
+
+  // Keep dashboard/lobby list limited to the selected room capacity and
+  // only the players actually present in that room.
+  function renderSelectedOnlinePlayers(players,maxPlayers){
+    const cap=validCount(maxPlayers || window.__onlineMaxPlayers || window.jkrnSelectedPlayers);
+    const list=Array.isArray(players)?players.slice(0,cap):[];
+    window.__onlineMaxPlayers=cap;
+    window.__onlineRoomPlayers=list;
+
+    const e=document.getElementById('onlinePlayers');
+    if(e){
+      e.innerHTML='<b>ROOM PLAYERS ('+list.length+'/'+cap+')</b>'+
+        list.map(function(p,i){
+          const seat=Number.isInteger(p.index)?p.index:i;
+          return '<div class="online-player">🪑 SEAT '+(seat+1)+'. '+(p.name||('Player '+(seat+1)))+
+            ' '+(p.connected===false?'🔴 OFFLINE':(p.ready?'✅ READY':'⏳ WAITING'))+
+            (seat===window.__onlineDealerIndex?' 👑 DEALER':'')+'</div>';
+        }).join('');
+    }
+
+    // Dashboard seats: only seats that actually exist in the selected room.
+    for(let i=2;i<=MAX;i++){
+      const box=document.getElementById('opp'+i);
+      if(box) box.style.display='none';
+    }
+    list.forEach(function(p,i){
+      const seat=Number.isInteger(p.index)?p.index:i;
+      if(seat<1 || seat>=cap) return;
+      const box=document.getElementById('opp'+(seat+1));
+      if(!box) return;
+      box.style.display='flex';
+      const name=box.querySelector('.opp-name');
+      const score=box.querySelector('.opp-score span');
+      if(name) name.childNodes[0].nodeValue=(p.name||('Player '+(seat+1)))+' ';
+      if(score && typeof gameScores==='object') score.textContent=String(gameScores['Player '+(seat+1)]||0);
+    });
+
+    if(typeof initializeGameLobby==='function') initializeGameLobby();
+    if(window.jkrnV10 && typeof window.jkrnV10.refresh==='function') window.jkrnV10.refresh();
+  }
+
+  // Expose the corrected renderer so the existing roomUpdate handler can use it.
+  window.jkrnRenderSelectedOnlinePlayers=renderSelectedOnlinePlayers;
+
+  // Patch the room player renderer after the original functions exist.
+  function hook(){
+    if(typeof window.renderOnlinePlayers==='function' && !window.__jkrnV13RenderHooked){
+      const original=window.renderOnlinePlayers;
+      window.renderOnlinePlayers=function(players,maxPlayers){
+        renderSelectedOnlinePlayers(players,maxPlayers);
+      };
+      window.__jkrnV13RenderHooked=true;
+    }
+    // Ensure the selected count is applied on startup.
+    const n=validCount(window.jkrnSelectedPlayers||window.numPlayers||6);
+    jkrnSelectedPlayers=n;
+    numPlayers=n;
+    if(typeof window.initializeGameLobby==='function') window.initializeGameLobby();
+  }
+
+  // Fix the online room-start count as well: selected count is the cap.
+  const oldStart=window.startOnlineGameUI;
+  if(typeof oldStart==='function' && !window.__jkrnV13StartHooked){
+    window.__jkrnV13StartHooked=true;
+    window.startOnlineGameUI=function(d){
+      const cap=validCount(window.__onlineMaxPlayers||window.jkrnSelectedPlayers||6);
+      if(d && Array.isArray(d.players)){
+        d.players=d.players.slice(0,cap);
+      }
+      numPlayers=cap;
+      jkrnSelectedPlayers=cap;
+      return oldStart.apply(this,arguments);
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded',hook,{once:false});
+  window.addEventListener('load',hook);
+  setTimeout(hook,50);
+  setTimeout(hook,300);
+  setInterval(function(){
+    const cap=validCount(numPlayers||jkrnSelectedPlayers||6);
+    for(let i=2;i<=MAX;i++){
+      const box=document.getElementById('opp'+i);
+      if(!box) continue;
+      // During an online room, only occupied seats are visible.
+      if(window.__realRoomStarted && Array.isArray(window.__onlineRoomPlayers)){
+        const occupied=window.__onlineRoomPlayers.some(function(p){
+          return Number(p.index)===(i-1) && p.connected!==false;
+        });
+        box.style.display=occupied?'flex':'none';
+      }else{
+        box.style.display=(i<=cap)?'flex':'none';
+      }
+    }
+  },500);
+})();
+</script>
+
 </body>
+
+
+<style id="jkrn-v14-final-45s-timer">
+/* V14 FINAL: 45-second countdown + smooth colour countdown ring. */
+.opp-box.active-turn .opp-avatar-container::after{
+  animation:none !important;
+  transform:none !important;
+  border:4px solid transparent !important;
+  background:conic-gradient(#19ff63 calc(var(--timer-pct,100)*1%), rgba(255,255,255,.14) 0) border-box !important;
+  -webkit-mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0) border-box !important;
+  -webkit-mask-composite:xor !important;
+  mask-composite:exclude !important;
+}
+.opp-timer{font-variant-numeric:tabular-nums!important;transition:none!important;}
+#playerInfoBox.active-turn .player-timer{font-variant-numeric:tabular-nums!important;}
+</style>
+<script id="jkrn-v14-final-45s-timer-js">
+(function(){
+  const TURN_SECONDS=45;
+  function validCount(){
+    const n=Number(window.numPlayers||window.jkrnSelectedPlayers||6);
+    return [2,3,4,5,6].includes(n)?n:2;
+  }
+  function render45(){
+    const n=validCount();
+    const left=Math.max(0,Math.min(TURN_SECONDS,Number(window.timeLeft)||0));
+    const pct=Math.max(0,Math.min(100,(left/TURN_SECONDS)*100));
+    for(let i=2;i<=6;i++){
+      const el=document.getElementById('timer-p'+i), box=document.getElementById('opp'+i);
+      if(!el) continue;
+      const active=(i-1===Number(window.currentPlayer) && i<=n && !window.gameOver);
+      el.textContent=active?String(left):'45';
+      el.style.setProperty('--timer-pct',active?pct:0);
+      if(box) box.classList.toggle('active-turn',active);
+    }
+    const me=document.getElementById('playerInfoBox');
+    const mt=document.getElementById('timeLeft');
+    const activeMe=(Number(window.currentPlayer)===0 && !window.gameOver);
+    if(mt) mt.textContent=String(left);
+    if(me){
+      me.classList.toggle('active-turn',activeMe);
+      me.style.setProperty('--timer-progress',activeMe?pct:0);
+    }
+    const pt=me?me.querySelector('.player-timer'):null;
+    if(pt) pt.innerHTML='⏳ <span id="timeLeft">'+left+'</span>s';
+  }
+  /* Replace the local turn timer with a real 45-second countdown. */
+  window.startTurnTimer=function(){
+    if(window.turnTimer){clearInterval(window.turnTimer);window.turnTimer=null;}
+    if(window.gameOver || !window.gameStarted) return;
+    const cp=Number(window.currentPlayer)||0;
+    if(typeof window.isEliminated==='function' && (window.isEliminated(cp) || (Array.isArray(window.droppedThisDeal)&&window.droppedThisDeal[cp]))){
+      setTimeout(()=>{if(!window.gameOver&&window.gameStarted&&typeof window.nextTurn==='function')window.nextTurn();},100);
+      return;
+    }
+    window.timeLeft=TURN_SECONDS;
+    render45();
+    if(typeof window.highlightActiveTurn==='function')window.highlightActiveTurn();
+    window.turnTimer=setInterval(function(){
+      if(window.gameOver || !window.gameStarted){clearInterval(window.turnTimer);window.turnTimer=null;return;}
+      window.timeLeft=Math.max(0,Number(window.timeLeft)-1);
+      render45();
+      if(window.timeLeft<=0){
+        clearInterval(window.turnTimer);window.turnTimer=null;
+        if(Number(window.currentPlayer)===0){
+          if(typeof window.handleTimeOut==='function')window.handleTimeOut();
+        }else if(typeof window.nextTurn==='function'){
+          const a=document.getElementById('action-p'+(Number(window.currentPlayer)+1));if(a)a.textContent='Time Up';
+          window.nextTurn();
+        }
+      }
+    },1000);
+    if(cp!==0 && typeof window.runComputerTurn==='function')window.runComputerTurn();
+  };
+  window.updateAllPlayerTimers=function(){render45();};
+  function loop(){render45();}
+  document.addEventListener('DOMContentLoaded',loop);
+  window.addEventListener('load',loop);
+  setInterval(loop,100);
+})();
+</script>
+
 </html>
 
 <style id="jkrn-draw-click-fix">
@@ -6785,12 +7305,12 @@ window.jkrnV15JokerRules={
   }
   function timerRing(){
     const left=Math.max(0,Number(window.timeLeft||0));
-    const pct=Math.max(0,Math.min(100,(left/60)*100));
+    const pct=Math.max(0,Math.min(100,(left/45)*100));
     for(let i=2;i<=6;i++){
       const el=document.getElementById('timer-p'+i); if(!el)continue;
       el.style.setProperty('--timer-pct',pct);
       const active=(typeof currentPlayer==='number' && currentPlayer===i-1);
-      el.textContent=active?String(left):'60';
+      el.textContent=active?String(left):'45';
       const box=document.getElementById('opp'+i);
       if(box)box.classList.toggle('active-turn',active);
     }
