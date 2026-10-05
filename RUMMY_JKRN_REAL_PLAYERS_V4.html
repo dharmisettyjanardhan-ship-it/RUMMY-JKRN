@@ -5690,6 +5690,133 @@ html,body{background:#050806!important;overflow-x:hidden!important;}
 })();
 </script>
 
+
+<style id="jkrn-v16-hand-outside-table-final">
+/* V16: HAND IS BELOW THE TABLE - NEVER INSIDE/OVER THE FELT */
+html,body{background:#050806!important;overflow-x:hidden!important;overflow-y:auto!important;}
+.table{
+  position:relative!important;
+  overflow:visible!important;
+  margin-bottom:205px!important;
+}
+/* Move the complete hand tray outside the table, directly underneath it. */
+#playerArea{
+  position:absolute!important;
+  left:50%!important;
+  top:calc(100% + 10px)!important;
+  bottom:auto!important;
+  right:auto!important;
+  transform:translateX(-50%)!important;
+  width:min(96vw,1280px)!important;
+  height:auto!important;
+  min-height:0!important;
+  z-index:12000!important;
+  pointer-events:none!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+}
+#playerInfoBox{
+  order:0!important;
+  pointer-events:auto!important;
+  margin:0 0 5px!important;
+  padding:2px 10px!important;
+  background:rgba(0,0,0,.82)!important;
+  border:1px solid #d6a72a!important;
+  border-radius:14px!important;
+  line-height:1.05!important;
+}
+#playerGroupsContainer{
+  order:1!important;
+  width:100%!important;
+  max-width:100%!important;
+  height:105px!important;
+  min-height:105px!important;
+  box-sizing:border-box!important;
+  padding:6px 8px 3px!important;
+  display:flex!important;
+  justify-content:center!important;
+  align-items:flex-start!important;
+  gap:5px!important;
+  overflow:visible!important;
+  background:rgba(3,5,4,.96)!important;
+  border:2px solid #c89520!important;
+  border-radius:16px!important;
+  box-shadow:0 4px 18px rgba(0,0,0,.65)!important;
+  pointer-events:auto!important;
+}
+#playerGroupsContainer .card-group{
+  min-width:0!important;
+  padding:1px!important;
+  margin:0!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+#playerGroupsContainer .cards-in-group{
+  min-height:74px!important;
+  height:74px!important;
+  align-items:flex-start!important;
+}
+#playerGroupsContainer .card{
+  width:48px!important;
+  min-width:48px!important;
+  height:70px!important;
+  box-sizing:border-box!important;
+  padding:3px 3px 5px!important;
+  border-radius:6px!important;
+  font-weight:1000!important;
+  transform:none!important;
+  box-shadow:0 2px 5px rgba(0,0,0,.65)!important;
+}
+#playerGroupsContainer .card .card-top,
+#playerGroupsContainer .card .card-top span{
+  font-size:16px!important;
+  font-weight:1000!important;
+  line-height:.95!important;
+}
+#playerGroupsContainer .card .card-center{
+  font-size:24px!important;
+  font-weight:1000!important;
+  line-height:1!important;
+}
+#playerGroupsContainer .cards-in-group .card + .card{margin-left:-9px!important;}
+#playerGroupsContainer .group-status-badge{
+  margin-top:1px!important;
+  font-size:9px!important;
+  font-weight:1000!important;
+  padding:2px 5px!important;
+  line-height:1.05!important;
+}
+/* Controls remain near the table edge, never over the hand. */
+.left-controls{position:fixed!important;left:18px!important;bottom:135px!important;z-index:13000!important;}
+.action-buttons{position:fixed!important;right:18px!important;bottom:135px!important;z-index:13000!important;}
+/* Remove all previous card scaling animations from the hand. */
+#playerGroupsContainer .card,
+#playerGroupsContainer .card:hover,
+#playerGroupsContainer .card:active{transform:none!important;}
+@media(max-width:1100px){
+  .table{margin-bottom:190px!important;}
+  #playerGroupsContainer{height:96px!important;min-height:96px!important;}
+  #playerGroupsContainer .cards-in-group{height:67px!important;min-height:67px!important;}
+  #playerGroupsContainer .card{width:44px!important;min-width:44px!important;height:64px!important;}
+  #playerGroupsContainer .card .card-top,#playerGroupsContainer .card .card-top span{font-size:15px!important;}
+  #playerGroupsContainer .card .card-center{font-size:22px!important;}
+  #playerGroupsContainer .cards-in-group .card + .card{margin-left:-8px!important;}
+}
+@media(max-width:700px){
+  .table{margin-bottom:170px!important;}
+  #playerArea{width:98vw!important;}
+  #playerGroupsContainer{justify-content:flex-start!important;overflow-x:auto!important;gap:4px!important;height:88px!important;min-height:88px!important;}
+  #playerGroupsContainer .card{width:40px!important;min-width:40px!important;height:58px!important;padding:2px!important;}
+  #playerGroupsContainer .card .card-top,#playerGroupsContainer .card .card-top span{font-size:13px!important;}
+  #playerGroupsContainer .card .card-center{font-size:19px!important;}
+  #playerGroupsContainer .cards-in-group .card + .card{margin-left:-7px!important;}
+  .left-controls{left:8px!important;bottom:100px!important;}
+  .action-buttons{right:8px!important;bottom:100px!important;}
+}
+</style>
 </body>
 
 
