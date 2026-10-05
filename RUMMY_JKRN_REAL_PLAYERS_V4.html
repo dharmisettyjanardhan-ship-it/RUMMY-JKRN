@@ -5024,6 +5024,129 @@ button[onclick*="groupSelected"] {
 })();
 </script>
 
+
+
+<!-- JKRN V10 FINAL: dynamic players + clean toss + visible cards -->
+<style id="jkrn-v10-final">
+/* Remove unwanted labels/controls requested by user */
+.dealer-toss-title,.dealer-toss-subtitle,#dealerTossInfo,#jkrnOptions,.jkrn-hand-lift-btn{display:none!important;}
+/* Keep toss cards visible, but show only visual dealer/first-lift marks */
+.toss-seat-card .toss-player{display:none!important;}
+.toss-seat-card .toss-badge{font-size:0!important;background:transparent!important;color:transparent!important;border:0!important;padding:0!important;}
+.toss-seat-card.lowest::after{content:'DEALER';font-size:9px!important;color:#00ff66!important;background:#101010!important;border-radius:5px!important;padding:2px 5px!important;position:absolute!important;bottom:3px!important;left:50%!important;transform:translateX(-50%)!important;white-space:nowrap!important;}
+.toss-seat-card.highest::after{content:'FIRST LIFT';font-size:9px!important;color:#ffd700!important;background:#101010!important;border-radius:5px!important;padding:2px 5px!important;position:absolute!important;bottom:3px!important;left:50%!important;transform:translateX(-50%)!important;white-space:nowrap!important;}
+/* Player seats */
+.opp-box{position:absolute!important;width:120px!important;min-width:120px!important;height:auto!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:2px!important;z-index:80!important;transform:none!important;}
+.opp-avatar-container{position:relative!important;width:62px!important;height:62px!important;}
+.opp-avatar{width:62px!important;height:62px!important;min-width:62px!important;border-radius:50%!important;overflow:hidden!important;border:3px solid #ddd!important;background:#263238!important;box-shadow:0 2px 10px rgba(0,0,0,.75)!important;}
+.opp-box.active-turn .opp-avatar{border-color:#ffe500!important;box-shadow:0 0 0 3px rgba(255,229,0,.2),0 0 20px #ffe500!important;}
+.opp-box.active-turn .opp-avatar-container::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:3px solid rgba(255,229,0,.25);border-top-color:#00ff66;border-right-color:#00ff66;animation:jkrnV10Spin 1s linear infinite;pointer-events:none;}
+@keyframes jkrnV10Spin{to{transform:rotate(360deg)}}
+.opp-details{margin:0!important;text-align:center!important;width:100%!important;display:flex!important;flex-direction:column!important;align-items:center!important;line-height:1.05!important;}
+.opp-name{font-size:12px!important;font-weight:900!important;color:#fff!important;text-shadow:0 2px 4px #000!important;margin:0!important;white-space:nowrap!important;max-width:120px!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+.opp-score{font-size:12px!important;font-weight:900!important;color:#ffe600!important;background:rgba(0,0,0,.72)!important;padding:2px 8px!important;border-radius:5px!important;margin:2px 0 0!important;}
+.opp-action{font-size:8px!important;color:#fff!important;margin:1px 0!important;}
+.opp-timer{display:flex!important;position:absolute!important;right:-9px!important;bottom:-5px!important;width:31px!important;height:31px!important;padding:0!important;border-radius:50%!important;align-items:center!important;justify-content:center!important;background:conic-gradient(#00ff66 calc(var(--timer-pct,100)*1%),rgba(0,0,0,.25) 0)!important;border:2px solid #ffe500!important;color:#fff!important;font-size:10px!important;font-weight:900!important;z-index:5!important;}
+.opp-timer::before{content:'';position:absolute;inset:3px;background:#111;border-radius:50%;z-index:-1;}
+.opp-box:not(.active-turn) .opp-timer{opacity:.28!important;}
+/* YOU profile */
+#playerArea{position:fixed!important;left:50%!important;bottom:0!important;top:auto!important;transform:translateX(-50%)!important;width:min(96vw,1250px)!important;height:205px!important;z-index:6000!important;pointer-events:none!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;}
+#playerGroupsContainer{order:1!important;width:100%!important;height:135px!important;flex:0 0 135px!important;display:flex!important;align-items:flex-end!important;justify-content:center!important;gap:10px!important;padding:4px 8px 0!important;overflow-x:auto!important;overflow-y:hidden!important;pointer-events:auto!important;}
+#playerGroupsContainer .card-group{min-width:78px!important;padding:3px!important;margin:0!important;}
+#playerGroupsContainer .card{width:72px!important;min-width:72px!important;height:105px!important;padding:5px 5px 12px!important;}
+#playerGroupsContainer .card .card-top{font-size:18px!important;font-weight:1000!important;}
+#playerGroupsContainer .card .card-center{font-size:34px!important;font-weight:1000!important;}
+#playerGroupsContainer .cards-in-group .card + .card{margin-left:-24px!important;}
+#playerInfoBox{order:2!important;width:auto!important;min-height:65px!important;background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;margin:0!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;gap:2px!important;pointer-events:auto!important;}
+#playerInfoBox .player-timer{display:flex!important;align-items:center!important;justify-content:center!important;font-size:11px!important;font-weight:900!important;border-radius:12px!important;padding:2px 9px!important;color:#fff!important;background:rgba(0,0,0,.85)!important;border:1px solid #ffe500!important;}
+#playerInfoBox.active-turn .player-timer{border-color:#00ff66!important;box-shadow:0 0 10px rgba(0,255,102,.7)!important;}
+/* Controls outside the card row */
+.left-controls{position:fixed!important;left:10px!important;bottom:10px!important;z-index:8000!important;}
+.action-buttons{position:fixed!important;right:10px!important;bottom:10px!important;z-index:8000!important;}
+/* Dynamic seat maps. Player 1 is always YOU at bottom. */
+#opp2,#opp3,#opp4,#opp5,#opp6{position:absolute!important;}
+@media(max-width:900px) and (orientation:landscape){
+ #playerArea{height:165px!important;width:99vw!important;}
+ #playerGroupsContainer{height:105px!important;flex-basis:105px!important;gap:6px!important;}
+ #playerGroupsContainer .card{width:55px!important;min-width:55px!important;height:80px!important;padding:3px 3px 9px!important;}
+ #playerGroupsContainer .card .card-top{font-size:13px!important;}
+ #playerGroupsContainer .card .card-center{font-size:24px!important;}
+ #playerGroupsContainer .cards-in-group .card + .card{margin-left:-19px!important;}
+ #playerInfoBox{min-height:55px!important;}
+ .opp-box{width:96px!important;min-width:96px!important;}
+ .opp-avatar-container,.opp-avatar{width:50px!important;height:50px!important;min-width:50px!important;}
+ .opp-name{font-size:10px!important;max-width:96px!important;}
+ .opp-score{font-size:10px!important;padding:2px 6px!important;}
+ .opp-action{font-size:7px!important;}
+ .opp-timer{width:26px!important;height:26px!important;font-size:9px!important;right:-6px!important;}
+}
+</style>
+<script id="jkrn-v10-final-js">
+(function(){
+  const MAX=6;
+  const maps={
+    2:{2:{left:'50%',top:'4%',right:'auto',transform:'translateX(-50%)'}},
+    3:{2:{left:'50%',top:'3%',right:'auto',transform:'translateX(-50%)'},3:{left:'4%',top:'40%',right:'auto',transform:'none'}},
+    4:{2:{left:'50%',top:'3%',right:'auto',transform:'translateX(-50%)'},3:{left:'3%',top:'40%',right:'auto',transform:'none'},4:{left:'auto',top:'40%',right:'3%',transform:'none'}},
+    5:{2:{left:'50%',top:'2%',right:'auto',transform:'translateX(-50%)'},3:{left:'2%',top:'34%',right:'auto',transform:'none'},4:{left:'auto',top:'34%',right:'2%',transform:'none'},5:{left:'17%',top:'8%',right:'auto',transform:'none'}},
+    6:{2:{left:'50%',top:'2%',right:'auto',transform:'translateX(-50%)'},3:{left:'2%',top:'40%',right:'auto',transform:'none'},4:{left:'auto',top:'40%',right:'2%',transform:'none'},5:{left:'16%',top:'7%',right:'auto',transform:'none'},6:{left:'auto',top:'7%',right:'16%',transform:'none'}}
+  };
+  function count(){return Math.max(2,Math.min(6,Number(window.numPlayers)||Number(window.jkrnSelectedPlayers)||6));}
+  function seats(){
+    const n=count(), m=maps[n]||maps[6];
+    for(let i=2;i<=MAX;i++){
+      const e=document.getElementById('opp'+i); if(!e)continue;
+      const visible=i<=n;
+      e.style.display=visible?'flex':'none';
+      if(visible&&m[i]) Object.assign(e.style,m[i]);
+      e.classList.toggle('active-turn',visible && typeof currentPlayer==='number' && currentPlayer===i-1 && !gameOver && !(droppedThisDeal&&droppedThisDeal[i-1]) && !(typeof isEliminated==='function'&&isEliminated(i-1)));
+    }
+  }
+  function tossPositions(n){
+    return {
+      2:{0:'left:50%;bottom:145px;transform:translateX(-50%)',1:'left:50%;top:8%;transform:translateX(-50%)'},
+      3:{0:'left:50%;bottom:145px;transform:translateX(-50%)',1:'left:7%;top:43%',2:'right:7%;top:43%'},
+      4:{0:'left:50%;bottom:145px;transform:translateX(-50%)',1:'left:4%;top:43%',2:'right:4%;top:43%',3:'left:50%;top:8%;transform:translateX(-50%)'},
+      5:{0:'left:50%;bottom:145px;transform:translateX(-50%)',1:'left:3%;top:43%',2:'right:3%;top:43%',3:'left:16%;top:10%',4:'right:16%;top:10%'},
+      6:{0:'left:50%;bottom:145px;transform:translateX(-50%)',1:'left:3%;top:43%',2:'right:3%;top:43%',3:'left:16%;top:9%',4:'right:16%;top:9%',5:'left:50%;top:4%;transform:translateX(-50%)'}
+    }[n];
+  }
+  const oldRun=window.runLeastCardToss;
+  if(typeof oldRun==='function'&&!window.__v10TossWrapped){
+    window.__v10TossWrapped=true;
+    window.runLeastCardToss=function(){
+      oldRun.apply(this,arguments);
+      const box=document.getElementById('dealerTossCards'); if(!box)return;
+      const pos=tossPositions(count());
+      box.querySelectorAll('.toss-seat-card').forEach(el=>{
+        const m=(el.className.match(/p(\d+)/)||[])[1];
+        if(m!=null&&pos[Number(m)]) el.style.cssText+=';'+pos[Number(m)];
+      });
+      const info=document.getElementById('dealerTossInfo'); if(info)info.innerHTML='';
+    };
+  }
+  function refresh(){
+    seats();
+    const n=count();
+    for(let i=2;i<=MAX;i++){
+      const sc=document.getElementById('score-p'+i);
+      if(sc&&typeof gameScores==='object') sc.textContent=String(gameScores['Player '+i]||0);
+    }
+    for(let i=1;i<=MAX;i++){
+      const t=document.getElementById('timer-p'+i); if(!t)continue;
+      const active=(i-1===currentPlayer&&i<=n&&!gameOver);
+      t.textContent=active?String(Math.max(0,Number(window.timeLeft||0))):'60';
+      const pct=active?Math.max(0,Math.min(100,(Number(window.timeLeft||0)/60)*100)):0;
+      t.style.setProperty('--timer-pct',pct);
+    }
+  }
+  window.addEventListener('DOMContentLoaded',refresh);
+  window.addEventListener('load',refresh);
+  setInterval(refresh,250);
+  window.jkrnV10={refresh,seats};
+})();
+</script>
+
 </body>
 </html>
 
