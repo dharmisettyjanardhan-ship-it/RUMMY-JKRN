@@ -4757,6 +4757,167 @@ button[onclick*="groupSelected"] {
 })();
 </script>
 
+
+<style id="jkrn-larger-cards-colored-groups-v1">
+/* ===== JKRN V5: slightly larger cards + clearly separated/color-coded groups ===== */
+#playerGroupsContainer{
+    gap: 14px !important;
+    padding: 4px 8px 2px !important;
+}
+
+/* Every hand group gets its own visible colored panel. */
+#playerGroupsContainer .card-group{
+    --group-accent:#7e57c2;
+    position:relative !important;
+    min-width:88px !important;
+    padding:6px 6px 5px !important;
+    border:2px solid var(--group-accent) !important;
+    border-radius:10px !important;
+    background:linear-gradient(180deg,rgba(0,0,0,.58),rgba(0,0,0,.34)) !important;
+    box-shadow:0 0 10px color-mix(in srgb,var(--group-accent) 38%,transparent),
+               inset 0 0 8px rgba(255,255,255,.05) !important;
+}
+
+/* Different group colors, so even INVALID groups are visually separated. */
+#playerGroupsContainer .card-group:nth-child(4n+1){--group-accent:#ff5252;}
+#playerGroupsContainer .card-group:nth-child(4n+2){--group-accent:#29b6f6;}
+#playerGroupsContainer .card-group:nth-child(4n+3){--group-accent:#ab47bc;}
+#playerGroupsContainer .card-group:nth-child(4n+4){--group-accent:#ffb300;}
+
+/* If the group is a valid Life/Set, use its rule color instead. */
+#playerGroupsContainer .card-group:has(.badge-pure){--group-accent:#00e676;}
+#playerGroupsContainer .card-group:has(.badge-second){--group-accent:#26c6da;}
+#playerGroupsContainer .card-group:has(.badge-set){--group-accent:#42a5f5;}
+#playerGroupsContainer .card-group:has(.badge-trill){--group-accent:#ce93d8;}
+#playerGroupsContainer .card-group:has(.badge-invalid),
+#playerGroupsContainer .card-group:has(.badge-impure){--group-accent:#ff5252;}
+
+/* Show the Life/Set/Invalid status below each group. */
+#playerGroupsContainer .card-group .group-status-badge{
+    display:block !important;
+    width:100% !important;
+    min-height:20px !important;
+    margin-top:5px !important;
+    padding:3px 5px !important;
+    border-radius:5px !important;
+    font-size:11px !important;
+    font-weight:900 !important;
+    letter-spacing:.2px !important;
+    border:1px solid rgba(255,255,255,.28) !important;
+    box-shadow:0 2px 5px rgba(0,0,0,.35) !important;
+}
+
+/* Make invalid/unusable groups unmistakable. */
+#playerGroupsContainer .card-group:has(.badge-invalid) .group-status-badge,
+#playerGroupsContainer .card-group:has(.badge-impure) .group-status-badge{
+    background:linear-gradient(90deg,#b71c1c,#ef5350) !important;
+    color:#fff !important;
+}
+
+/* Slightly bigger cards than the current V4 size. */
+#playerGroupsContainer .card{
+    width:clamp(68px,6.1vw,102px) !important;
+    min-width:clamp(68px,6.1vw,102px) !important;
+    height:clamp(104px,9.8vw,150px) !important;
+    padding:8px 7px 18px !important;
+    border-radius:6px !important;
+}
+
+/* Keep grouped cards readable without making the hand too wide. */
+#playerGroupsContainer .cards-in-group .card + .card{
+    margin-left:clamp(-50px,-3.0vw,-38px) !important;
+}
+
+#playerGroupsContainer .card .card-top{
+    font-size:clamp(21px,2.15vw,31px) !important;
+    font-weight:900 !important;
+}
+#playerGroupsContainer .card .card-center{
+    font-size:clamp(36px,3.45vw,51px) !important;
+    font-weight:900 !important;
+}
+
+/* Mobile/short landscape: retain a useful increase without overflowing. */
+@media (orientation:landscape) and (max-height:700px){
+    #playerGroupsContainer .card{
+        width:clamp(56px,5.9vw,84px) !important;
+        min-width:clamp(56px,5.9vw,84px) !important;
+        height:clamp(86px,9.2vw,122px) !important;
+    }
+    #playerGroupsContainer .card .card-top{
+        font-size:clamp(18px,2vw,27px) !important;
+    }
+    #playerGroupsContainer .card .card-center{
+        font-size:clamp(31px,3.2vw,44px) !important;
+    }
+}
+
+@media (max-width:700px) and (orientation:portrait){
+    #playerGroupsContainer .card-group{
+        min-width:78px !important;
+        padding:4px !important;
+    }
+    #playerGroupsContainer .card{
+        width:clamp(55px,15vw,70px) !important;
+        min-width:clamp(55px,15vw,70px) !important;
+        height:clamp(84px,22vw,106px) !important;
+    }
+    #playerGroupsContainer .cards-in-group .card + .card{
+        margin-left:clamp(-34px,-7vw,-24px) !important;
+    }
+    #playerGroupsContainer .card .card-top{
+        font-size:clamp(16px,4.5vw,22px) !important;
+    }
+    #playerGroupsContainer .card .card-center{
+        font-size:clamp(28px,8vw,38px) !important;
+    }
+}
+</style>
+
+<script id="jkrn-invalid-group-label-v1">
+(function(){
+    /* Final display-only badge rule:
+       valid Life/Set keeps its color; anything that is not a valid Life/Set
+       is explicitly shown as INVALID. This does not change declaration rules. */
+    function jkrnFinalBadge(group){
+        if(!group || group.length < 3) return {text:"INVALID",cls:"badge-invalid"};
+        try{
+            if(typeof isPureSequence==="function" && isPureSequence(group))
+                return {text:"1st Life",cls:"badge-pure"};
+            if(typeof isSequence==="function" && isSequence(group))
+                return {text:"2nd Life",cls:"badge-second"};
+            if(typeof isValidSet==="function" && isValidSet(group)){
+                const hasJ = group.some(c => c && (c.isPrintedJoker===true ||
+                    (typeof isJoker==="function" && isJoker(c))));
+                return {text:hasJ ? "Trill" : "Set",cls:hasJ ? "badge-trill" : "badge-set"};
+            }
+        }catch(e){}
+        return {text:"INVALID",cls:"badge-invalid"};
+    }
+
+    function refreshBadges(){
+        const groups = document.querySelectorAll("#playerGroupsContainer .card-group");
+        groups.forEach(gDiv=>{
+            const idx = Number(gDiv.dataset.gIdx);
+            const group = (typeof playerGroups!=="undefined" && Array.isArray(playerGroups))
+                ? playerGroups[idx] : null;
+            if(!group) return;
+            const info = jkrnFinalBadge(group);
+            const badge = gDiv.querySelector(".group-status-badge");
+            if(badge){
+                badge.className = "group-status-badge " + info.cls;
+                badge.textContent = info.text;
+            }
+        });
+    }
+
+    window.addEventListener("load",function(){
+        setTimeout(refreshBadges,80);
+        setInterval(refreshBadges,350);
+    });
+})();
+</script>
+
 </body>
 </html>
 
