@@ -6402,3 +6402,175 @@ window.jkrnV15JokerRules={
     }
 }
 </style>
+
+<style id="jkrn-v24-reference-seat-layout">
+/* =========================================================
+   JKRN V24 — Reference screenshot seat + hand layout
+   Circular profiles, player names, TOTAL PTS and active timer ring.
+   ========================================================= */
+.opp-box{
+  position:absolute!important;
+  width:126px!important;
+  min-width:126px!important;
+  max-width:126px!important;
+  height:auto!important;
+  padding:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:3px!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+  z-index:80!important;
+  transform:none!important;
+}
+.opp-box.active-turn{border:0!important;box-shadow:none!important;}
+.opp-avatar-container{
+  position:relative!important;
+  width:62px!important;height:62px!important;min-width:62px!important;
+  margin:0 auto!important;
+}
+.opp-avatar{
+  width:62px!important;height:62px!important;min-width:62px!important;
+  border-radius:50%!important;
+  overflow:hidden!important;
+  border:3px solid #d8d8d8!important;
+  background:#263238!important;
+  box-shadow:0 2px 10px rgba(0,0,0,.7)!important;
+}
+.opp-box.active-turn .opp-avatar{border-color:#ffe500!important;box-shadow:0 0 0 3px rgba(255,229,0,.2),0 0 18px #ffe500!important;}
+.opp-avatar img,.jkrn-profile-img{width:100%!important;height:100%!important;object-fit:cover!important;border-radius:50%!important;display:block!important;}
+.opp-details{margin:0!important;text-align:center!important;width:100%!important;display:flex!important;flex-direction:column!important;align-items:center!important;line-height:1.05!important;}
+.opp-name{font-size:13px!important;font-weight:900!important;color:#fff!important;text-shadow:0 2px 4px #000!important;margin:0!important;white-space:nowrap!important;max-width:126px!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+.opp-score{font-size:13px!important;font-weight:900!important;color:#ffe600!important;background:rgba(0,0,0,.72)!important;padding:2px 9px!important;border-radius:5px!important;margin:2px 0 0!important;text-shadow:0 1px 2px #000!important;}
+.opp-action{font-size:9px!important;color:#fff!important;margin:1px 0 0!important;text-shadow:0 1px 3px #000!important;opacity:.95!important;}
+.dealer-badge,.elim-badge{font-size:8px!important;}
+.opp-timer{
+  display:flex!important;
+  position:absolute!important;
+  right:-10px!important;
+  bottom:-4px!important;
+  width:31px!important;height:31px!important;
+  padding:0!important;
+  border-radius:50%!important;
+  align-items:center!important;justify-content:center!important;
+  background:conic-gradient(#ffe500 calc(var(--timer-pct,100)*1%),rgba(0,0,0,.25) 0)!important;
+  border:2px solid #ffe500!important;
+  color:#fff!important;
+  font-size:10px!important;font-weight:900!important;
+  line-height:1!important;
+  box-shadow:0 0 9px rgba(255,229,0,.85)!important;
+  z-index:5!important;
+}
+.opp-timer::before{content:"";position:absolute;inset:3px;background:#111;border-radius:50%;z-index:-1;}
+.opp-box:not(.active-turn) .opp-timer{opacity:.28!important;box-shadow:none!important;}
+.opp-box.eliminated .opp-timer{border-color:#f44336!important;box-shadow:none!important;}
+
+/* Six-player positions: top-center, upper corners, side-middle, YOU bottom-center. */
+#opp2{left:50%!important;top:2%!important;right:auto!important;transform:translateX(-50%)!important;}
+#opp3{left:5%!important;top:28%!important;right:auto!important;transform:none!important;}
+#opp4{right:5%!important;top:28%!important;left:auto!important;transform:none!important;}
+#opp5{left:17%!important;top:6%!important;right:auto!important;transform:none!important;}
+#opp6{right:17%!important;top:6%!important;left:auto!important;transform:none!important;}
+
+/* Bottom player: profile + name + PTS above the hand, centered. */
+#playerArea{
+  position:fixed!important;
+  left:50%!important;bottom:3px!important;top:auto!important;
+  transform:translateX(-50%)!important;
+  width:min(96vw,1180px)!important;
+  z-index:6000!important;
+  pointer-events:none!important;
+}
+#playerInfoBox{
+  pointer-events:auto!important;
+  background:transparent!important;border:0!important;box-shadow:none!important;
+  padding:0!important;margin:0 auto 2px!important;
+  display:flex!important;flex-direction:column!important;align-items:center!important;gap:2px!important;
+}
+#playerInfoBox .player-profile-wrap{display:flex!important;flex-direction:column!important;align-items:center!important;gap:2px!important;}
+#playerInfoBox .player-profile-img{width:58px!important;height:58px!important;border:3px solid #ddd!important;box-shadow:0 2px 10px rgba(0,0,0,.7)!important;}
+#playerInfoBox.active-turn .player-profile-img{border-color:#ffe500!important;box-shadow:0 0 0 3px rgba(255,229,0,.2),0 0 18px #ffe500!important;}
+#playerInfoBox .player-timer{display:flex!important;align-items:center!important;justify-content:center!important;font-size:11px!important;font-weight:900!important;border-radius:12px!important;padding:2px 8px!important;color:#fff!important;background:rgba(0,0,0,.82)!important;border:1px solid #ffe500!important;}
+#playerInfoBox .player-profile-wrap > span:not(.player-profile-img){font-size:13px!important;font-weight:900!important;color:#fff!important;text-shadow:0 2px 4px #000!important;white-space:nowrap!important;}
+
+/* Hand: keep all groups in one clean row above the controls. */
+#playerGroupsContainer{
+  pointer-events:auto!important;
+  height:126px!important;
+  max-width:96vw!important;
+  gap:12px!important;
+  padding:3px 8px 0!important;
+  align-items:flex-end!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  justify-content:center!important;
+}
+#playerGroupsContainer .card-group{min-width:78px!important;padding:3px!important;}
+#playerGroupsContainer .card{width:72px!important;min-width:72px!important;height:104px!important;font-size:18px!important;padding:6px 6px 14px!important;}
+#playerGroupsContainer .card-top{font-size:16px!important;font-weight:1000!important;}
+#playerGroupsContainer .card-center{font-size:31px!important;}
+#playerGroupsContainer .cards-in-group .card + .card{margin-left:-28px!important;}
+
+/* Controls stay below/away from the cards. */
+.left-controls{position:fixed!important;left:12px!important;bottom:8px!important;z-index:7000!important;}
+.action-buttons{position:fixed!important;right:12px!important;bottom:8px!important;z-index:7000!important;}
+
+@media(max-width:900px) and (orientation:landscape){
+  .opp-box{width:104px!important;min-width:104px!important;}
+  .opp-avatar-container,.opp-avatar{width:50px!important;height:50px!important;min-width:50px!important;}
+  .opp-name{font-size:10px!important;max-width:104px!important;}
+  .opp-score{font-size:10px!important;padding:2px 6px!important;}
+  .opp-action{font-size:7px!important;}
+  .opp-timer{width:27px!important;height:27px!important;font-size:9px!important;right:-7px!important;}
+  #opp2{top:1%!important;}
+  #opp3{left:2%!important;top:28%!important;}
+  #opp4{right:2%!important;top:28%!important;}
+  #opp5{left:14%!important;top:5%!important;}
+  #opp6{right:14%!important;top:5%!important;}
+  #playerArea{bottom:0!important;width:99vw!important;}
+  #playerInfoBox .player-profile-img{width:42px!important;height:42px!important;}
+  #playerInfoBox .player-profile-wrap > span:not(.player-profile-img){font-size:10px!important;}
+  #playerGroupsContainer{height:96px!important;gap:7px!important;}
+  #playerGroupsContainer .card{width:55px!important;min-width:55px!important;height:78px!important;font-size:13px!important;padding:4px 4px 10px!important;}
+  #playerGroupsContainer .card-top{font-size:12px!important;}
+  #playerGroupsContainer .card-center{font-size:23px!important;}
+  #playerGroupsContainer .cards-in-group .card + .card{margin-left:-22px!important;}
+}
+</style>
+<script id="jkrn-v24-player-ui">
+(function(){
+  function makePts(){
+    document.querySelectorAll('.opp-score').forEach(el=>{
+      const first=el.firstChild;
+      if(first && first.nodeType===3 && /Score:\s*/i.test(first.nodeValue)) first.nodeValue=first.nodeValue.replace(/Score:\s*/i,'PTS: ');
+    });
+    const p=document.getElementById('playerInfoBox');
+    if(p){
+      const walker=document.createTreeWalker(p,NodeFilter.SHOW_TEXT);
+      let n; while(n=walker.nextNode()){ if(/Score:\s*/i.test(n.nodeValue)) n.nodeValue=n.nodeValue.replace(/Score:\s*/gi,'PTS: '); }
+    }
+  }
+  function timerRing(){
+    const left=Math.max(0,Number(window.timeLeft||0));
+    const pct=Math.max(0,Math.min(100,(left/60)*100));
+    for(let i=2;i<=6;i++){
+      const el=document.getElementById('timer-p'+i); if(!el)continue;
+      el.style.setProperty('--timer-pct',pct);
+      const active=(typeof currentPlayer==='number' && currentPlayer===i-1);
+      el.textContent=active?String(left):'60';
+      const box=document.getElementById('opp'+i);
+      if(box)box.classList.toggle('active-turn',active);
+    }
+    const me=document.getElementById('playerInfoBox');
+    if(me)me.classList.toggle('active-turn',typeof currentPlayer==='number'&&currentPlayer===0);
+  }
+  function refresh(){makePts();timerRing();}
+  document.addEventListener('DOMContentLoaded',refresh);
+  window.addEventListener('load',refresh);
+  setInterval(refresh,250);
+})();
+</script>
