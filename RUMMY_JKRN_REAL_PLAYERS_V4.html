@@ -6344,3 +6344,61 @@ window.jkrnV15JokerRules={
 }
 </style>
 
+
+
+<style id="jkrn-v7-no-control-overlap">
+/* =========================================================
+   JKRN V7 — Keep action buttons completely away from cards
+   • Cards stay at the bottom
+   • Drop/Auto Sort and Discard/Declare sit above the hand
+   • Buttons never cover card faces or group labels
+   ========================================================= */
+@media (max-height: 900px) and (orientation: landscape){
+    .left-controls,
+    .action-buttons{
+        position: fixed !important;
+        bottom: clamp(170px, 28vh, 220px) !important;
+        z-index: 9000 !important;
+        pointer-events: auto !important;
+    }
+
+    .left-controls{
+        left: 8px !important;
+        right: auto !important;
+    }
+
+    .action-buttons{
+        right: 8px !important;
+        left: auto !important;
+    }
+
+    .left-controls button,
+    .action-buttons button{
+        position: relative !important;
+        z-index: 9001 !important;
+    }
+
+    /* Keep the complete hand below the controls and visible. */
+    .player-area{
+        z-index: 6000 !important;
+    }
+
+    #playerGroupsContainer{
+        z-index: 6001 !important;
+    }
+
+    #playerGroupsContainer .card,
+    #playerGroupsContainer .card-group{
+        z-index: 6002 !important;
+    }
+}
+
+/* For normal desktop/tablet landscape, keep buttons beside the hand but above it. */
+@media (min-width: 901px) and (orientation: landscape){
+    .left-controls,
+    .action-buttons{
+        bottom: clamp(150px, 22vh, 210px) !important;
+        z-index: 9000 !important;
+    }
+}
+</style>
