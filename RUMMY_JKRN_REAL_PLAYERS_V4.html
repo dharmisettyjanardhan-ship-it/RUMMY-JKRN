@@ -2126,7 +2126,9 @@ button[data-action="discard"], button[data-action="declare"],
     <label class="jkrn-label">PLAYERS</label>
     <div class="jkrn-scroll-row" id="playerChoiceRow">
       <button type="button" class="jkrn-choice" data-players="2" onclick="selectPlayerCount(2)">2</button>
+      <button type="button" class="jkrn-choice" data-players="3" onclick="selectPlayerCount(3)">3</button>
       <button type="button" class="jkrn-choice" data-players="4" onclick="selectPlayerCount(4)">4</button>
+      <button type="button" class="jkrn-choice" data-players="5" onclick="selectPlayerCount(5)">5</button>
       <button type="button" class="jkrn-choice active" data-players="6" onclick="selectPlayerCount(6)">6</button>
     </div>
 
@@ -2411,7 +2413,7 @@ let jkrnSelectedPool = 201;
 let jkrnSelectedPlayers = 6;
 let jkrnEntryAmount = 300;
 function selectPoolType(v){ jkrnSelectedPool=Number(v)===101?101:201; document.querySelectorAll('#poolChoiceRow .jkrn-choice').forEach(b=>b.classList.toggle('active',Number(b.dataset.pool)===jkrnSelectedPool)); }
-function selectPlayerCount(v){ const n=Number(v); jkrnSelectedPlayers=(n===4||n===6)?n:2; document.querySelectorAll('#playerChoiceRow .jkrn-choice').forEach(b=>b.classList.toggle('active',Number(b.dataset.players)===jkrnSelectedPlayers)); }
+function selectPlayerCount(v){ const n=Number(v); jkrnSelectedPlayers=([2,3,4,5,6].includes(n)?n:2); document.querySelectorAll('#playerChoiceRow .jkrn-choice').forEach(b=>b.classList.toggle('active',Number(b.dataset.players)===jkrnSelectedPlayers)); }
 function updateEntryAmount(v){ jkrnEntryAmount=Math.max(300,Math.min(10000,Number(v)||300)); const e=document.getElementById('entryAmountDisplay'); if(e)e.textContent='₹'+jkrnEntryAmount.toLocaleString('en-IN'); const r=document.getElementById('entryAmount'); if(r&&Number(r.value)!==jkrnEntryAmount)r.value=jkrnEntryAmount; }
 function setEntryAmount(v){updateEntryAmount(v);}
 function updateStartButton(){const b=document.getElementById('startRoomBtn'); const cap=Number(window.__onlineMaxPlayers||jkrnSelectedPlayers); const count=(window.__onlineRoomPlayers||[]).filter(p=>p.connected!==false).length; if(b){b.disabled=!onlineRoomId || count<cap || !!window.__realRoomStarted; b.textContent=count>=cap?'START':'WAITING '+count+'/'+cap;}}
@@ -4915,6 +4917,110 @@ button[onclick*="groupSelected"] {
         setTimeout(refreshBadges,80);
         setInterval(refreshBadges,350);
     });
+})();
+</script>
+
+
+<style id="jkrn-v25-reference-layout-fix">
+/* V25: screenshot-style clean table / dynamic player count / readable hand */
+/* Remove the extra hand/options labels requested by the user. */
+.jkrn-hand-lift-btn{display:none!important;}
+#jkrnOptions{display:none!important;}
+.dealer-toss-title,.dealer-toss-subtitle{display:none!important;}
+#dealerTossInfo{display:none!important;}
+/* Toss cards remain visible so LOWEST/HIGHEST logic is still clear from the cards. */
+.toss-seat-card .toss-badge{font-size:0!important;background:transparent!important;color:transparent!important;border:0!important;padding:0!important;}
+.toss-seat-card.lowest::after{content:'DEALER';font-size:10px;color:#00ff66;background:#111;border-radius:5px;padding:3px 5px;position:absolute;bottom:3px;left:50%;transform:translateX(-50%);white-space:nowrap;}
+.toss-seat-card.highest::after{content:'FIRST LIFT';font-size:10px;color:#ffd700;background:#111;border-radius:5px;padding:3px 5px;position:absolute;bottom:3px;left:50%;transform:translateX(-50%);white-space:nowrap;}
+/* Hide empty seats immediately; active seats get the round profile/timer. */
+.opp-box{border-radius:38px!important;}
+.opp-avatar-container{position:relative!important;}
+.opp-avatar{width:48px!important;height:48px!important;min-width:48px!important;border-radius:50%!important;border:3px solid #ffd700!important;box-shadow:0 0 8px rgba(255,215,0,.45)!important;}
+.opp-box.active-turn .opp-avatar{border-color:#00ff66!important;box-shadow:0 0 0 3px rgba(0,255,102,.18),0 0 22px #00ff66!important;}
+/* Circular countdown ring around the active player's profile. */
+.opp-box.active-turn .opp-avatar-container::after{
+  content:'';position:absolute;inset:-5px;border-radius:50%;border:3px solid rgba(255,215,0,.3);border-top-color:#00ff66;border-right-color:#00ff66;animation:jkrnTimerSpin 1s linear infinite;pointer-events:none;
+}
+@keyframes jkrnTimerSpin{to{transform:rotate(360deg)}}
+.opp-timer{position:absolute!important;bottom:-7px!important;right:-8px!important;display:block!important;min-width:30px;text-align:center;background:#101010!important;color:#ffd700!important;border:2px solid #ffd700!important;border-radius:12px!important;font-size:11px!important;font-weight:1000!important;padding:2px 5px!important;z-index:10;}
+.opp-box:not(.active-turn) .opp-timer{display:none!important;}
+.opp-name{font-size:12px!important;font-weight:900!important;}
+.opp-score{font-size:12px!important;color:#ffd700!important;font-weight:1000!important;}
+.opp-action{font-size:9px!important;}
+/* Keep the hand inside the visible lower table area. */
+.player-area{bottom:1%!important;width:min(96vw,1250px)!important;z-index:6000!important;}
+#playerGroupsContainer{height:170px!important;align-items:flex-end!important;overflow-x:auto!important;overflow-y:visible!important;padding:5px 8px 0!important;gap:12px!important;}
+#playerGroupsContainer .card{width:clamp(68px,6vw,96px)!important;min-width:clamp(68px,6vw,96px)!important;height:clamp(104px,10vw,145px)!important;padding:7px 7px 14px!important;}
+#playerGroupsContainer .cards-in-group .card + .card{margin-left:clamp(-18px,-1vw,-10px)!important;}
+#playerGroupsContainer .card .card-top{font-size:clamp(22px,1.7vw,30px)!important;font-weight:1000!important;}
+#playerGroupsContainer .card .card-center{font-size:clamp(36px,3vw,50px)!important;font-weight:1000!important;}
+#playerGroupsContainer .card-group{min-width:92px!important;padding:5px!important;}
+/* Controls sit at the sides of the hand, never over cards. */
+.left-controls{left:12px!important;bottom:12px!important;z-index:8000!important;}
+.action-buttons{right:12px!important;bottom:12px!important;z-index:8000!important;}
+/* Dynamic seats: 2, 3, 4, 5 or 6. */
+#opp2,#opp3,#opp4,#opp5,#opp6{position:absolute!important;}
+@media(max-width:900px){
+ .opp-avatar{width:38px!important;height:38px!important;min-width:38px!important;}
+ .opp-box{width:118px!important;}
+ #playerGroupsContainer{height:155px!important;}
+ #playerGroupsContainer .card{width:clamp(58px,7vw,78px)!important;min-width:clamp(58px,7vw,78px)!important;height:clamp(88px,10vw,116px)!important;}
+}
+</style>
+<script id="jkrn-v25-dynamic-seats-and-timer">
+(function(){
+  const MAX=6;
+  function selectedCount(){return Math.max(2,Math.min(MAX,Number(numPlayers)||Number(jkrnSelectedPlayers)||6));}
+  function applySeats(){
+    const n=selectedCount();
+    for(let i=2;i<=MAX;i++){
+      const el=document.getElementById('opp'+i); if(!el)continue;
+      el.style.display=(i<=n)?'flex':'none';
+    }
+    const maps={
+      2:{2:['50%','4%','auto','translateX(-50%)']},
+      3:{2:['50%','4%','auto','translateX(-50%)'],3:['8%','42%','auto','none'],4:['auto','42%','8%','none']},
+      4:{2:['50%','4%','auto','translateX(-50%)'],3:['3%','43%','auto','none'],4:['auto','43%','3%','none']},
+      5:{2:['50%','3%','auto','translateX(-50%)'],3:['2%','32%','auto','none'],4:['auto','32%','2%','none'],5:['18%','12%','auto','none']},
+      6:{2:['50%','3%','auto','translateX(-50%)'],3:['2%','42%','auto','none'],4:['auto','42%','2%','none'],5:['15%','12%','auto','none'],6:['auto','12%','15%','none']}
+    };
+    const m=maps[n]||maps[6];
+    Object.keys(m).forEach(k=>{const e=document.getElementById('opp'+k);if(!e)return;const v=m[k];e.style.left=v[0];e.style.top=v[1];e.style.right=v[2];e.style.transform=v[3];});
+    // Only occupied online seats get profiles; local game uses the selected count.
+    if(window.__realRoomStarted && Array.isArray(window.__onlineRoomPlayers)){
+      for(let i=2;i<=MAX;i++){
+        const e=document.getElementById('opp'+i); if(e)e.style.display=(i-1<window.__onlineRoomPlayers.length)?'flex':'none';
+      }
+    }
+  }
+  function refreshNamesAndScores(){
+    const n=selectedCount();
+    for(let i=1;i<=MAX;i++){
+      const seat=document.getElementById('opp'+(i+1)); if(!seat)continue;
+      const name=seat.querySelector('.opp-name');
+      if(name && i<n) name.innerHTML='Player '+(i+1)+' <span id="dealer-tag-p'+(i+1)+'" class="dealer-badge" style="display:none;">DEALER</span><span id="elim-tag-p'+(i+1)+'" class="elim-badge" style="display:none;">OUT</span>';
+      const sc=document.getElementById('score-p'+(i+1));
+      if(sc)sc.textContent=String(gameScores['Player '+(i+1)]||0);
+    }
+  }
+  function syncTurnVisual(){
+    const n=selectedCount();
+    for(let i=0;i<n;i++){
+      const seat=i===0?document.getElementById('playerInfoBox'):document.getElementById('opp'+(i+1));
+      if(seat)seat.classList.toggle('active-turn',i===currentPlayer && !gameOver && !droppedThisDeal[i] && !isEliminated(i));
+    }
+    for(let i=n;i<MAX;i++){
+      const seat=document.getElementById('opp'+(i+1)); if(seat)seat.classList.remove('active-turn');
+    }
+  }
+  const oldUpdate=window.updateUI;
+  if(typeof oldUpdate==='function' && !window.__jkrnV25Wrapped){
+    window.__jkrnV25Wrapped=true;
+    window.updateUI=function(){const r=oldUpdate.apply(this,arguments);applySeats();refreshNamesAndScores();syncTurnVisual();return r;};
+  }
+  function tick(){applySeats();refreshNamesAndScores();syncTurnVisual();}
+  window.addEventListener('load',tick);document.addEventListener('DOMContentLoaded',tick);setInterval(tick,500);
+  window.jkrnV25={applySeats,tick};
 })();
 </script>
 
