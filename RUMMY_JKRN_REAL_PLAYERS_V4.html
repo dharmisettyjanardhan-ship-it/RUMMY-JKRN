@@ -6204,3 +6204,143 @@ window.jkrnV15JokerRules={
   document.addEventListener('DOMContentLoaded',refreshSeatProfiles);
 })();
 </script>
+
+
+<style id="jkrn-v6-bold-readable-cards">
+/* =========================================================
+   JKRN V6 — Reference-style readable cards
+   • Less overlap between cards
+   • Much bolder/larger rank numbers
+   • Suit remains large and clear
+   • Keeps Life/Set/Invalid group colors
+   ========================================================= */
+
+/* Give each group enough visual breathing room. */
+#playerGroupsContainer{
+    gap: 16px !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+}
+
+/* Cards: larger, but not excessively overlapping. */
+#playerGroupsContainer .card{
+    width: clamp(76px, 5.2vw, 88px) !important;
+    min-width: clamp(76px, 5.2vw, 88px) !important;
+    height: clamp(112px, 8.4vw, 126px) !important;
+    padding: 7px 7px 16px !important;
+    border-radius: 7px !important;
+    font-weight: 1000 !important;
+}
+
+/* IMPORTANT: show more of every card in a group. */
+#playerGroupsContainer .cards-in-group .card + .card{
+    margin-left: clamp(-22px, -1.35vw, -16px) !important;
+}
+
+/* Rank + suit at the top: very bold and easy to read. */
+#playerGroupsContainer .card .card-top{
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:flex-start !important;
+    justify-content:flex-start !important;
+    gap:1px !important;
+    font-size: clamp(23px, 1.75vw, 29px) !important;
+    line-height: .92 !important;
+    font-weight: 1000 !important;
+    letter-spacing: -.5px !important;
+    text-shadow: 0 1px 0 rgba(0,0,0,.18) !important;
+}
+
+/* Make the actual rank noticeably heavier/larger than the suit. */
+#playerGroupsContainer .card .card-top span:first-child{
+    font-size: 1.12em !important;
+    font-weight: 1000 !important;
+    line-height: .9 !important;
+}
+#playerGroupsContainer .card .card-top span:nth-child(2){
+    font-size: .82em !important;
+    font-weight: 950 !important;
+    line-height: .9 !important;
+}
+
+/* Big central suit. */
+#playerGroupsContainer .card .card-center{
+    font-size: clamp(38px, 3.05vw, 48px) !important;
+    line-height: 1 !important;
+    font-weight: 1000 !important;
+    text-shadow: 0 1px 0 rgba(0,0,0,.12) !important;
+}
+
+/* Joker badge stays visible on the larger cards. */
+#playerGroupsContainer .card .joker-badge{
+    font-size: clamp(10px, .8vw, 13px) !important;
+    padding: 2px 4px !important;
+}
+
+/* Keep colored group panels clearly separated. */
+#playerGroupsContainer .card-group{
+    min-width: 96px !important;
+    padding: 6px 6px 5px !important;
+    border-width: 2px !important;
+}
+
+/* Status label: bold and easy to identify. */
+#playerGroupsContainer .card-group .group-status-badge{
+    font-size: 12px !important;
+    font-weight: 1000 !important;
+    min-height: 22px !important;
+    padding: 4px 6px !important;
+}
+
+/* Landscape phones / short screens. */
+@media (orientation: landscape) and (max-height: 900px){
+    #playerGroupsContainer{
+        gap: 9px !important;
+        padding-left: 5px !important;
+        padding-right: 5px !important;
+    }
+    #playerGroupsContainer .card{
+        width: clamp(64px, 5.1vw, 76px) !important;
+        min-width: clamp(64px, 5.1vw, 76px) !important;
+        height: clamp(94px, 8.6vw, 108px) !important;
+        padding: 5px 5px 13px !important;
+    }
+    #playerGroupsContainer .cards-in-group .card + .card{
+        margin-left: clamp(-18px, -1.25vw, -13px) !important;
+    }
+    #playerGroupsContainer .card .card-top{
+        font-size: clamp(19px, 1.8vw, 25px) !important;
+    }
+    #playerGroupsContainer .card .card-center{
+        font-size: clamp(31px, 3vw, 40px) !important;
+    }
+    #playerGroupsContainer .card-group{
+        min-width: 82px !important;
+        padding: 4px !important;
+    }
+    #playerGroupsContainer .card-group .group-status-badge{
+        font-size: 10px !important;
+        min-height: 19px !important;
+        padding: 3px 4px !important;
+    }
+}
+
+/* Portrait phones. */
+@media (max-width:700px) and (orientation:portrait){
+    #playerGroupsContainer .card{
+        width: clamp(58px, 15vw, 68px) !important;
+        min-width: clamp(58px, 15vw, 68px) !important;
+        height: clamp(88px, 22vw, 102px) !important;
+    }
+    #playerGroupsContainer .cards-in-group .card + .card{
+        margin-left: clamp(-16px, -4vw, -11px) !important;
+    }
+    #playerGroupsContainer .card .card-top{
+        font-size: clamp(17px, 4.5vw, 22px) !important;
+    }
+    #playerGroupsContainer .card .card-center{
+        font-size: clamp(27px, 8vw, 36px) !important;
+    }
+}
+</style>
+
