@@ -2388,6 +2388,314 @@ button[data-action="discard"], button[data-action="declare"],
 }
 </style>
 
+
+/* ===== JKRN FINAL HAND + CONTROLS POSITION FIX =====
+   Hand cards stay at the physical bottom.
+   GROUP / AUTO SORT / DISCARD / DECLARE stay beside the black hand area.
+*/
+<style id="jkrn-final-bottom-controls-fix">
+/* The black hand panel is the visual home for the controls + cards */
+.player-area{
+    position: fixed !important;
+    left: 50% !important;
+    bottom: 0 !important;
+    transform: translateX(-50%) !important;
+    width: min(96vw, 1180px) !important;
+    max-width: 1180px !important;
+    z-index: 6000 !important;
+    pointer-events: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+.player-info{
+    pointer-events:auto !important;
+    position:relative !important;
+    z-index:6100 !important;
+}
+
+.groups-container{
+    pointer-events:auto !important;
+    width:100% !important;
+    max-width:100% !important;
+    height:112px !important;
+    min-height:112px !important;
+    padding:2px 150px 2px 150px !important;
+    margin:0 !important;
+    display:flex !important;
+    justify-content:center !important;
+    align-items:flex-end !important;
+    overflow-x:auto !important;
+    overflow-y:visible !important;
+}
+
+/* Keep all cards uniform */
+.card{
+    width:62px !important;
+    min-width:62px !important;
+    height:92px !important;
+    flex:0 0 62px !important;
+}
+
+/* Controls sit beside the hand, inside the same black bottom zone */
+.left-controls,
+.action-buttons{
+    position:fixed !important;
+    bottom:8px !important;
+    top:auto !important;
+    z-index:7000 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    gap:7px !important;
+}
+
+.left-controls{
+    left:max(8px, calc(50% - min(48vw,590px) + 8px)) !important;
+}
+.action-buttons{
+    right:max(8px, calc(50% - min(48vw,590px) + 8px)) !important;
+}
+
+.left-controls button,
+.action-buttons button{
+    min-width:90px !important;
+    min-height:34px !important;
+    padding:7px 10px !important;
+    font-size:11px !important;
+}
+
+/* Do not let hidden action buttons reserve visual space */
+.btn-group[style*="display: none"],
+.btn-discard[style*="display: none"]{
+    display:none !important;
+}
+
+/* Landscape/desktop */
+@media (min-width:701px){
+    .player-area{bottom:0 !important;}
+    .groups-container{
+        height:118px !important;
+        min-height:118px !important;
+        padding-left:150px !important;
+        padding-right:150px !important;
+    }
+}
+
+/* Phone */
+@media (max-width:700px){
+    .player-area{
+        bottom:0 !important;
+        width:100vw !important;
+    }
+    .groups-container{
+        height:100px !important;
+        min-height:100px !important;
+        padding-left:112px !important;
+        padding-right:112px !important;
+        gap:4px !important;
+    }
+    .card{
+        width:48px !important;
+        min-width:48px !important;
+        height:74px !important;
+        flex-basis:48px !important;
+    }
+    .left-controls,
+    .action-buttons{
+        bottom:6px !important;
+        gap:4px !important;
+    }
+    .left-controls{
+        left:5px !important;
+    }
+    .action-buttons{
+        right:5px !important;
+    }
+    .left-controls button,
+    .action-buttons button{
+        min-width:70px !important;
+        min-height:29px !important;
+        padding:5px 7px !important;
+        font-size:9px !important;
+    }
+}
+</style>
+
+
+<style id="JKRN_FINAL_GROUPS_AND_SIDE_OPTIONS">
+/* ===== FINAL: BIGGER CARDS + REAL GROUP SPACING + SIDE OPTIONS ===== */
+#playerArea.jkrn-body-hand{
+  bottom:0 !important;
+  width:100vw !important;
+  padding:4px 150px 3px !important;
+  background:rgba(0,0,0,.94) !important;
+  border:2px solid #333 !important;
+  border-bottom:0 !important;
+  border-radius:14px 14px 0 0 !important;
+  box-shadow:0 -4px 18px rgba(0,0,0,.75) !important;
+}
+
+/* Keep groups clearly separated while cards inside each group stay together */
+#playerArea.jkrn-body-hand #playerGroupsContainer{
+  height:126px !important;
+  min-height:126px !important;
+  justify-content:center !important;
+  align-items:flex-end !important;
+  gap:14px !important;
+  overflow-x:auto !important;
+  overflow-y:visible !important;
+  scrollbar-width:none !important;
+}
+#playerArea.jkrn-body-hand #playerGroupsContainer::-webkit-scrollbar{display:none !important;}
+
+#playerArea.jkrn-body-hand #playerGroupsContainer .card-group{
+  min-width:0 !important;
+  padding:3px 5px !important;
+  margin:0 !important;
+  background:rgba(25,25,25,.92) !important;
+  border:1px solid #555 !important;
+  border-radius:7px !important;
+  box-shadow:0 0 5px rgba(0,0,0,.55) !important;
+}
+#playerArea.jkrn-body-hand #playerGroupsContainer .cards-in-group{
+  gap:0 !important;
+  min-height:110px !important;
+  align-items:flex-end !important;
+  justify-content:center !important;
+}
+
+/* Bigger playable cards */
+#playerArea.jkrn-body-hand #playerGroupsContainer .card,
+#playerArea.jkrn-body-hand #playerGroupsContainer .cards-in-group .card{
+  width:clamp(60px,4.9vw,80px) !important;
+  min-width:clamp(60px,4.9vw,80px) !important;
+  height:clamp(88px,8.7vw,116px) !important;
+  padding:5px 5px 14px !important;
+  font-size:clamp(13px,1.35vw,17px) !important;
+  flex:0 0 auto !important;
+  margin-left:-16px !important;
+}
+#playerArea.jkrn-body-hand #playerGroupsContainer .card:first-child{
+  margin-left:0 !important;
+}
+#playerArea.jkrn-body-hand #playerGroupsContainer .card:hover{
+  transform:translateY(-10px) !important;
+  z-index:20 !important;
+}
+#playerArea.jkrn-body-hand #playerGroupsContainer .selected{
+  transform:translateY(-16px) !important;
+  z-index:30 !important;
+}
+#playerArea.jkrn-body-hand #playerGroupsContainer .card-top{
+  font-size:clamp(12px,1.25vw,15px) !important;
+}
+#playerArea.jkrn-body-hand #playerGroupsContainer .card-center{
+  font-size:clamp(23px,2.8vw,30px) !important;
+}
+
+/* Four requested options stay at the two sides of the black hand box */
+.left-controls,
+.action-buttons{
+  position:fixed !important;
+  bottom:12px !important;
+  top:auto !important;
+  z-index:100000 !important;
+  display:flex !important;
+  flex-direction:column !important;
+  gap:7px !important;
+  padding:7px !important;
+  background:rgba(0,0,0,.94) !important;
+  border:2px solid #333 !important;
+  border-radius:10px !important;
+  box-shadow:0 0 12px rgba(0,0,0,.7) !important;
+}
+.left-controls{left:8px !important;}
+.action-buttons{right:8px !important;}
+
+.left-controls button,
+.action-buttons button{
+  min-width:100px !important;
+  min-height:38px !important;
+  padding:7px 10px !important;
+  font-size:11px !important;
+  font-weight:900 !important;
+  border-radius:7px !important;
+}
+
+/* Group button should appear normally when cards are selected */
+#groupButton{min-width:105px !important;}
+
+/* Phone: still bigger than the previous version, but keep all 13 cards usable */
+@media(max-width:900px){
+  #playerArea.jkrn-body-hand{
+    padding:3px 92px 2px !important;
+    border-radius:10px 10px 0 0 !important;
+  }
+  #playerArea.jkrn-body-hand #playerGroupsContainer{
+    height:102px !important;
+    min-height:102px !important;
+    gap:9px !important;
+    justify-content:flex-start !important;
+  }
+  #playerArea.jkrn-body-hand #playerGroupsContainer .card-group{
+    padding:2px 4px !important;
+  }
+  #playerArea.jkrn-body-hand #playerGroupsContainer .cards-in-group{
+    min-height:90px !important;
+  }
+  #playerArea.jkrn-body-hand #playerGroupsContainer .card,
+  #playerArea.jkrn-body-hand #playerGroupsContainer .cards-in-group .card{
+    width:clamp(52px,6.2vw,66px) !important;
+    min-width:clamp(52px,6.2vw,66px) !important;
+    height:clamp(78px,9vw,92px) !important;
+    margin-left:-13px !important;
+    font-size:13px !important;
+  }
+  #playerArea.jkrn-body-hand #playerGroupsContainer .card:first-child{
+    margin-left:0 !important;
+  }
+  #playerArea.jkrn-body-hand #playerGroupsContainer .card-center{
+    font-size:23px !important;
+  }
+  .left-controls,.action-buttons{
+    bottom:8px !important;
+    padding:4px !important;
+    gap:4px !important;
+    border-width:1px !important;
+  }
+  .left-controls{left:4px !important;}
+  .action-buttons{right:4px !important;}
+  .left-controls button,.action-buttons button{
+    min-width:68px !important;
+    min-height:30px !important;
+    padding:5px 6px !important;
+    font-size:9px !important;
+  }
+}
+
+/* Very narrow phones */
+@media(max-width:450px){
+  #playerArea.jkrn-body-hand{padding-left:76px !important;padding-right:76px !important;}
+  #playerArea.jkrn-body-hand #playerGroupsContainer{
+    height:92px !important;
+    min-height:92px !important;
+  }
+  #playerArea.jkrn-body-hand #playerGroupsContainer .card,
+  #playerArea.jkrn-body-hand #playerGroupsContainer .cards-in-group .card{
+    width:50px !important;
+    min-width:50px !important;
+    height:75px !important;
+    margin-left:-12px !important;
+  }
+  .left-controls button,.action-buttons button{
+    min-width:61px !important;
+    min-height:27px !important;
+    font-size:8px !important;
+  }
+}
+</style>
+
 </head>
 <body onload="initAutoGame()">
 
