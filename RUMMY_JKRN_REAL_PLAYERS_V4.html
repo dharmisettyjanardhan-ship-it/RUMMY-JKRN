@@ -7546,14 +7546,53 @@ window.jkrnV15JokerRules={
 
 /* Desktop/large landscape: hand stays below the gold table border. */
 @media (min-width:901px){
-  #playerArea{bottom:-178px !important;}
+  /* REAL GAME: keep the player's 13 cards fully visible below the table. */
+  #playerArea{
+    position:fixed !important;
+    left:50% !important;
+    bottom:6px !important;
+    transform:translateX(-50%) !important;
+    width:98vw !important;
+    max-width:none !important;
+    z-index:6000 !important;
+  }
+  #playerGroupsContainer{
+    width:100% !important;
+    max-width:none !important;
+    height:112px !important;
+    min-height:112px !important;
+    overflow:visible !important;
+    justify-content:center !important;
+    align-items:flex-end !important;
+    gap:4px !important;
+  }
+  #playerGroupsContainer .card-group{
+    min-width:0 !important;
+    padding:0 !important;
+  }
+  #playerGroupsContainer .cards-in-group{
+    min-height:92px !important;
+    align-items:flex-end !important;
+    gap:4px !important;
+  }
+  #playerGroupsContainer .card,
+  #playerGroupsContainer .cards-in-group .card{
+    width:clamp(48px,4.15vw,68px) !important;
+    min-width:clamp(48px,4.15vw,68px) !important;
+    height:clamp(72px,7.8vw,102px) !important;
+    margin-left:0 !important;
+    flex:0 0 auto !important;
+  }
   #centerArea{top:32% !important;}
 }
 
 /* Landscape phones: same rule, scaled to fit all 13 cards. */
 @media (max-width:900px) and (orientation:landscape){
   #playerArea{
-    bottom:-112px !important;
+    position:fixed !important;
+    bottom:4px !important;
+    left:50% !important;
+    transform:translateX(-50%) !important;
     width:100vw !important;
   }
   #playerInfoBox{font-size:10px !important;}
@@ -7583,8 +7622,183 @@ window.jkrnV15JokerRules={
 }
 
 @media (max-width:900px) and (orientation:portrait){
-  #playerArea{bottom:-150px !important;}
+  #playerArea{bottom:4px !important;}
   #playerGroupsContainer{overflow-x:auto !important;justify-content:flex-start !important;}
   #centerArea{top:34% !important;}
 }
 </style>
+
+<style id="JKRN_REAL_GAME_FINAL_HAND_AND_PILES_FIX">
+/* Final override: runtime updateUI/renderOnlineState must not move or clip the hand. */
+#playerArea{
+  position:fixed !important;
+  left:50% !important;
+  transform:translateX(-50%) !important;
+  bottom:6px !important;
+  width:98vw !important;
+  max-width:none !important;
+  z-index:6000 !important;
+  pointer-events:none !important;
+}
+#playerInfoBox,#playerGroupsContainer{pointer-events:auto !important;}
+#playerGroupsContainer{
+  width:100% !important;
+  max-width:none !important;
+  display:flex !important;
+  justify-content:center !important;
+  align-items:flex-end !important;
+  flex-wrap:nowrap !important;
+  overflow:visible !important;
+  height:112px !important;
+  min-height:112px !important;
+}
+#playerGroupsContainer .cards-in-group{
+  display:flex !important;
+  flex-wrap:nowrap !important;
+  align-items:flex-end !important;
+  justify-content:center !important;
+  gap:4px !important;
+  min-height:92px !important;
+}
+#playerGroupsContainer .card-group{
+  min-width:0 !important;
+  padding:0 !important;
+}
+#playerGroupsContainer .card,
+#playerGroupsContainer .cards-in-group .card{
+  width:clamp(48px,4.15vw,68px) !important;
+  min-width:clamp(48px,4.15vw,68px) !important;
+  height:clamp(72px,7.8vw,102px) !important;
+  margin-left:0 !important;
+  flex:0 0 auto !important;
+}
+#centerArea{
+  z-index:5000 !important;
+  overflow:visible !important;
+}
+#topJokerDisplay,#discardPile{
+  position:relative !important;
+  z-index:5002 !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  display:flex !important;
+  width:88px !important;
+  min-width:88px !important;
+  height:126px !important;
+  min-height:126px !important;
+  overflow:visible !important;
+}
+#topJokerDisplay .card-top,#topJokerDisplay .card-center,
+#discardPile > *{opacity:1 !important;visibility:visible !important;}
+@media (max-width:900px){
+  #playerArea{bottom:4px !important;width:100vw !important;}
+  #playerGroupsContainer{height:92px !important;min-height:92px !important;gap:2px !important;}
+  #playerGroupsContainer .cards-in-group{min-height:78px !important;gap:2px !important;}
+  #playerGroupsContainer .card,#playerGroupsContainer .cards-in-group .card{
+    width:clamp(38px,5.2vw,56px) !important;
+    min-width:clamp(38px,5.2vw,56px) !important;
+    height:clamp(58px,7.8vw,76px) !important;
+  }
+  #topJokerDisplay,#discardPile{
+    width:clamp(58px,7vw,78px) !important;
+    min-width:clamp(58px,7vw,78px) !important;
+    height:clamp(82px,10vw,108px) !important;
+    min-height:clamp(82px,10vw,108px) !important;
+  }
+}
+</style>
+
+<style id="JKRN_TRUE_VIEWPORT_HAND_FIX">
+/* TRUE viewport hand: playerArea is moved to BODY so fixed positioning is relative to the browser viewport. */
+#playerArea.jkrn-body-hand {
+  position:fixed !important;
+  left:50% !important;
+  right:auto !important;
+  top:auto !important;
+  bottom:0 !important;
+  transform:translateX(-50%) !important;
+  width:100vw !important;
+  max-width:none !important;
+  height:auto !important;
+  margin:0 !important;
+  z-index:99999 !important;
+  pointer-events:none !important;
+  box-sizing:border-box !important;
+  padding:0 4px 2px !important;
+}
+#playerArea.jkrn-body-hand #playerInfoBox{pointer-events:auto !important;}
+#playerArea.jkrn-body-hand #playerGroupsContainer{
+  pointer-events:auto !important;
+  width:100% !important;
+  max-width:none !important;
+  height:112px !important;
+  min-height:112px !important;
+  margin:0 !important;
+  padding:0 !important;
+  display:flex !important;
+  flex-direction:row !important;
+  flex-wrap:nowrap !important;
+  justify-content:center !important;
+  align-items:flex-end !important;
+  gap:3px !important;
+  overflow:visible !important;
+}
+#playerArea.jkrn-body-hand #playerGroupsContainer .card-group,
+#playerArea.jkrn-body-hand #playerGroupsContainer .cards-in-group{
+  margin:0 !important;
+  padding:0 !important;
+  min-width:0 !important;
+  background:transparent !important;
+  border:0 !important;
+  display:flex !important;
+  flex-wrap:nowrap !important;
+  align-items:flex-end !important;
+  gap:3px !important;
+}
+#playerArea.jkrn-body-hand #playerGroupsContainer .card,
+#playerArea.jkrn-body-hand #playerGroupsContainer .cards-in-group .card{
+  flex:0 0 auto !important;
+  width:clamp(48px,4.05vw,66px) !important;
+  min-width:clamp(48px,4.05vw,66px) !important;
+  height:clamp(72px,7.6vw,100px) !important;
+  margin:0 !important;
+}
+@media(max-width:900px){
+ #playerArea.jkrn-body-hand{bottom:0 !important;padding-bottom:2px !important;}
+ #playerArea.jkrn-body-hand #playerGroupsContainer{height:86px !important;min-height:86px !important;gap:2px !important;}
+ #playerArea.jkrn-body-hand #playerGroupsContainer .card-group,
+ #playerArea.jkrn-body-hand #playerGroupsContainer .cards-in-group{gap:2px !important;}
+ #playerArea.jkrn-body-hand #playerGroupsContainer .card,
+ #playerArea.jkrn-body-hand #playerGroupsContainer .cards-in-group .card{
+   width:clamp(38px,5.1vw,55px) !important;min-width:clamp(38px,5.1vw,55px) !important;
+   height:clamp(58px,7.7vw,74px) !important;
+ }
+}
+</style>
+<script id="JKRN_TRUE_VIEWPORT_HAND_FIX_JS">
+(function(){
+  function moveHandToBody(){
+    const p=document.getElementById('playerArea');
+    if(!p) return;
+    if(p.parentElement!==document.body) document.body.appendChild(p);
+    p.classList.add('jkrn-body-hand');
+  }
+  function keepHand(){
+    moveHandToBody();
+    const p=document.getElementById('playerArea');
+    if(!p) return;
+    p.style.setProperty('position','fixed','important');
+    p.style.setProperty('left','50%','important');
+    p.style.setProperty('right','auto','important');
+    p.style.setProperty('top','auto','important');
+    p.style.setProperty('bottom','0px','important');
+    p.style.setProperty('transform','translateX(-50%)','important');
+    p.style.setProperty('width','100vw','important');
+    p.style.setProperty('max-width','none','important');
+    p.style.setProperty('z-index','99999','important');
+  }
+  document.addEventListener('DOMContentLoaded',()=>{keepHand();setTimeout(keepHand,100);setTimeout(keepHand,500);});
+  window.addEventListener('load',()=>{keepHand();setTimeout(keepHand,300);});
+  setInterval(keepHand,1000);
+})();
+</script>
