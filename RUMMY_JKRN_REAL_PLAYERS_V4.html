@@ -7428,3 +7428,126 @@ window.jkrnV15JokerRules={
   setInterval(refresh,250);
 })();
 </script>
+
+
+<!-- JKRN FINAL HAND POSITION: move the complete hand tray below the table -->
+<style id="jkrn-final-hand-below-table">
+@media (orientation: landscape) and (min-height: 501px){
+  /* Keep the green table above; the hand belongs in the black area below it. */
+  #playerArea{
+    position:fixed !important;
+    left:50% !important;
+    top:auto !important;
+    bottom:6px !important;
+    transform:translateX(-50%) !important;
+    width:min(88vw,1400px) !important;
+    height:150px !important;
+    z-index:12000 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:flex-end !important;
+    pointer-events:none !important;
+  }
+
+  /* Player name/profile stays compact above the hand tray. */
+  #playerInfoBox{
+    pointer-events:auto !important;
+    margin:0 0 3px !important;
+    padding:2px 8px !important;
+    background:rgba(0,0,0,.72) !important;
+    border:1px solid #8d6a1b !important;
+    border-radius:10px !important;
+    line-height:1 !important;
+  }
+
+  /* Black hand box sits completely OUTSIDE the green table. */
+  #playerGroupsContainer{
+    pointer-events:auto !important;
+    width:100% !important;
+    max-width:100% !important;
+    height:118px !important;
+    min-height:118px !important;
+    padding:4px 8px 3px !important;
+    display:flex !important;
+    align-items:flex-end !important;
+    justify-content:center !important;
+    gap:7px !important;
+    overflow:hidden !important;
+    background:rgba(0,0,0,.96) !important;
+    border:2px solid #333 !important;
+    border-radius:14px !important;
+    box-shadow:0 -4px 18px rgba(0,0,0,.75) !important;
+  }
+
+  #playerGroupsContainer .card-group{
+    min-width:0 !important;
+    padding:2px !important;
+    margin:0 !important;
+    background:transparent !important;
+    border:0 !important;
+    box-shadow:none !important;
+    flex-shrink:0 !important;
+  }
+
+  #playerGroupsContainer .cards-in-group{
+    min-height:86px !important;
+    height:86px !important;
+    align-items:flex-end !important;
+    overflow:visible !important;
+  }
+
+  /* Smaller cards so the full hand fits in the bottom black area. */
+  #playerGroupsContainer .card{
+    width:58px !important;
+    min-width:58px !important;
+    height:84px !important;
+    padding:4px 4px 10px !important;
+    border-radius:5px !important;
+    font-size:14px !important;
+    font-weight:1000 !important;
+  }
+  #playerGroupsContainer .card .card-top{
+    font-size:17px !important;
+    line-height:.92 !important;
+    font-weight:1000 !important;
+  }
+  #playerGroupsContainer .card .card-top span:first-child{
+    font-size:1.08em !important;
+    font-weight:1000 !important;
+  }
+  #playerGroupsContainer .card .card-center{
+    font-size:29px !important;
+    font-weight:1000 !important;
+  }
+  #playerGroupsContainer .cards-in-group .card + .card{
+    margin-left:-18px !important;
+  }
+  #playerGroupsContainer .group-status-badge{
+    display:none !important;
+  }
+
+  /* Buttons stay outside the hand tray, at the lower corners. */
+  .left-controls{
+    position:fixed !important;
+    left:18px !important;
+    bottom:12px !important;
+    z-index:13000 !important;
+  }
+  .action-buttons{
+    position:fixed !important;
+    right:18px !important;
+    bottom:12px !important;
+    z-index:13000 !important;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 620px){
+  #playerArea{height:132px !important;bottom:4px !important;}
+  #playerGroupsContainer{height:104px !important;min-height:104px !important;}
+  #playerGroupsContainer .cards-in-group{height:76px !important;min-height:76px !important;}
+  #playerGroupsContainer .card{width:50px !important;min-width:50px !important;height:72px !important;padding:3px !important;}
+  #playerGroupsContainer .card .card-top{font-size:15px !important;}
+  #playerGroupsContainer .card .card-center{font-size:25px !important;}
+}
+</style>
