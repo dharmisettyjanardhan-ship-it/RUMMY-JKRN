@@ -2523,178 +2523,394 @@ button[data-action="discard"], button[data-action="declare"],
 </style>
 
 
-<style id="JKRN_FINAL_GROUPS_AND_SIDE_OPTIONS">
-/* ===== FINAL: BIGGER CARDS + REAL GROUP SPACING + SIDE OPTIONS ===== */
-#playerArea.jkrn-body-hand{
-  bottom:0 !important;
-  width:100vw !important;
-  padding:4px 150px 3px !important;
-  background:rgba(0,0,0,.94) !important;
-  border:2px solid #333 !important;
-  border-bottom:0 !important;
-  border-radius:14px 14px 0 0 !important;
-  box-shadow:0 -4px 18px rgba(0,0,0,.75) !important;
+<style id="JKRN_FINAL_SIDE_OPTIONS_AND_GROUP_LAYOUT">
+/* FINAL: options sit beside the hand, not on top of the table/cards */
+#playerArea.jkrn-body-hand,
+#playerArea{
+  position:fixed!important;
+  left:50%!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:8px!important;
+  transform:translateX(-50%)!important;
+  width:min(100vw - 260px,1250px)!important;
+  max-width:calc(100vw - 260px)!important;
+  height:auto!important;
+  z-index:12000!important;
+  pointer-events:none!important;
+}
+#playerArea .player-info{
+  pointer-events:auto!important;
+}
+#playerGroupsContainer{
+  pointer-events:auto!important;
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:flex-end!important;
+  justify-content:center!important;
+  flex-wrap:nowrap!important;
+  gap:14px!important;
+  width:100%!important;
+  height:168px!important;
+  min-height:168px!important;
+  padding:8px 4px 0!important;
+  overflow-x:auto!important;
+  overflow-y:visible!important;
+  scrollbar-width:none!important;
+}
+#playerGroupsContainer::-webkit-scrollbar{display:none!important;}
+
+/* Every detected group gets its own visual box. */
+#playerGroupsContainer .card-group{
+  flex:0 0 auto!important;
+  min-width:78px!important;
+  padding:5px 5px 4px!important;
+  margin:0!important;
+  background:rgba(0,0,0,.68)!important;
+  border:2px solid var(--group-accent,#777)!important;
+  border-radius:10px!important;
+  box-shadow:0 0 10px rgba(0,0,0,.55), inset 0 0 8px rgba(255,255,255,.04)!important;
+  pointer-events:auto!important;
+}
+#playerGroupsContainer .cards-in-group{
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  min-height:112px!important;
+  height:112px!important;
+  gap:0!important;
+}
+#playerGroupsContainer .cards-in-group .card{
+  flex:0 0 auto!important;
+  width:78px!important;
+  min-width:78px!important;
+  height:112px!important;
+  padding:6px 6px 13px!important;
+  border-radius:7px!important;
+}
+#playerGroupsContainer .cards-in-group .card + .card{
+  margin-left:-22px!important;
+}
+#playerGroupsContainer .card .card-top,
+#playerGroupsContainer .card .card-top span{
+  font-size:21px!important;
+  font-weight:1000!important;
+  line-height:1!important;
+}
+#playerGroupsContainer .card .card-center{
+  font-size:38px!important;
+  font-weight:1000!important;
+  line-height:1!important;
+}
+#playerGroupsContainer .card-group .group-status-badge{
+  display:block!important;
+  width:100%!important;
+  min-height:22px!important;
+  margin-top:4px!important;
+  padding:4px 5px!important;
+  border-radius:6px!important;
+  font-size:11px!important;
+  font-weight:1000!important;
+  text-align:center!important;
+  line-height:1.1!important;
 }
 
-/* Keep groups clearly separated while cards inside each group stay together */
-#playerArea.jkrn-body-hand #playerGroupsContainer{
-  height:126px !important;
-  min-height:126px !important;
-  justify-content:center !important;
-  align-items:flex-end !important;
-  gap:14px !important;
-  overflow-x:auto !important;
-  overflow-y:visible !important;
-  scrollbar-width:none !important;
-}
-#playerArea.jkrn-body-hand #playerGroupsContainer::-webkit-scrollbar{display:none !important;}
-
-#playerArea.jkrn-body-hand #playerGroupsContainer .card-group{
-  min-width:0 !important;
-  padding:3px 5px !important;
-  margin:0 !important;
-  background:rgba(25,25,25,.92) !important;
-  border:1px solid #555 !important;
-  border-radius:7px !important;
-  box-shadow:0 0 5px rgba(0,0,0,.55) !important;
-}
-#playerArea.jkrn-body-hand #playerGroupsContainer .cards-in-group{
-  gap:0 !important;
-  min-height:110px !important;
-  align-items:flex-end !important;
-  justify-content:center !important;
-}
-
-/* Bigger playable cards */
-#playerArea.jkrn-body-hand #playerGroupsContainer .card,
-#playerArea.jkrn-body-hand #playerGroupsContainer .cards-in-group .card{
-  width:clamp(60px,4.9vw,80px) !important;
-  min-width:clamp(60px,4.9vw,80px) !important;
-  height:clamp(88px,8.7vw,116px) !important;
-  padding:5px 5px 14px !important;
-  font-size:clamp(13px,1.35vw,17px) !important;
-  flex:0 0 auto !important;
-  margin-left:-16px !important;
-}
-#playerArea.jkrn-body-hand #playerGroupsContainer .card:first-child{
-  margin-left:0 !important;
-}
-#playerArea.jkrn-body-hand #playerGroupsContainer .card:hover{
-  transform:translateY(-10px) !important;
-  z-index:20 !important;
-}
-#playerArea.jkrn-body-hand #playerGroupsContainer .selected{
-  transform:translateY(-16px) !important;
-  z-index:30 !important;
-}
-#playerArea.jkrn-body-hand #playerGroupsContainer .card-top{
-  font-size:clamp(12px,1.25vw,15px) !important;
-}
-#playerArea.jkrn-body-hand #playerGroupsContainer .card-center{
-  font-size:clamp(23px,2.8vw,30px) !important;
-}
-
-/* Four requested options stay at the two sides of the black hand box */
+/* Side option panels */
 .left-controls,
 .action-buttons{
-  position:fixed !important;
-  bottom:12px !important;
-  top:auto !important;
-  z-index:100000 !important;
-  display:flex !important;
-  flex-direction:column !important;
-  gap:7px !important;
-  padding:7px !important;
-  background:rgba(0,0,0,.94) !important;
-  border:2px solid #333 !important;
-  border-radius:10px !important;
-  box-shadow:0 0 12px rgba(0,0,0,.7) !important;
+  position:fixed!important;
+  top:auto!important;
+  bottom:58px!important;
+  z-index:15000!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:7px!important;
+  padding:8px!important;
+  background:rgba(0,0,0,.92)!important;
+  border:2px solid #c79a08!important;
+  border-radius:12px!important;
+  box-shadow:0 4px 16px rgba(0,0,0,.7)!important;
+  pointer-events:auto!important;
 }
-.left-controls{left:8px !important;}
-.action-buttons{right:8px !important;}
-
+.left-controls{left:8px!important;right:auto!important;}
+.action-buttons{right:8px!important;left:auto!important;}
 .left-controls button,
 .action-buttons button{
-  min-width:100px !important;
-  min-height:38px !important;
-  padding:7px 10px !important;
-  font-size:11px !important;
-  font-weight:900 !important;
-  border-radius:7px !important;
+  width:112px!important;
+  min-width:112px!important;
+  height:38px!important;
+  min-height:38px!important;
+  margin:0!important;
+  padding:7px 9px!important;
+  border-radius:8px!important;
+  font-size:12px!important;
+  font-weight:1000!important;
 }
-
-/* Group button should appear normally when cards are selected */
-#groupButton{min-width:105px !important;}
-
-/* Phone: still bigger than the previous version, but keep all 13 cards usable */
-@media(max-width:900px){
-  #playerArea.jkrn-body-hand{
-    padding:3px 92px 2px !important;
-    border-radius:10px 10px 0 0 !important;
-  }
-  #playerArea.jkrn-body-hand #playerGroupsContainer{
-    height:102px !important;
-    min-height:102px !important;
-    gap:9px !important;
-    justify-content:flex-start !important;
-  }
-  #playerArea.jkrn-body-hand #playerGroupsContainer .card-group{
-    padding:2px 4px !important;
-  }
-  #playerArea.jkrn-body-hand #playerGroupsContainer .cards-in-group{
-    min-height:90px !important;
-  }
-  #playerArea.jkrn-body-hand #playerGroupsContainer .card,
-  #playerArea.jkrn-body-hand #playerGroupsContainer .cards-in-group .card{
-    width:clamp(52px,6.2vw,66px) !important;
-    min-width:clamp(52px,6.2vw,66px) !important;
-    height:clamp(78px,9vw,92px) !important;
-    margin-left:-13px !important;
-    font-size:13px !important;
-  }
-  #playerArea.jkrn-body-hand #playerGroupsContainer .card:first-child{
-    margin-left:0 !important;
-  }
-  #playerArea.jkrn-body-hand #playerGroupsContainer .card-center{
-    font-size:23px !important;
-  }
-  .left-controls,.action-buttons{
-    bottom:8px !important;
-    padding:4px !important;
-    gap:4px !important;
-    border-width:1px !important;
-  }
-  .left-controls{left:4px !important;}
-  .action-buttons{right:4px !important;}
-  .left-controls button,.action-buttons button{
-    min-width:68px !important;
-    min-height:30px !important;
-    padding:5px 6px !important;
-    font-size:9px !important;
-  }
+#groupButton,
+#discardButton,
+#declareButton{
+  position:relative!important;
+  right:auto!important;
+  bottom:auto!important;
 }
+#groupButton{display:block!important;}
+#discardButton{display:block!important;}
+#declareButton{display:block!important;}
 
-/* Very narrow phones */
-@media(max-width:450px){
-  #playerArea.jkrn-body-hand{padding-left:76px !important;padding-right:76px !important;}
-  #playerArea.jkrn-body-hand #playerGroupsContainer{
-    height:92px !important;
-    min-height:92px !important;
+/* Group colors */
+#playerGroupsContainer .card-group:has(.badge-pure){--group-accent:#00e676!important;}
+#playerGroupsContainer .card-group:has(.badge-second){--group-accent:#26c6da!important;}
+#playerGroupsContainer .card-group:has(.badge-set){--group-accent:#42a5f5!important;}
+#playerGroupsContainer .card-group:has(.badge-trill){--group-accent:#ce93d8!important;}
+#playerGroupsContainer .card-group:has(.badge-invalid),
+#playerGroupsContainer .card-group:has(.badge-impure){--group-accent:#ff5252!important;}
+
+@media (max-width:1100px){
+  #playerArea.jkrn-body-hand,#playerArea{
+    width:calc(100vw - 210px)!important;
+    max-width:calc(100vw - 210px)!important;
   }
-  #playerArea.jkrn-body-hand #playerGroupsContainer .card,
-  #playerArea.jkrn-body-hand #playerGroupsContainer .cards-in-group .card{
-    width:50px !important;
-    min-width:50px !important;
-    height:75px !important;
-    margin-left:-12px !important;
+  #playerGroupsContainer{gap:9px!important;height:130px!important;min-height:130px!important;}
+  #playerGroupsContainer .cards-in-group{min-height:88px!important;height:88px!important;}
+  #playerGroupsContainer .cards-in-group .card{
+    width:60px!important;min-width:60px!important;height:88px!important;
+    padding:4px!important;
   }
+  #playerGroupsContainer .cards-in-group .card + .card{margin-left:-17px!important;}
+  #playerGroupsContainer .card .card-top,#playerGroupsContainer .card .card-top span{font-size:17px!important;}
+  #playerGroupsContainer .card .card-center{font-size:29px!important;}
+  .left-controls,.action-buttons{bottom:45px!important;padding:6px!important;}
+  .left-controls button,.action-buttons button{width:92px!important;min-width:92px!important;height:32px!important;min-height:32px!important;font-size:10px!important;}
+}
+@media (max-width:700px){
+  #playerArea.jkrn-body-hand,#playerArea{
+    width:calc(100vw - 150px)!important;
+    max-width:calc(100vw - 150px)!important;
+    bottom:4px!important;
+  }
+  #playerGroupsContainer{
+    justify-content:flex-start!important;
+    gap:6px!important;
+    height:112px!important;
+    min-height:112px!important;
+    overflow-x:auto!important;
+  }
+  #playerGroupsContainer .cards-in-group{min-height:72px!important;height:72px!important;}
+  #playerGroupsContainer .cards-in-group .card{
+    width:50px!important;min-width:50px!important;height:72px!important;
+    padding:3px!important;
+  }
+  #playerGroupsContainer .cards-in-group .card + .card{margin-left:-12px!important;}
+  #playerGroupsContainer .card .card-top,#playerGroupsContainer .card .card-top span{font-size:14px!important;}
+  #playerGroupsContainer .card .card-center{font-size:23px!important;}
+  #playerGroupsContainer .card-group{min-width:56px!important;padding:3px!important;}
+  #playerGroupsContainer .card-group .group-status-badge{font-size:8px!important;min-height:18px!important;padding:3px!important;}
+  .left-controls,.action-buttons{bottom:38px!important;padding:4px!important;gap:4px!important;}
+  .left-controls{left:3px!important;}
+  .action-buttons{right:3px!important;}
   .left-controls button,.action-buttons button{
-    min-width:61px !important;
-    min-height:27px !important;
-    font-size:8px !important;
+    width:64px!important;min-width:64px!important;height:28px!important;min-height:28px!important;
+    padding:4px 3px!important;font-size:8px!important;
   }
 }
 </style>
+
+
+<script id="JKRN_FINAL_AUTO_SORT_LIFE_SECOND_SET">
+(function(){
+  const LOW={A:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13};
+  const HIGH={2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13,A:14};
+  const SUIT={'♥':1,'♦':2,'♣':3,'♠':4};
+
+  function wild(c){
+    return !!c && (c.isPrintedJoker===true ||
+      (typeof wildJoker!=='undefined' && wildJoker && c.rank===wildJoker.rank));
+  }
+  function pure(g){
+    if(!Array.isArray(g)||g.length<3||g.some(c=>c&&c.isPrintedJoker)) return false;
+    const suit=g[0]&&g[0].suit;
+    if(!suit||g.some(c=>!c||c.suit!==suit)) return false;
+    let a=g.map(c=>LOW[c.rank]).sort((x,y)=>x-y);
+    if(a.some(v=>v==null)||new Set(a).size!==a.length) return false;
+    if(a.every((v,i)=>i===0||v===a[i-1]+1)) return true;
+    a=g.map(c=>HIGH[c.rank]).sort((x,y)=>x-y);
+    return a.every((v,i)=>i===0||v===a[i-1]+1);
+  }
+  function second(g){
+    if(!Array.isArray(g)||g.length<3||pure(g)) return false;
+    const n=g.filter(c=>!wild(c)), j=g.length-n.length;
+    if(!n.length) return j>=3;
+    const suit=n[0]&&n[0].suit;
+    if(!suit||n.some(c=>!c||c.suit!==suit)) return false;
+    let a=n.map(c=>LOW[c.rank]).sort((x,y)=>x-y);
+    if(new Set(a).size!==a.length) return false;
+    let gap=0;
+    for(let i=1;i<a.length;i++) gap+=Math.max(0,a[i]-a[i-1]-1);
+    if(gap<=j) return true;
+    a=n.map(c=>HIGH[c.rank]).sort((x,y)=>x-y);
+    gap=0;
+    for(let i=1;i<a.length;i++) gap+=Math.max(0,a[i]-a[i-1]-1);
+    return gap<=j;
+  }
+  function setGroup(g){
+    if(!Array.isArray(g)||g.length<3||g.length>4) return false;
+    const n=g.filter(c=>!wild(c));
+    if(!n.length) return true;
+    const rank=n[0].rank, suits=new Set();
+    if(n.some(c=>c.rank!==rank)) return false;
+    for(const c of n){ if(suits.has(c.suit)) return false; suits.add(c.suit); }
+    return true;
+  }
+  function kind(g){
+    if(pure(g)) return 'pure';
+    if(second(g)) return 'second';
+    if(setGroup(g)) return 'set';
+    return 'invalid';
+  }
+  function orderGroup(g){
+    const k=kind(g), a=g.slice();
+    if(k==='pure'||k==='second'){
+      return a.sort((x,y)=>{
+        const xv=LOW[x.rank]||99,yv=LOW[y.rank]||99;
+        return xv-yv || (SUIT[x.suit]||99)-(SUIT[y.suit]||99);
+      });
+    }
+    if(k==='set'){
+      return a.sort((x,y)=>(Number(wild(x))-Number(wild(y))) ||
+        ((SUIT[x.suit]||99)-(SUIT[y.suit]||99)));
+    }
+    return a.sort((x,y)=>((SUIT[x.suit]||99)-(SUIT[y.suit]||99)) ||
+      ((LOW[x.rank]||99)-(LOW[y.rank]||99)));
+  }
+  function points(c){
+    if(!c||wild(c)) return 0;
+    const r=String(c.rank||'').toUpperCase();
+    return ['A','K','Q','J'].includes(r)?10:(parseInt(r,10)||0);
+  }
+
+  function solve(cards){
+    const n=cards.length, full=(1<<n)-1, cand=Array.from({length:n},()=>[]);
+    for(let m=1;m<=full;m++){
+      let count=0;
+      for(let i=0;i<n;i++) if(m&(1<<i)) count++;
+      if(count<3) continue;
+      const g=[];
+      for(let i=0;i<n;i++) if(m&(1<<i)) g.push(cards[i]);
+      const k=kind(g);
+      if(k==='invalid') continue;
+      const c={m,g,k,count};
+      for(let i=0;i<n;i++) if(m&(1<<i)) cand[i].push(c);
+    }
+    const memo=new Map();
+    function better(a,b){
+      if(!b) return a;
+      if(a.valid!==b.valid) return a.valid>b.valid?a:b;
+      if(a.pure!==b.pure) return a.pure>b.pure?a:b;
+      if(a.seq!==b.seq) return a.seq>b.seq?a:b;
+      if(a.sets!==b.sets) return a.sets>b.sets?a:b;
+      if(a.covered!==b.covered) return a.covered>b.covered?a:b;
+      if(a.dead!==b.dead) return a.dead<b.dead?a:b;
+      return a;
+    }
+    function dp(mask){
+      if(!mask) return {dead:0,pure:0,seq:0,sets:0,covered:0,valid:0,chosen:[]};
+      if(memo.has(mask)) return memo.get(mask);
+      const bit=mask&-mask, i=Math.log2(bit)|0;
+      const skip=dp(mask^bit);
+      let best={
+        dead:skip.dead+points(cards[i]),pure:skip.pure,seq:skip.seq,
+        sets:skip.sets,covered:skip.covered,valid:skip.valid,chosen:skip.chosen
+      };
+      for(const c of cand[i]){
+        if((c.m&mask)!==c.m) continue;
+        const q=dp(mask^c.m);
+        const x={
+          dead:q.dead,
+          pure:q.pure+(c.k==='pure'?1:0),
+          seq:q.seq+((c.k==='pure'||c.k==='second')?1:0),
+          sets:q.sets+(c.k==='set'?1:0),
+          covered:q.covered+c.count,
+          valid:0,
+          chosen:q.chosen.concat(c)
+        };
+        if(x.covered===n && x.pure>=1 && x.seq>=2) x.valid=1;
+        best=better(x,best);
+      }
+      memo.set(mask,best);
+      return best;
+    }
+
+    const best=dp(full), result=[];
+    const used=new Set();
+    best.chosen.forEach(c=>{
+      result.push(orderGroup(c.g));
+      for(let i=0;i<n;i++) if(c.m&(1<<i)) used.add(i);
+    });
+
+    const left=cards.filter((c,i)=>!used.has(i));
+    /* Remaining cards stay together as a clearly marked manual-work group. */
+    if(left.length){
+      const remainder=orderGroup(left);
+      remainder.__jkrnRemainder=true;
+      result.push(remainder);
+    }
+
+    const rank={pure:1,second:2,set:3,invalid:4};
+    result.sort((a,b)=>(rank[kind(a)]||4)-(rank[kind(b)]||4));
+    return result.length?result:[orderGroup(cards)];
+  }
+
+  function runFinalAutoSort(){
+    if(typeof isEliminated==='function' && isEliminated(0)) return;
+    if(typeof playerGroups==='undefined') return;
+    const cards=playerGroups.flat().filter(Boolean);
+    if(!cards.length) return;
+    window.__jkrnRemainderGroups=new WeakSet();
+    const result=solve(cards);
+    result.forEach(g=>{ if(g.__jkrnRemainder) window.__jkrnRemainderGroups.add(g); });
+    playerGroups=result;
+    selectedCards=[];
+    if(typeof updateUI==='function') updateUI();
+  }
+
+  window.autoSortPlayerCards=runFinalAutoSort;
+  window.autoSortCards=function(){
+    if(typeof playSound==='function') playSound('group');
+    runFinalAutoSort();
+  };
+
+  /* Labels shown under each group. */
+  const oldBadge=window.getGroupBadgeInfo;
+  window.getGroupBadgeInfo=function(group){
+    if(window.__jkrnRemainderGroups && window.__jkrnRemainderGroups.has(group))
+      return {text:'OTHER CARDS',cls:'badge-invalid'};
+    if(pure(group)) return {text:'1st Life',cls:'badge-pure'};
+    if(second(group)) return {text:'2nd Life',cls:'badge-second'};
+    if(setGroup(group))
+      return wild(group[0]) || group.some(wild)
+        ? {text:'Trill',cls:'badge-trill'}
+        : {text:'Set',cls:'badge-set'};
+    return oldBadge ? oldBadge(group) : {text:'OTHER CARDS',cls:'badge-invalid'};
+  };
+
+  /* Keep the visual labels correct after every update. */
+  const oldDisplay=window.displayPlayer;
+  if(typeof oldDisplay==='function'){
+    window.displayPlayer=function(){
+      oldDisplay();
+      const boxes=document.querySelectorAll('#playerGroupsContainer .card-group');
+      boxes.forEach((box,i)=>{
+        const g=(typeof playerGroups!=='undefined')?playerGroups[i]:null;
+        if(!g) return;
+        const info=window.getGroupBadgeInfo(g);
+        const b=box.querySelector('.group-status-badge');
+        if(b){b.className='group-status-badge '+info.cls;b.textContent=info.text;}
+      });
+    };
+  }
+})();
+</script>
 
 </head>
 <body onload="initAutoGame()">
