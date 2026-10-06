@@ -7429,125 +7429,162 @@ window.jkrnV15JokerRules={
 })();
 </script>
 
+<style id="jkrn-final-hand-wild-open-fix">
+/* FINAL LAYOUT FIX — 13 equal cards completely below the table. */
+#playerArea{
+  position:absolute !important;
+  left:50% !important;
+  top:auto !important;
+  bottom:-178px !important;
+  transform:translateX(-50%) !important;
+  width:min(98vw,1200px) !important;
+  max-width:98vw !important;
+  height:auto !important;
+  z-index:950 !important;
+  pointer-events:none !important;
+}
+#playerInfoBox{
+  pointer-events:auto !important;
+  position:relative !important;
+  z-index:951 !important;
+  margin:0 auto 4px !important;
+  width:max-content !important;
+  max-width:96vw !important;
+}
+#playerGroupsContainer{
+  pointer-events:auto !important;
+  width:100% !important;
+  max-width:100% !important;
+  height:128px !important;
+  min-height:128px !important;
+  padding:0 4px !important;
+  margin:0 auto !important;
+  display:flex !important;
+  justify-content:center !important;
+  align-items:flex-start !important;
+  gap:4px !important;
+  overflow:visible !important;
+  flex-wrap:nowrap !important;
+}
+#playerGroupsContainer .card-group{
+  min-width:0 !important;
+  padding:0 !important;
+  margin:0 !important;
+  background:transparent !important;
+  border:0 !important;
+}
+#playerGroupsContainer .cards-in-group{
+  display:flex !important;
+  flex-wrap:nowrap !important;
+  gap:4px !important;
+  align-items:flex-start !important;
+  min-height:0 !important;
+}
+#playerGroupsContainer .cards-in-group .card,
+#playerGroupsContainer .card{
+  width:clamp(52px,5.1vw,76px) !important;
+  min-width:clamp(52px,5.1vw,76px) !important;
+  height:clamp(78px,8vw,112px) !important;
+  margin-left:0 !important;
+  margin-right:0 !important;
+  padding:5px 5px 12px !important;
+  flex:0 0 auto !important;
+}
+#playerGroupsContainer .card .card-top{
+  font-size:clamp(15px,1.55vw,24px) !important;
+  font-weight:900 !important;
+}
+#playerGroupsContainer .card .card-center{
+  font-size:clamp(25px,2.7vw,40px) !important;
+}
 
-<!-- JKRN FINAL HAND POSITION: move the complete hand tray below the table -->
-<style id="jkrn-final-hand-below-table">
-@media (orientation: landscape) and (min-height: 501px){
-  /* Keep the green table above; the hand belongs in the black area below it. */
+/* Keep WILD JOKER and OPEN DECK completely above the hand and fully visible. */
+#centerArea{
+  position:absolute !important;
+  top:31% !important;
+  left:50% !important;
+  transform:translate(-50%,-50%) !important;
+  z-index:1200 !important;
+  overflow:visible !important;
+}
+#centerArea .pile-container{
+  position:relative !important;
+  z-index:1201 !important;
+  overflow:visible !important;
+}
+#centerArea .pile-label,
+#centerArea .pile,
+#centerArea .deck-count,
+#centerArea #printedJokerLabel{
+  position:relative !important;
+  z-index:1202 !important;
+}
+#topJokerDisplay,
+#discardPile{
+  width:88px !important;
+  height:126px !important;
+  min-width:88px !important;
+  min-height:126px !important;
+  overflow:visible !important;
+  opacity:1 !important;
+  visibility:visible !important;
+}
+#topJokerDisplay .card-top,
+#topJokerDisplay .card-center{
+  visibility:visible !important;
+  opacity:1 !important;
+}
+#discardPile{
+  display:flex !important;
+  align-items:flex-start !important;
+  justify-content:flex-start !important;
+}
+#discardPile > *{
+  max-width:100% !important;
+  max-height:100% !important;
+}
+
+/* Desktop/large landscape: hand stays below the gold table border. */
+@media (min-width:901px){
+  #playerArea{bottom:-178px !important;}
+  #centerArea{top:32% !important;}
+}
+
+/* Landscape phones: same rule, scaled to fit all 13 cards. */
+@media (max-width:900px) and (orientation:landscape){
   #playerArea{
-    position:fixed !important;
-    left:50% !important;
-    top:auto !important;
-    bottom:6px !important;
-    transform:translateX(-50%) !important;
-    width:min(88vw,1400px) !important;
-    height:150px !important;
-    z-index:12000 !important;
-    display:flex !important;
-    flex-direction:column !important;
-    align-items:center !important;
-    justify-content:flex-end !important;
-    pointer-events:none !important;
+    bottom:-112px !important;
+    width:100vw !important;
   }
-
-  /* Player name/profile stays compact above the hand tray. */
-  #playerInfoBox{
-    pointer-events:auto !important;
-    margin:0 0 3px !important;
-    padding:2px 8px !important;
-    background:rgba(0,0,0,.72) !important;
-    border:1px solid #8d6a1b !important;
-    border-radius:10px !important;
-    line-height:1 !important;
-  }
-
-  /* Black hand box sits completely OUTSIDE the green table. */
+  #playerInfoBox{font-size:10px !important;}
   #playerGroupsContainer{
-    pointer-events:auto !important;
-    width:100% !important;
-    max-width:100% !important;
-    height:118px !important;
-    min-height:118px !important;
-    padding:4px 8px 3px !important;
-    display:flex !important;
-    align-items:flex-end !important;
-    justify-content:center !important;
-    gap:7px !important;
-    overflow:hidden !important;
-    background:rgba(0,0,0,.96) !important;
-    border:2px solid #333 !important;
-    border-radius:14px !important;
-    box-shadow:0 -4px 18px rgba(0,0,0,.75) !important;
+    height:92px !important;
+    min-height:92px !important;
+    gap:2px !important;
+    padding:0 2px !important;
   }
-
-  #playerGroupsContainer .card-group{
-    min-width:0 !important;
-    padding:2px !important;
-    margin:0 !important;
-    background:transparent !important;
-    border:0 !important;
-    box-shadow:none !important;
-    flex-shrink:0 !important;
+  #playerGroupsContainer .cards-in-group{gap:2px !important;}
+  #playerGroupsContainer .card,
+  #playerGroupsContainer .cards-in-group .card{
+    width:clamp(38px,5.2vw,56px) !important;
+    min-width:clamp(38px,5.2vw,56px) !important;
+    height:clamp(58px,7.8vw,76px) !important;
+    padding:3px 3px 8px !important;
   }
-
-  #playerGroupsContainer .cards-in-group{
-    min-height:86px !important;
-    height:86px !important;
-    align-items:flex-end !important;
-    overflow:visible !important;
-  }
-
-  /* Smaller cards so the full hand fits in the bottom black area. */
-  #playerGroupsContainer .card{
-    width:58px !important;
-    min-width:58px !important;
-    height:84px !important;
-    padding:4px 4px 10px !important;
-    border-radius:5px !important;
-    font-size:14px !important;
-    font-weight:1000 !important;
-  }
-  #playerGroupsContainer .card .card-top{
-    font-size:17px !important;
-    line-height:.92 !important;
-    font-weight:1000 !important;
-  }
-  #playerGroupsContainer .card .card-top span:first-child{
-    font-size:1.08em !important;
-    font-weight:1000 !important;
-  }
-  #playerGroupsContainer .card .card-center{
-    font-size:29px !important;
-    font-weight:1000 !important;
-  }
-  #playerGroupsContainer .cards-in-group .card + .card{
-    margin-left:-18px !important;
-  }
-  #playerGroupsContainer .group-status-badge{
-    display:none !important;
-  }
-
-  /* Buttons stay outside the hand tray, at the lower corners. */
-  .left-controls{
-    position:fixed !important;
-    left:18px !important;
-    bottom:12px !important;
-    z-index:13000 !important;
-  }
-  .action-buttons{
-    position:fixed !important;
-    right:18px !important;
-    bottom:12px !important;
-    z-index:13000 !important;
+  #playerGroupsContainer .card .card-top{font-size:clamp(11px,1.7vw,18px) !important;}
+  #playerGroupsContainer .card .card-center{font-size:clamp(19px,2.8vw,29px) !important;}
+  #centerArea{top:32% !important;gap:8px !important;}
+  #topJokerDisplay,#discardPile{
+    width:clamp(58px,7vw,78px) !important;
+    min-width:clamp(58px,7vw,78px) !important;
+    height:clamp(82px,10vw,108px) !important;
+    min-height:clamp(82px,10vw,108px) !important;
   }
 }
 
-@media (orientation: landscape) and (max-height: 620px){
-  #playerArea{height:132px !important;bottom:4px !important;}
-  #playerGroupsContainer{height:104px !important;min-height:104px !important;}
-  #playerGroupsContainer .cards-in-group{height:76px !important;min-height:76px !important;}
-  #playerGroupsContainer .card{width:50px !important;min-width:50px !important;height:72px !important;padding:3px !important;}
-  #playerGroupsContainer .card .card-top{font-size:15px !important;}
-  #playerGroupsContainer .card .card-center{font-size:25px !important;}
+@media (max-width:900px) and (orientation:portrait){
+  #playerArea{bottom:-150px !important;}
+  #playerGroupsContainer{overflow-x:auto !important;justify-content:flex-start !important;}
+  #centerArea{top:34% !important;}
 }
 </style>
