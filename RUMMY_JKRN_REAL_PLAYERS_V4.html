@@ -2912,6 +2912,54 @@ button[data-action="discard"], button[data-action="declare"],
 })();
 </script>
 
+
+<style id="JKRN_TABLE_SMALL_EGG_FINAL">
+/* Smaller egg-shaped / rounded game table */
+.table{
+  width:min(92vw,1280px)!important;
+  max-width:1280px!important;
+  height:50vh!important;
+  min-height:350px!important;
+  max-height:430px!important;
+  margin:14px auto 235px!important;
+  border-radius:50% / 50%!important;
+  overflow:visible!important;
+}
+.table:before{
+  inset:10px!important;
+  border-radius:50% / 50%!important;
+}
+@media (min-width:901px){
+  .table{
+    width:min(92vw,1280px)!important;
+    height:50vh!important;
+    min-height:350px!important;
+    max-height:430px!important;
+    margin:14px auto 235px!important;
+    border-radius:50% / 50%!important;
+  }
+}
+@media (max-width:900px) and (orientation:landscape){
+  .table{
+    width:94vw!important;
+    height:50vh!important;
+    min-height:270px!important;
+    max-height:380px!important;
+    margin:8px auto 165px!important;
+    border-radius:50% / 48%!important;
+  }
+}
+@media (max-width:700px) and (orientation:portrait){
+  .table{
+    width:94vw!important;
+    height:52dvh!important;
+    min-height:300px!important;
+    max-height:520px!important;
+    margin:8px auto 165px!important;
+    border-radius:50% / 46%!important;
+  }
+}
+</style>
 </head>
 <body onload="initAutoGame()">
 
@@ -8326,3 +8374,84 @@ window.jkrnV15JokerRules={
   setInterval(keepHand,1000);
 })();
 </script>
+
+
+<style id="JKRN_FINAL_EGG_TABLE_MATCH">
+/* FINAL: compact egg-shaped table, applied AFTER every previous override */
+html body .table{
+  width:82vw !important;
+  max-width:1260px !important;
+  min-width:0 !important;
+  height:50vh !important;
+  min-height:285px !important;
+  max-height:410px !important;
+  margin:72px auto 245px !important;
+  border-radius:50% / 50% !important;
+  overflow:visible !important;
+  transform:none !important;
+  box-sizing:border-box !important;
+}
+html body .table::before{
+  inset:9px !important;
+  border-radius:50% / 50% !important;
+}
+@media (min-width:1400px){
+  html body .table{
+    width:80vw !important;
+    max-width:1280px !important;
+    height:52vh !important;
+    max-height:420px !important;
+  }
+}
+@media (max-width:900px) and (orientation:landscape){
+  html body .table{
+    width:88vw !important;
+    height:47vh !important;
+    min-height:240px !important;
+    max-height:330px !important;
+    margin:42px auto 165px !important;
+    border-radius:50% / 50% !important;
+  }
+}
+@media (max-width:700px) and (orientation:portrait){
+  html body .table{
+    width:92vw !important;
+    height:48dvh !important;
+    min-height:260px !important;
+    max-height:430px !important;
+    margin:30px auto 165px !important;
+    border-radius:50% / 50% !important;
+  }
+}
+/* Keep the hand below the smaller table without resizing the hand */
+html body #playerArea.jkrn-body-hand{
+  width:100vw !important;
+  max-width:none !important;
+}
+</style>
+<script id="JKRN_FINAL_EGG_TABLE_JS">
+(function(){
+  function forceEggTable(){
+    const t=document.querySelector('.table');
+    if(!t) return;
+    t.style.setProperty('width','82vw','important');
+    t.style.setProperty('max-width','1260px','important');
+    t.style.setProperty('height','50vh','important');
+    t.style.setProperty('min-height','285px','important');
+    t.style.setProperty('max-height','410px','important');
+    t.style.setProperty('border-radius','50% / 50%','important');
+    t.style.setProperty('margin','72px auto 245px','important');
+    t.style.setProperty('box-sizing','border-box','important');
+  }
+  document.addEventListener('DOMContentLoaded',function(){
+    forceEggTable();
+    setTimeout(forceEggTable,100);
+    setTimeout(forceEggTable,500);
+  });
+  window.addEventListener('load',function(){
+    forceEggTable();
+    setTimeout(forceEggTable,300);
+  });
+})();
+</script>
+
