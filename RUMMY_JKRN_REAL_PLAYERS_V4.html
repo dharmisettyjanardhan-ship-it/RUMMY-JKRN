@@ -8760,3 +8760,197 @@ html body #playerArea.jkrn-body-hand{
 })();
 </script>
 
+
+
+<!-- JKRN FINAL: grouped hand + larger cards + side controls -->
+<style id="JKRN_FINAL_GROUPED_HAND_LAYOUT">
+/* Buttons: move slightly outside the hand and keep them above every card. */
+html body .left-controls,
+html body .action-buttons{
+  position:fixed !important;
+  top:auto !important;
+  bottom:18px !important;
+  z-index:100005 !important;
+  pointer-events:auto !important;
+  display:flex !important;
+  flex-direction:column !important;
+  gap:7px !important;
+  width:auto !important;
+  padding:0 !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+html body .left-controls{
+  left:max(12px, calc(50% - 700px)) !important;
+  right:auto !important;
+}
+html body .action-buttons{
+  right:max(12px, calc(50% - 700px)) !important;
+  left:auto !important;
+}
+html body .left-controls button,
+html body .action-buttons button{
+  position:relative !important;
+  z-index:100006 !important;
+  pointer-events:auto !important;
+  width:108px !important;
+  min-width:108px !important;
+  height:38px !important;
+  min-height:38px !important;
+  padding:6px 8px !important;
+  font-size:12px !important;
+  font-weight:900 !important;
+  border-radius:9px !important;
+  box-shadow:0 3px 9px rgba(0,0,0,.65) !important;
+}
+
+/* Larger cards, with overlap only inside each group. */
+html body #playerArea.jkrn-body-hand{
+  z-index:99999 !important;
+  bottom:0 !important;
+  padding:0 0 3px !important;
+}
+html body #playerArea.jkrn-body-hand #playerGroupsContainer{
+  height:126px !important;
+  min-height:126px !important;
+  width:min(100vw,1260px) !important;
+  max-width:1260px !important;
+  gap:14px !important;                 /* gap between GROUPS */
+  align-items:flex-end !important;
+  justify-content:center !important;
+  overflow:visible !important;
+  padding:0 !important;
+}
+html body #playerArea.jkrn-body-hand #playerGroupsContainer .card-group{
+  flex:0 0 auto !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:flex-end !important;
+  min-width:0 !important;
+  width:auto !important;
+  margin:0 !important;
+  padding:0 3px !important;
+  background:rgba(0,0,0,.10) !important;
+  border:1px solid rgba(255,215,0,.20) !important;
+  border-radius:7px !important;
+  overflow:visible !important;
+}
+html body #playerArea.jkrn-body-hand #playerGroupsContainer .cards-in-group{
+  display:flex !important;
+  flex-direction:row !important;
+  flex-wrap:nowrap !important;
+  align-items:flex-end !important;
+  justify-content:center !important;
+  gap:0 !important;                     /* cards overlap inside a group */
+  min-height:108px !important;
+  height:108px !important;
+  width:auto !important;
+  margin:0 !important;
+  padding:0 !important;
+  background:transparent !important;
+  border:0 !important;
+}
+html body #playerArea.jkrn-body-hand #playerGroupsContainer .card,
+html body #playerArea.jkrn-body-hand #playerGroupsContainer .cards-in-group .card{
+  flex:0 0 72px !important;
+  width:72px !important;
+  min-width:72px !important;
+  height:106px !important;
+  min-height:106px !important;
+  margin-left:-20px !important;         /* overlap within same group */
+  position:relative !important;
+  z-index:99999 !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  border-radius:7px !important;
+  box-shadow:0 2px 5px rgba(0,0,0,.65) !important;
+}
+html body #playerArea.jkrn-body-hand #playerGroupsContainer .cards-in-group .card:first-child{
+  margin-left:0 !important;
+}
+/* Keep the right edge of each group clean and distinct. */
+html body #playerArea.jkrn-body-hand #playerGroupsContainer .card-group + .card-group{
+  margin-left:4px !important;
+}
+html body #playerArea.jkrn-body-hand #playerGroupsContainer .card .card-top{
+  font-size:21px !important;
+  font-weight:1000 !important;
+}
+html body #playerArea.jkrn-body-hand #playerGroupsContainer .card .card-center{
+  font-size:39px !important;
+  font-weight:1000 !important;
+}
+html body #playerArea.jkrn-body-hand #playerGroupsContainer .group-status-badge{
+  position:relative !important;
+  z-index:100000 !important;
+  margin:2px 0 0 !important;
+  min-width:64px !important;
+  font-size:9px !important;
+  font-weight:1000 !important;
+  white-space:nowrap !important;
+}
+
+@media(max-width:1250px){
+  html body .left-controls{left:8px !important;}
+  html body .action-buttons{right:8px !important;}
+  html body #playerArea.jkrn-body-hand #playerGroupsContainer{
+    width:calc(100vw - 220px) !important;
+    max-width:none !important;
+    gap:10px !important;
+  }
+  html body #playerArea.jkrn-body-hand #playerGroupsContainer .card,
+  html body #playerArea.jkrn-body-hand #playerGroupsContainer .cards-in-group .card{
+    flex-basis:66px !important;width:66px !important;min-width:66px !important;height:98px !important;min-height:98px !important;
+    margin-left:-18px !important;
+  }
+  html body #playerArea.jkrn-body-hand #playerGroupsContainer .card .card-top{font-size:19px !important;}
+  html body #playerArea.jkrn-body-hand #playerGroupsContainer .card .card-center{font-size:35px !important;}
+}
+@media(max-width:900px){
+  html body .left-controls{left:5px !important;bottom:10px !important;}
+  html body .action-buttons{right:5px !important;bottom:10px !important;}
+  html body .left-controls button,
+  html body .action-buttons button{width:82px !important;min-width:82px !important;height:32px !important;min-height:32px !important;font-size:10px !important;}
+  html body #playerArea.jkrn-body-hand #playerGroupsContainer{
+    width:calc(100vw - 170px) !important;
+    height:96px !important;min-height:96px !important;gap:7px !important;
+  }
+  html body #playerArea.jkrn-body-hand #playerGroupsContainer .cards-in-group{height:82px !important;min-height:82px !important;}
+  html body #playerArea.jkrn-body-hand #playerGroupsContainer .card,
+  html body #playerArea.jkrn-body-hand #playerGroupsContainer .cards-in-group .card{
+    flex-basis:55px !important;width:55px !important;min-width:55px !important;height:80px !important;min-height:80px !important;margin-left:-14px !important;
+  }
+  html body #playerArea.jkrn-body-hand #playerGroupsContainer .card .card-top{font-size:15px !important;}
+  html body #playerArea.jkrn-body-hand #playerGroupsContainer .card .card-center{font-size:28px !important;}
+}
+</style>
+
+<script id="JKRN_FINAL_GROUPED_HAND_JS">
+(function(){
+  let groupedDealNo = null;
+  function groupNewDeal(){
+    try{
+      if(typeof playerGroups==='undefined' || !Array.isArray(playerGroups)) return;
+      if(typeof dealNumber==='undefined') return;
+      const handCount = playerGroups.flat().filter(Boolean).length;
+      if(handCount !== 13) return;
+      if(groupedDealNo === dealNumber) return;
+      if(typeof window.jkrnAutoSortLifeSet === 'function'){
+        window.jkrnAutoSortLifeSet();
+        groupedDealNo = dealNumber;
+      }
+    }catch(e){}
+  }
+  document.addEventListener('DOMContentLoaded',function(){
+    setTimeout(groupNewDeal,700);
+    setTimeout(groupNewDeal,1400);
+  });
+  window.addEventListener('load',function(){
+    setTimeout(groupNewDeal,700);
+    setTimeout(groupNewDeal,1400);
+  });
+  setInterval(groupNewDeal,500);
+})();
+</script>
