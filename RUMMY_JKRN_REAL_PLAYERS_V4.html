@@ -3403,6 +3403,219 @@ body.jkrn-online-lobby-open #onlineLobby {
 }
 </style>
 
+
+<style id="JKRN_ACTUAL_FINAL_TABLE_RESPONSIVE_FIX">
+/* =========================================================
+   ACTUAL FINAL RESPONSIVE TABLE FIX
+   Remove the old compact/egg table behaviour.
+   Desktop = large clear table.
+   Mobile = full-width table, hand stays at bottom.
+   ========================================================= */
+
+html body .table{
+  width:min(96vw, 1500px) !important;
+  max-width:1500px !important;
+  min-width:0 !important;
+  height:62vh !important;
+  min-height:420px !important;
+  max-height:650px !important;
+  margin:10px auto 210px !important;
+  border-radius:50% / 42% !important;
+  transform:none !important;
+  box-sizing:border-box !important;
+}
+
+/* Do not allow any old inline/JS sizing to make the table small. */
+html body .table[style]{
+  width:min(96vw, 1500px) !important;
+  max-width:1500px !important;
+  height:62vh !important;
+  min-height:420px !important;
+  max-height:650px !important;
+  margin:10px auto 210px !important;
+  border-radius:50% / 42% !important;
+}
+
+/* Large desktop */
+@media (min-width:1200px){
+  html body .table,
+  html body .table[style]{
+    width:96vw !important;
+    max-width:1500px !important;
+    height:64vh !important;
+    min-height:500px !important;
+    max-height:680px !important;
+    margin:10px auto 215px !important;
+    border-radius:50% / 40% !important;
+  }
+}
+
+/* Tablet / landscape phone */
+@media (max-width:1100px) and (orientation:landscape){
+  html body .table,
+  html body .table[style]{
+    position:fixed !important;
+    left:50% !important;
+    top:45px !important;
+    transform:translateX(-50%) !important;
+    width:99vw !important;
+    max-width:none !important;
+    height:calc(100dvh - 185px) !important;
+    min-height:250px !important;
+    max-height:none !important;
+    margin:0 !important;
+    border-width:4px !important;
+    border-radius:50% / 34% !important;
+    overflow:visible !important;
+  }
+
+  html body .center-area{
+    top:38% !important;
+  }
+
+  html body #playerArea,
+  html body #playerArea.jkrn-body-hand{
+    position:fixed !important;
+    left:50% !important;
+    bottom:0 !important;
+    top:auto !important;
+    transform:translateX(-50%) !important;
+    width:100vw !important;
+    max-width:none !important;
+    height:140px !important;
+    min-height:140px !important;
+    z-index:12000 !important;
+  }
+
+  html body #playerGroupsContainer{
+    width:100vw !important;
+    max-width:100vw !important;
+    height:105px !important;
+    min-height:105px !important;
+    overflow-x:auto !important;
+    overflow-y:visible !important;
+    justify-content:flex-start !important;
+    padding:2px 78px 0 !important;
+    gap:8px !important;
+  }
+
+  html body #playerGroupsContainer .card{
+    width:52px !important;
+    min-width:52px !important;
+    height:78px !important;
+    flex:0 0 52px !important;
+  }
+
+  html body #playerGroupsContainer .cards-in-group .card + .card{
+    margin-left:-25px !important;
+  }
+
+  html body .left-controls,
+  html body .action-buttons{
+    position:fixed !important;
+    bottom:145px !important;
+    top:auto !important;
+    z-index:14000 !important;
+  }
+  html body .left-controls{left:5px !important;right:auto !important;}
+  html body .action-buttons{right:5px !important;left:auto !important;}
+}
+
+/* Portrait phone */
+@media (max-width:700px) and (orientation:portrait){
+  html body .table,
+  html body .table[style]{
+    position:fixed !important;
+    left:50% !important;
+    top:45px !important;
+    transform:translateX(-50%) !important;
+    width:99vw !important;
+    max-width:none !important;
+    height:calc(100dvh - 205px) !important;
+    min-height:300px !important;
+    max-height:none !important;
+    margin:0 !important;
+    border-width:4px !important;
+    border-radius:50% / 36% !important;
+    overflow:visible !important;
+  }
+
+  html body #playerArea,
+  html body #playerArea.jkrn-body-hand{
+    position:fixed !important;
+    left:50% !important;
+    bottom:0 !important;
+    top:auto !important;
+    transform:translateX(-50%) !important;
+    width:100vw !important;
+    max-width:none !important;
+    height:160px !important;
+    min-height:160px !important;
+    z-index:12000 !important;
+  }
+
+  html body #playerGroupsContainer{
+    width:100vw !important;
+    max-width:100vw !important;
+    height:122px !important;
+    min-height:122px !important;
+    overflow-x:auto !important;
+    overflow-y:visible !important;
+    justify-content:flex-start !important;
+    padding:2px 72px 0 !important;
+    gap:7px !important;
+  }
+
+  html body #playerGroupsContainer .card{
+    width:48px !important;
+    min-width:48px !important;
+    height:72px !important;
+    flex:0 0 48px !important;
+  }
+
+  html body #playerGroupsContainer .cards-in-group .card + .card{
+    margin-left:-23px !important;
+  }
+
+  html body .left-controls,
+  html body .action-buttons{
+    position:fixed !important;
+    bottom:165px !important;
+    top:auto !important;
+    z-index:14000 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    gap:4px !important;
+  }
+  html body .left-controls{left:3px !important;right:auto !important;}
+  html body .action-buttons{right:3px !important;left:auto !important;}
+
+  html body .left-controls button,
+  html body .action-buttons button{
+    width:68px !important;
+    min-width:68px !important;
+    height:29px !important;
+    min-height:29px !important;
+    padding:3px !important;
+    font-size:8px !important;
+  }
+}
+
+/* Very narrow portrait phones */
+@media (max-width:380px) and (orientation:portrait){
+  html body .table,
+  html body .table[style]{
+    width:100vw !important;
+    height:calc(100dvh - 200px) !important;
+    top:44px !important;
+  }
+  html body #playerGroupsContainer{
+    padding-left:70px !important;
+    padding-right:70px !important;
+  }
+}
+</style>
+
 </head>
 <body onload="initAutoGame()">
 
@@ -8837,84 +9050,7 @@ window.jkrnV15JokerRules={
 </script>
 
 
-<style id="JKRN_FINAL_EGG_TABLE_MATCH">
-/* FINAL: compact egg-shaped table, applied AFTER every previous override */
-html body .table{
-  width:82vw !important;
-  max-width:1260px !important;
-  min-width:0 !important;
-  height:50vh !important;
-  min-height:285px !important;
-  max-height:410px !important;
-  margin:72px auto 245px !important;
-  border-radius:50% / 50% !important;
-  overflow:visible !important;
-  transform:none !important;
-  box-sizing:border-box !important;
-}
-html body .table::before{
-  inset:9px !important;
-  border-radius:50% / 50% !important;
-}
-@media (min-width:1400px){
-  html body .table{
-    width:80vw !important;
-    max-width:1280px !important;
-    height:52vh !important;
-    max-height:420px !important;
-  }
-}
-@media (max-width:900px) and (orientation:landscape){
-  html body .table{
-    width:88vw !important;
-    height:47vh !important;
-    min-height:240px !important;
-    max-height:330px !important;
-    margin:42px auto 165px !important;
-    border-radius:50% / 50% !important;
-  }
-}
-@media (max-width:700px) and (orientation:portrait){
-  html body .table{
-    width:92vw !important;
-    height:48dvh !important;
-    min-height:260px !important;
-    max-height:430px !important;
-    margin:30px auto 165px !important;
-    border-radius:50% / 50% !important;
-  }
-}
-/* Keep the hand below the smaller table without resizing the hand */
-html body #playerArea.jkrn-body-hand{
-  width:100vw !important;
-  max-width:none !important;
-}
-</style>
-<script id="JKRN_FINAL_EGG_TABLE_JS">
-(function(){
-  function forceEggTable(){
-    const t=document.querySelector('.table');
-    if(!t) return;
-    t.style.setProperty('width','82vw','important');
-    t.style.setProperty('max-width','1260px','important');
-    t.style.setProperty('height','50vh','important');
-    t.style.setProperty('min-height','285px','important');
-    t.style.setProperty('max-height','410px','important');
-    t.style.setProperty('border-radius','50% / 50%','important');
-    t.style.setProperty('margin','72px auto 245px','important');
-    t.style.setProperty('box-sizing','border-box','important');
-  }
-  document.addEventListener('DOMContentLoaded',function(){
-    forceEggTable();
-    setTimeout(forceEggTable,100);
-    setTimeout(forceEggTable,500);
-  });
-  window.addEventListener('load',function(){
-    forceEggTable();
-    setTimeout(forceEggTable,300);
-  });
-})();
-</script>
+
 
 
 
@@ -9378,6 +9514,263 @@ html body .btn-discard[style*="display: none"] {
         min-height:30px !important;
         font-size:8px !important;
         padding:3px !important;
+    }
+}
+</style>
+
+<style id="JKRN_MOBILE_FULL_TABLE_CLEAR_FINAL">
+/* =========================================================
+   JKRN MOBILE FINAL — SHOW THE COMPLETE TABLE CLEARLY
+   Desktop layout is untouched.
+   On real touch/mobile devices the oval table uses the full
+   available viewport ABOVE the bottom hand area.
+   ========================================================= */
+html.mobile-device,
+html.mobile-device body{
+    width:100% !important;
+    min-width:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    overflow:hidden !important;
+    background:#050505 !important;
+}
+
+/* MOBILE LANDSCAPE */
+@media (max-width: 1100px) and (orientation: landscape){
+    html.mobile-device .top-bar{
+        position:fixed !important;
+        top:0 !important;
+        left:0 !important;
+        width:100vw !important;
+        height:42px !important;
+        min-height:42px !important;
+        z-index:15000 !important;
+        padding:4px 8px !important;
+    }
+
+    html.mobile-device .table{
+        position:fixed !important;
+        left:50% !important;
+        top:45px !important;
+        transform:translateX(-50%) !important;
+        width:98vw !important;
+        height:calc(100dvh - 190px) !important;
+        min-height:300px !important;
+        max-height:none !important;
+        margin:0 !important;
+        border-width:5px !important;
+        border-radius:50% / 38% !important;
+        overflow:visible !important;
+        z-index:10 !important;
+    }
+
+    html.mobile-device .center-area{
+        top:43% !important;
+        gap:8px !important;
+    }
+
+    html.mobile-device .opp-box{
+        width:clamp(92px,12vw,150px) !important;
+        min-height:34px !important;
+        padding:3px 6px 3px 3px !important;
+    }
+    html.mobile-device #opp2{top:37% !important;left:1.5% !important;}
+    html.mobile-device #opp3{top:15% !important;left:13% !important;}
+    html.mobile-device #opp4{top:4% !important;left:50% !important;}
+    html.mobile-device #opp5{top:15% !important;right:13% !important;}
+    html.mobile-device #opp6{top:37% !important;right:1.5% !important;}
+
+    /* Hand stays at the physical bottom; table never hides behind it. */
+    html.mobile-device #playerArea,
+    html.mobile-device #playerArea.jkrn-body-hand{
+        position:fixed !important;
+        left:50% !important;
+        bottom:0 !important;
+        top:auto !important;
+        transform:translateX(-50%) !important;
+        width:100vw !important;
+        max-width:100vw !important;
+        height:145px !important;
+        min-height:145px !important;
+        z-index:12000 !important;
+        pointer-events:none !important;
+    }
+
+    html.mobile-device #playerInfoBox{
+        pointer-events:auto !important;
+        margin:0 auto 1px !important;
+        padding:2px 8px !important;
+        z-index:12005 !important;
+    }
+
+    html.mobile-device #playerGroupsContainer{
+        pointer-events:auto !important;
+        width:100vw !important;
+        max-width:100vw !important;
+        height:108px !important;
+        min-height:108px !important;
+        padding:2px 78px 0 !important;
+        margin:0 !important;
+        display:flex !important;
+        justify-content:flex-start !important;
+        align-items:flex-end !important;
+        gap:10px !important;
+        overflow-x:auto !important;
+        overflow-y:visible !important;
+        scrollbar-width:none !important;
+    }
+    html.mobile-device #playerGroupsContainer::-webkit-scrollbar{display:none !important;}
+
+    html.mobile-device #playerGroupsContainer .card-group{
+        flex:0 0 auto !important;
+        min-width:62px !important;
+        padding:0 !important;
+        margin:0 !important;
+        background:transparent !important;
+        border:0 !important;
+    }
+    html.mobile-device #playerGroupsContainer .cards-in-group{
+        height:82px !important;
+        min-height:82px !important;
+        display:flex !important;
+        flex-wrap:nowrap !important;
+        align-items:flex-end !important;
+        overflow:visible !important;
+    }
+    html.mobile-device #playerGroupsContainer .card{
+        width:52px !important;
+        min-width:52px !important;
+        height:78px !important;
+        flex:0 0 52px !important;
+        padding:3px !important;
+        font-size:13px !important;
+    }
+    html.mobile-device #playerGroupsContainer .cards-in-group .card + .card{
+        margin-left:-25px !important;
+    }
+    html.mobile-device #playerGroupsContainer .card-top{font-size:12px !important;}
+    html.mobile-device #playerGroupsContainer .card-center{font-size:21px !important;}
+
+    /* Options are on the two sides, vertically stacked, never over cards. */
+    html.mobile-device .left-controls,
+    html.mobile-device .action-buttons{
+        position:fixed !important;
+        top:auto !important;
+        bottom:150px !important;
+        width:72px !important;
+        display:flex !important;
+        flex-direction:column !important;
+        gap:5px !important;
+        z-index:14000 !important;
+    }
+    html.mobile-device .left-controls{left:4px !important;right:auto !important;}
+    html.mobile-device .action-buttons{right:4px !important;left:auto !important;}
+    html.mobile-device .left-controls button,
+    html.mobile-device .action-buttons button{
+        width:72px !important;
+        min-width:72px !important;
+        height:30px !important;
+        min-height:30px !important;
+        padding:3px 4px !important;
+        font-size:8px !important;
+    }
+}
+
+/* MOBILE PORTRAIT */
+@media (max-width: 700px) and (orientation: portrait){
+    html.mobile-device .top-bar{
+        position:fixed !important;
+        top:0 !important;
+        left:0 !important;
+        width:100vw !important;
+        height:44px !important;
+        z-index:15000 !important;
+    }
+
+    html.mobile-device .table{
+        position:fixed !important;
+        left:50% !important;
+        top:47px !important;
+        transform:translateX(-50%) !important;
+        width:98vw !important;
+        height:calc(100dvh - 205px) !important;
+        min-height:330px !important;
+        max-height:none !important;
+        margin:0 !important;
+        border-width:4px !important;
+        border-radius:50% / 38% !important;
+        overflow:visible !important;
+    }
+
+    html.mobile-device .center-area{top:43% !important;gap:5px !important;}
+
+    html.mobile-device .opp-box{
+        width:clamp(82px,25vw,110px) !important;
+        min-height:31px !important;
+        padding:2px 4px !important;
+    }
+    html.mobile-device #opp2{top:38% !important;left:1% !important;}
+    html.mobile-device #opp3{top:16% !important;left:3% !important;}
+    html.mobile-device #opp4{top:4% !important;left:50% !important;}
+    html.mobile-device #opp5{top:16% !important;right:3% !important;}
+    html.mobile-device #opp6{top:38% !important;right:1% !important;}
+
+    html.mobile-device #playerArea,
+    html.mobile-device #playerArea.jkrn-body-hand{
+        position:fixed !important;
+        left:50% !important;
+        bottom:0 !important;
+        width:100vw !important;
+        max-width:100vw !important;
+        height:158px !important;
+        min-height:158px !important;
+        transform:translateX(-50%) !important;
+        z-index:12000 !important;
+    }
+    html.mobile-device #playerGroupsContainer{
+        width:100vw !important;
+        height:120px !important;
+        min-height:120px !important;
+        padding:2px 76px 0 !important;
+        gap:7px !important;
+        justify-content:flex-start !important;
+        overflow-x:auto !important;
+        overflow-y:visible !important;
+    }
+    html.mobile-device #playerGroupsContainer .card-group{min-width:57px !important;}
+    html.mobile-device #playerGroupsContainer .cards-in-group{height:82px !important;min-height:82px !important;}
+    html.mobile-device #playerGroupsContainer .card{
+        width:48px !important;
+        min-width:48px !important;
+        height:72px !important;
+        flex:0 0 48px !important;
+        padding:3px !important;
+    }
+    html.mobile-device #playerGroupsContainer .cards-in-group .card + .card{margin-left:-23px !important;}
+    html.mobile-device #playerGroupsContainer .card-top{font-size:11px !important;}
+    html.mobile-device #playerGroupsContainer .card-center{font-size:19px !important;}
+
+    html.mobile-device .left-controls,
+    html.mobile-device .action-buttons{
+        position:fixed !important;
+        top:auto !important;
+        bottom:163px !important;
+        width:68px !important;
+        display:flex !important;
+        flex-direction:column !important;
+        gap:4px !important;
+        z-index:14000 !important;
+    }
+    html.mobile-device .left-controls{left:3px !important;right:auto !important;}
+    html.mobile-device .action-buttons{right:3px !important;left:auto !important;}
+    html.mobile-device .left-controls button,
+    html.mobile-device .action-buttons button{
+        width:68px !important;
+        min-width:68px !important;
+        height:29px !important;
+        min-height:29px !important;
+        padding:3px !important;
+        font-size:8px !important;
     }
 }
 </style>
