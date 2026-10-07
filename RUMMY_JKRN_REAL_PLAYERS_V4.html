@@ -6456,6 +6456,88 @@ html,body{background:#050806!important;overflow-x:hidden!important;}
 })();
 </script>
 
+
+<style id="JKRN_FINAL_BUTTON_CARD_SEPARATION_FIX">
+/* FINAL FIX: action buttons must never sit behind the player's cards. */
+#playerArea{
+  bottom:82px !important;
+  z-index:6000 !important;
+  pointer-events:none !important;
+}
+#playerInfoBox,#playerGroupsContainer{
+  pointer-events:auto !important;
+}
+#playerGroupsContainer{
+  position:relative !important;
+  z-index:6001 !important;
+}
+#playerGroupsContainer .card{
+  position:relative !important;
+  z-index:6003 !important;
+  pointer-events:auto !important;
+}
+.left-controls,.action-buttons{
+  position:fixed !important;
+  bottom:10px !important;
+  top:auto !important;
+  z-index:999999 !important;
+  pointer-events:auto !important;
+  display:flex !important;
+  flex-direction:column !important;
+  gap:6px !important;
+  padding:6px !important;
+  background:rgba(0,0,0,.94) !important;
+  border:2px solid #d5ad2f !important;
+  border-radius:10px !important;
+  box-shadow:0 4px 14px rgba(0,0,0,.8) !important;
+}
+.left-controls{left:10px !important;right:auto !important;}
+.action-buttons{right:10px !important;left:auto !important;}
+.left-controls button,.action-buttons button{
+  position:relative !important;
+  z-index:1000000 !important;
+  pointer-events:auto !important;
+  touch-action:manipulation !important;
+  width:112px !important;
+  min-width:112px !important;
+  height:38px !important;
+  min-height:38px !important;
+  margin:0 !important;
+  padding:6px 8px !important;
+  font-size:12px !important;
+  font-weight:900 !important;
+  cursor:pointer !important;
+}
+/* Keep the hand safely above the bottom control strip. */
+@media(max-width:1100px){
+  #playerArea{bottom:82px !important;}
+  #playerGroupsContainer{overflow:visible !important;}
+  .left-controls,.action-buttons{bottom:8px !important;}
+}
+@media(max-width:700px){
+  #playerArea{bottom:70px !important;}
+  .left-controls,.action-buttons{bottom:6px !important;padding:4px !important;gap:4px !important;}
+  .left-controls button,.action-buttons button{width:82px !important;min-width:82px !important;height:32px !important;min-height:32px !important;font-size:10px !important;padding:4px 5px !important;}
+}
+</style>
+<script id="JKRN_FINAL_BUTTON_CLICK_FIX">
+(function(){
+  /* Group/Auto Sort are hand tools and remain clickable whenever a hand exists. */
+  function enableHandTools(){
+    ['groupButton','autoSortBtn','autoSortButton','dropButton'].forEach(function(id){
+      var b=document.getElementById(id);
+      if(b){ b.style.pointerEvents='auto'; b.style.zIndex='1000000'; }
+    });
+    ['discardButton','declareButton'].forEach(function(id){
+      var b=document.getElementById(id);
+      if(b){ b.style.zIndex='1000000'; b.style.pointerEvents='auto'; }
+    });
+  }
+  document.addEventListener('DOMContentLoaded',enableHandTools);
+  setInterval(enableHandTools,500);
+})();
+</script>
+
 </body>
 
 
