@@ -9949,3 +9949,55 @@ html.mobile-device body{
     }
 }
 </style>
+
+
+<!-- JKRN FINAL: completely remove player countdown visuals -->
+<style id="jkrn-remove-green-countdown-final">
+/* Opponent countdown number/circle */
+.opp-timer,
+.opp-box.active-turn .opp-timer,
+.opp-box:not(.active-turn) .opp-timer {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* Green/yellow animated countdown ring around opponent avatar */
+.opp-box.active-turn .opp-avatar-container::before,
+.opp-box.active-turn .opp-avatar-container::after {
+  display: none !important;
+  content: none !important;
+  animation: none !important;
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Remove green active-turn glow from opponent avatar */
+.opp-box.active-turn .opp-avatar {
+  border-color: #ddd !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,.7) !important;
+}
+
+/* Your own 60s timer below the profile */
+#playerInfoBox .player-timer,
+#playerInfoBox.active-turn .player-timer {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* No green active-turn border/glow on the player info */
+#playerInfoBox.active-turn,
+.player-info.active-turn {
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Keep the normal player avatar without countdown ring */
+#playerInfoBox.active-turn .player-profile-img {
+  border-color: #ddd !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,.7) !important;
+}
+</style>
+
