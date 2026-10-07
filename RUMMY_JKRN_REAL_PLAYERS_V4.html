@@ -7098,6 +7098,355 @@ html,body{background:#050806!important;overflow-x:hidden!important;}
 }
 </style>
 
+
+<style id="jkrn-final-hand-grouped-by-symbol-v1">
+/* FINAL HAND GROUPING
+   - Valid 1st Life / 2nd Life / Set / Trill stay as separate groups.
+   - Remaining cards are grouped by the same suit/symbol.
+   - Cards inside each group stay in ascending order.
+   - Does not change declaration/scoring rules.
+*/
+#playerGroupsContainer .card-group{
+  margin-right: 10px !important;
+}
+#playerGroupsContainer .cards-in-group{
+  display:flex !important;
+  flex-wrap:nowrap !important;
+  align-items:flex-end !important;
+  justify-content:center !important;
+}
+</style>
+
+<script id="jkrn-final-hand-grouped-by-symbol-v1-js">
+(function(){
+  const LOW={A:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13};
+  const HIGH={2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13,A:14};
+  const SUIT={'♥':1,'♦':2,'♣':3,'♠':4};
+
+  function wild(c){
+    return !!c && (c.isPrintedJoker===true ||
+      (typeof wildJoker!=='undefined' && wildJoker && c.rank===wildJoker.rank));
+  }
+
+  function pure(g){
+    if(!Array.isArray(g)||g.length<3||g.some(c=>c&&c.isPrintedJoker)) return false;
+    const suit=g[0]&&g[0].suit;
+    if(!suit||g.some(c=>!c||c.suit!==suit)) return false;
+    const a=g.map(c=>LOW[c.rank]).sort((x,y)=>x-y);
+    if(a.some(v=>!Number.isFinite(v))||new Set(a).size!==a.length) return false;
+    if(a.every((v,i)=>i===0||v===a[i-1]+1)) return true;
+    const b=g.map(c=>HIGH[c.rank]).sort((x,y)=>x-y);
+    return b.every((v,i)=>i===0||v===b[i-1]+1);
+  }
+
+  function secondLife(g){
+    if(!Array.isArray(g)||g.length<3||pure(g)) return false;
+    const n=g.filter(c=>!wild(c)), j=g.length-n.length;
+    if(!n.length) return j>=3;
+    const suit=n[0].suit;
+    if(!suit||n.some(c=>c.suit!==suit)) return false;
+    const a=n.map(c=>LOW[c.rank]).sort((x,y)=>x-y);
+    if(new Set(a).size!==a.length) return false;
+    let gap=0;
+    for(let i=1;i<a.length;i++) gap+=Math.max(0,a[i]-a[i-1]-1);
+    if(gap<=j) return true;
+    const b=n.map(c=>HIGH[c.rank]).sort((x,y)=>x-y);
+    gap=0;
+    for(let i=1;i<b.length;i++) gap+=Math.max(0,b[i]-b[i-1]-1);
+    return gap<=j;
+  }
+
+  function setGroup(g){
+    if(!Array.isArray(g)||g.length<3||g.length>4) return false;
+    const n=g.filter(c=>!wild(c));
+    if(!n.length) return true;
+    const rank=n[0].rank;
+    if(n.some(c=>c.rank!==rank)) return false;
+    const suits=new Set();
+    for(const c of n){
+      if(suits.has(c.suit)) return false;
+      suits.add(c.suit);
+    }
+    return true;
+  }
+
+  function kind(g){
+    if(pure(g)) return 'pure';
+    if(secondLife(g)) return 'second';
+    if(setGroup(g)) return 'set';
+    return 'invalid';
+  }
+
+  function rank(c){
+    return LOW[c&&c.rank]||99;
+  }
+
+  function orderSequence(g){
+    const a=(g||[]).slice();
+    const natural=a.filter(c=>!wild(c)).sort((x,y)=>rank(x)-rank(y));
+    const jokers=a.filter(wild);
+    return natural.concat(jokers);
+  }
+
+  function orderSet(g){
+    return (g||[]).slice().sort((a,b)=>{
+      const aw=wild(a), bw=wild(b);
+      if(aw!==bw) return aw?1:-1;
+      return (SUIT[a.suit]||99)-(SUIT[b.suit]||99);
+    });
+  }
+
+  function orderGroup(g){
+    const k=kind(g);
+    if(k==='pure'||k==='second') return orderSequence(g);
+    if(k==='set') return orderSet(g);
+    return (g||[]).slice().sort((a,b)=>{
+      const sa=SUIT[a.suit]||99, sb=SUIT[b.suit]||99;
+      return sa!==sb ? sa-sb : rank(a)-rank(b);
+    });
+  }
+
+  function points(c){
+    if(!c||wild(c)) return 0;
+    const r=String(c.rank||'').toUpperCase();
+    if(['A','K','Q','J'].includes(r)) return 10;
+    return parseInt(r,10)||0;
+  }
+
+  /* Find the best non-overlapping valid lives/sets first. */
+  function findValidGroups(cards){
+    const n=cards.length;
+    if(n<3) return {groups:[],used:new Set()};
+
+    const candidates=[];
+    const total=1<<n;
+
+    for(let mask=1;mask<total;mask++){
+      let count=0;
+      for(let i=0;i<n;i++) if(mask&(1<<i)) count++;
+      if(count<3) continue;
+
+      const g=[];
+      for(let i=0;i<n;i++) if(mask&(1<<i)) g.push(cards[i]);
+      const k=kind(g);
+      if(k!=='invalid') candidates.push({mask,g,k,count});
+    }
+
+    const byBit=Array.from({length:n},()=>[]);
+    candidates.forEach(c=>{
+      for(let i=0;i<n;i++) if(c.mask&(1<<i)) byBit[i].push(c);
+    });
+
+    let best=null;
+
+    function score(sol){
+      let pureCount=0, seqCount=0, covered=0, count=sol.length;
+      sol.forEach(g=>{
+        const k=kind(g);
+        if(k==='pure') pureCount++;
+        if(k==='pure'||k==='second') seqCount++;
+        covered+=g.length;
+      });
+      return {pureCount,seqCount,covered,count};
+    }
+
+    function better(sol){
+      if(!best) return true;
+      const a=score(sol), b=score(best);
+
+      if((a.pureCount>=1)!==(b.pureCount>=1)) return a.pureCount>=1;
+      if((a.seqCount>=2)!==(b.seqCount>=2)) return a.seqCount>=2;
+      if(a.pureCount!==b.pureCount) return a.pureCount>b.pureCount;
+      if(a.seqCount!==b.seqCount) return a.seqCount>b.seqCount;
+      if(a.count!==b.count) return a.count>b.count;
+      return a.covered>b.covered;
+    }
+
+    function dfs(usedMask,sol){
+      let idx=-1;
+      for(let i=0;i<n;i++){
+        if(!(usedMask&(1<<i))){idx=i;break;}
+      }
+
+      if(idx<0){
+        if(better(sol)) best=sol.slice();
+        return;
+      }
+
+      /* Leave this card for the same-symbol remainder group. */
+      dfs(usedMask|(1<<idx),sol);
+
+      for(const c of byBit[idx]){
+        if((c.mask&usedMask)!==0) continue;
+        dfs(usedMask|c.mask,sol.concat([c.g]));
+      }
+    }
+
+    dfs(0,[]);
+
+    const groups=best||[];
+    const used=new Set();
+    groups.forEach(g=>g.forEach(c=>used.add(c)));
+    return {groups,used};
+  }
+
+  function finalGroupCards(cards){
+    const valid=findValidGroups(cards);
+    const result=valid.groups.map(orderGroup);
+
+    /* IMPORTANT:
+       All cards not consumed by Life/Set/Trill are grouped by SYMBOL/SUIT.
+       Example: all remaining ♥ together, all remaining ♣ together, etc.
+    */
+    const remaining=cards.filter(c=>!valid.used.has(c));
+    const bySuit=new Map();
+
+    remaining.forEach(c=>{
+      const key=c && c.suit ? c.suit : 'OTHER';
+      if(!bySuit.has(key)) bySuit.set(key,[]);
+      bySuit.get(key).push(c);
+    });
+
+    const suitOrder=['♥','♦','♣','♠','OTHER'];
+    suitOrder.forEach(suit=>{
+      if(!bySuit.has(suit)) return;
+      const g=bySuit.get(suit).slice().sort((a,b)=>rank(a)-rank(b));
+      if(g.length) result.push(g);
+      bySuit.delete(suit);
+    });
+
+    bySuit.forEach(g=>{ if(g.length) result.push(g.sort((a,b)=>rank(a)-rank(b))); });
+
+    /* Valid groups first:
+       1st Life -> 2nd Life -> Set/Trill -> same-symbol remainder groups.
+    */
+    result.sort((a,b)=>{
+      const ka=kind(a), kb=kind(b);
+      const pa=ka==='pure'?1:ka==='second'?2:ka==='set'?3:4;
+      const pb=kb==='pure'?1:kb==='second'?2:kb==='set'?3:4;
+      if(pa!==pb) return pa-pb;
+      if(pa<4) return b.length-a.length;
+      const sa=SUIT[a[0]&&a[0].suit]||99, sb=SUIT[b[0]&&b[0].suit]||99;
+      return sa-sb;
+    });
+
+    return result.length ? result : [cards.slice()];
+  }
+
+  window.jkrnFinalGroupedHandSort=function(){
+    if(typeof playerGroups==='undefined') return;
+    const cards=playerGroups.flat().filter(Boolean);
+    if(!cards.length) return;
+
+    /* Respect current-player turn guard for online/local play. */
+    const myIndex=(window.__realRoomStarted && Number.isInteger(window.__onlineMyIndex))
+      ? Number(window.__onlineMyIndex) : 0;
+    if(typeof currentPlayer==='number' && currentPlayer!==myIndex) return;
+    if(typeof isEliminated==='function' && isEliminated(myIndex)) return;
+
+    playerGroups=finalGroupCards(cards);
+    selectedCards=[];
+    if(typeof updateUI==='function') updateUI();
+  };
+
+  /* Final Auto Sort entry points. */
+  window.autoSortPlayerCards=window.jkrnFinalGroupedHandSort;
+  window.autoSortCards=function(){
+    if(typeof playSound==='function') playSound('group');
+    window.jkrnFinalGroupedHandSort();
+  };
+
+  /* Keep the deal-time call compatible with this final sorter. */
+  window.jkrnAutoSortLifeSetAscending=window.jkrnFinalGroupedHandSort;
+})();
+</script>
+
+<!-- JKRN PLAYER VISIBILITY FINAL FIX
+     Only the selected/actually joined players are shown.
+     Player 1 is the current user; opponent seats are hidden until occupied.
+-->
+<style id="jkrn-player-visibility-final">
+#opp2,#opp3,#opp4,#opp5,#opp6{display:none;}
+</style>
+<script id="jkrn-player-visibility-final-js">
+(function(){
+  const MAX_SEATS = 6;
+
+  function selectedCap(){
+    const n = Number(window.__onlineMaxPlayers || window.jkrnSelectedPlayers || window.numPlayers || 2);
+    return [2,3,4,5,6].includes(n) ? n : 2;
+  }
+
+  function refreshPlayerSeats(){
+    const hasOnlineRoom = !!window.onlineRoomId || !!window.__onlineMaxPlayers ||
+                          Array.isArray(window.__onlineRoomPlayers);
+    const list = Array.isArray(window.__onlineRoomPlayers) ? window.__onlineRoomPlayers : [];
+    const cap = selectedCap();
+    const occupied = new Set();
+
+    if (hasOnlineRoom) {
+      // Online room: show ONLY seats for players who have actually joined.
+      list.forEach(function(p, i){
+        const seat = Number.isInteger(p && p.index) ? Number(p.index) : i;
+        if (seat >= 1 && seat < cap && p && p.connected !== false) occupied.add(seat + 1);
+      });
+    } else {
+      // Local/preview mode: selected player count determines available seats.
+      for(let seat=2; seat<=cap; seat++) occupied.add(seat);
+    }
+
+    for(let seat=2; seat<=MAX_SEATS; seat++){
+      const box=document.getElementById('opp'+seat);
+      if(!box) continue;
+      box.style.display = occupied.has(seat) ? 'flex' : 'none';
+    }
+  }
+
+  window.jkrnRefreshPlayerSeats = refreshPlayerSeats;
+
+  // Run before the UI has time to show all six default opponent boxes.
+  refreshPlayerSeats();
+
+  // Re-check whenever room/player state changes.
+  document.addEventListener('DOMContentLoaded', refreshPlayerSeats);
+  window.addEventListener('load', refreshPlayerSeats);
+  setTimeout(refreshPlayerSeats, 50);
+  setTimeout(refreshPlayerSeats, 300);
+  setTimeout(refreshPlayerSeats, 1000);
+  setInterval(refreshPlayerSeats, 250);
+
+  // Keep the existing online renderer, but force the seat visibility again
+  // after its DOM updates.
+  const hookRenderer = setInterval(function(){
+    if(typeof window.renderOnlinePlayers === 'function' && !window.__jkrnPlayerVisibilityHooked){
+      const oldRenderer = window.renderOnlinePlayers;
+      window.renderOnlinePlayers = function(players,maxPlayers){
+        oldRenderer.apply(this, arguments);
+        window.__onlineRoomPlayers = Array.isArray(players) ? players : [];
+        if(maxPlayers) window.__onlineMaxPlayers = Number(maxPlayers);
+        refreshPlayerSeats();
+      };
+      window.__jkrnPlayerVisibilityHooked = true;
+      refreshPlayerSeats();
+    }
+  }, 100);
+
+  setTimeout(function(){ clearInterval(hookRenderer); }, 15000);
+
+  // Also refresh after the selected player count changes.
+  const oldSelect = window.selectPlayerCount;
+  if(typeof oldSelect === 'function' && !window.__jkrnPlayerVisibilitySelectHooked){
+    window.__jkrnPlayerVisibilitySelectHooked = true;
+    window.selectPlayerCount = function(v){
+      const result = oldSelect.apply(this, arguments);
+      setTimeout(refreshPlayerSeats, 0);
+      setTimeout(refreshPlayerSeats, 100);
+      return result;
+    };
+  }
+})();
+</script>
+
 </body>
 
 
