@@ -7447,6 +7447,381 @@ html,body{background:#050806!important;overflow-x:hidden!important;}
 })();
 </script>
 
+
+
+<!-- JKRN ACTION BUTTONS HARD FIX V2
+     Auto Sort and Drop use direct handlers so older wrapper patches cannot block them.
+-->
+<style id="jkrn-action-hard-fix-v2">
+  #dropButton, .btn-auto-sort{
+    pointer-events:auto !important;
+    position:relative !important;
+    z-index:99999 !important;
+    cursor:pointer !important;
+  }
+  #dropButton:disabled{pointer-events:auto !important;}
+  .left-controls{z-index:99999 !important; pointer-events:auto !important;}
+</style>
+<script id="jkrn-action-hard-fix-v2-js">
+(function(){
+  function rankValue(c){
+    const r={A:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13};
+    return r[c&&c.rank]||99;
+  }
+  function suitValue(c){
+    const r={'♥':1,'♦':2,'♣':3,'♠':4};
+    return r[c&&c.suit]||99;
+  }
+
+  // REAL AUTO SORT: visually sorts the player's complete hand by symbol + rank.
+  // It does not create/declare Life or Set groups.
+  function hardAutoSort(){
+    if(typeof playerGroups==='undefined' || !Array.isArray(playerGroups)) return;
+    const cards=playerGroups.flat().filter(Boolean);
+    if(!cards.length) return;
+    cards.sort(function(a,b){
+      const aj=!!a.isPrintedJoker, bj=!!b.isPrintedJoker;
+      if(aj!==bj) return aj?1:-1;
+      if(aj&&bj) return 0;
+      const ss=suitValue(a)-suitValue(b);
+      return ss || rankValue(a)-rankValue(b);
+    });
+    // Separate symbol groups so the sorted hand is visibly grouped.
+    const groups=[];
+    let lastKey=null;
+    cards.forEach(function(c){
+      const key=c.isPrintedJoker?'JOKER':(c.suit||'?');
+      if(key!==lastKey){ groups.push([]); lastKey=key; }
+      groups[groups.length-1].push(c);
+    });
+    playerGroups=groups.filter(g=>g.length);
+    selectedCards=[];
+    if(typeof updateUI==='function') updateUI();
+    if(typeof playSound==='function') playSound('group');
+  }
+
+  function mySeat(){
+    return window.__realRoomStarted && Number.isInteger(window.__onlineMyIndex)
+      ? Number(window.__onlineMyIndex) : 0;
+  }
+  function myTurn(){
+    return typeof currentPlayer==='number' && currentPlayer===mySeat();
+  }
+  function toast(msg){
+    if(typeof showToast==='function') showToast(msg);
+    else {
+      const st=document.getElementById('status');
+      if(st) st.innerText=msg;
+    }
+  }
+
+  function hardDrop(){
+    const online=!!window.__realRoomStarted;
+    const seat=mySeat();
+    const eliminated=online ? !!window.__onlineEliminated : (typeof isEliminated==='function' && isEliminated(0));
+    if(eliminated){toast('⚠️ You are eliminated.');return;}
+    if(online){
+      if(!myTurn()){toast('⚠️ Not your turn.');return;}
+      if(playerHasDrawn){toast('⚠️ Card lift chesaru. Mundu 1 card discard cheyyali.');return;}
+      if(!window.onlineSocket){toast('⚠️ Online connection unavailable.');return;}
+      window.onlineSocket.emit('drop');
+      return;
+    }
+    if(typeof currentPlayer!=='number' || currentPlayer!==0 || gameOver){toast('⚠️ Not your turn.');return;}
+    if(typeof droppedThisDeal!=='undefined' && droppedThisDeal[0]) return;
+    const pts=(!hasLiftedThisDeal && !playerHasDrawn)?25:50;
+    gameScores['Player 1']=(gameScores['Player 1']||0)+pts;
+    playerDealStatus[0]={result:'Drop',points:pts,dropType:pts===25?'First Drop':'Middle Drop'};
+    droppedThisDeal[0]=true; playerHasDrawn=false; selectedCards=[];
+    if(turnTimer){clearInterval(turnTimer);turnTimer=null;}
+    const active=getActivePlayers().filter(i=>!droppedThisDeal[i]&&!isEliminated(i));
+    if(active.length<=1){
+      if(active[0]!==undefined){playerDealStatus[active[0]]={result:'Winner',points:0};currentPlayer=active[0];}
+      gameOver=true;
+      if(typeof playSound==='function')playSound('win');
+      if(typeof updateUI==='function')updateUI();
+      return;
+    }
+    currentPlayer=getNextActivePlayer(0);
+    timeLeft=60;
+    if(typeof updateUI==='function')updateUI();
+    if(typeof startTurnTimer==='function')startTurnTimer();
+  }
+
+  function bind(){
+    const auto=document.querySelector('.btn-auto-sort');
+    if(auto){
+      auto.removeAttribute('onclick');
+      auto.onclick=function(e){e.preventDefault();e.stopPropagation();hardAutoSort();};
+    }
+    const drop=document.getElementById('dropButton');
+    if(drop){
+      drop.removeAttribute('onclick');
+      drop.onclick=function(e){e.preventDefault();e.stopPropagation();hardDrop();};
+      // Do not let older updateUI patches make the button physically unclickable.
+      drop.style.pointerEvents='auto';
+    }
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);else bind();
+  window.addEventListener('load',bind);
+  setTimeout(bind,100);setTimeout(bind,500);setTimeout(bind,1500);
+  window.jkrnHardAutoSort=hardAutoSort;
+  window.jkrnHardDrop=hardDrop;
+})();
+</script>
+
+
+<!-- JKRN FINAL MARKED-AREA OPTIONS POSITION
+     Put left/right action options exactly in the lower side areas
+     marked in the reference screenshot, beside the bottom hand.
+-->
+<style id="JKRN_MARKED_OPTIONS_FINAL">
+@media (min-width:1101px){
+  .left-controls,
+  .action-buttons{
+    position:fixed !important;
+    top:auto !important;
+    bottom:85px !important;
+    transform:none !important;
+    z-index:30000 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    gap:7px !important;
+    width:108px !important;
+    height:auto !important;
+    margin:0 !important;
+    padding:0 !important;
+    pointer-events:auto !important;
+  }
+
+  .left-controls{
+    left:6px !important;
+    right:auto !important;
+  }
+
+  .action-buttons{
+    right:6px !important;
+    left:auto !important;
+  }
+
+  .left-controls button,
+  .action-buttons button{
+    width:108px !important;
+    min-width:108px !important;
+    height:42px !important;
+    min-height:42px !important;
+    margin:0 !important;
+    padding:6px 8px !important;
+    font-size:12px !important;
+    border-radius:9px !important;
+    pointer-events:auto !important;
+  }
+}
+
+/* Landscape phones/tablets: same marked lower-side position */
+@media (max-width:1100px) and (orientation:landscape){
+  .left-controls,
+  .action-buttons{
+    position:fixed !important;
+    top:auto !important;
+    bottom:88px !important;
+    transform:none !important;
+    z-index:30000 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    gap:5px !important;
+    width:76px !important;
+    height:auto !important;
+    margin:0 !important;
+    padding:0 !important;
+    pointer-events:auto !important;
+  }
+  .left-controls{left:4px !important;right:auto !important;}
+  .action-buttons{right:4px !important;left:auto !important;}
+  .left-controls button,
+  .action-buttons button{
+    width:76px !important;
+    min-width:76px !important;
+    height:32px !important;
+    min-height:32px !important;
+    padding:4px 5px !important;
+    font-size:9px !important;
+    border-radius:6px !important;
+  }
+}
+</style>
+
+<!-- JKRN FINAL: MARKED SIDE OPTIONS + AUTO SORT WORKS ON ANY TURN -->
+<style id="jkrn-marked-side-options-any-turn-final">
+/* Put the options exactly beside the lower hand area, like the marked screenshot. */
+html body .left-controls,
+html body .action-buttons{
+  position:fixed !important;
+  top:60% !important;
+  bottom:auto !important;
+  transform:translateY(-50%) !important;
+  z-index:999999 !important;
+  display:flex !important;
+  flex-direction:column !important;
+  gap:7px !important;
+  width:104px !important;
+  height:auto !important;
+  pointer-events:auto !important;
+}
+html body .left-controls{
+  left:6.5% !important;
+  right:auto !important;
+}
+html body .action-buttons{
+  right:6.5% !important;
+  left:auto !important;
+}
+html body .left-controls button,
+html body .action-buttons button{
+  position:relative !important;
+  width:104px !important;
+  min-width:104px !important;
+  height:42px !important;
+  min-height:42px !important;
+  margin:0 !important;
+  padding:6px 8px !important;
+  font-size:12px !important;
+  font-weight:900 !important;
+  pointer-events:auto !important;
+}
+
+/* Auto Sort must remain clickable even when it is NOT your turn. */
+html body #autoSortButton,
+html body .btn-auto-sort{
+  pointer-events:auto !important;
+  cursor:pointer !important;
+}
+html body #autoSortButton.jkrn-not-my-turn,
+html body .btn-auto-sort.jkrn-not-my-turn{
+  pointer-events:auto !important;
+  opacity:1 !important;
+  filter:none !important;
+  cursor:pointer !important;
+}
+
+/* Keep the other actions turn-controlled. */
+html body #dropButton.jkrn-not-my-turn,
+html body #discardButton.jkrn-not-my-turn,
+html body #declareButton.jkrn-not-my-turn{
+  pointer-events:none !important;
+}
+
+/* Auto Sort is always visible; its action is visual-only and does not change turn. */
+html body #autoSortButton{
+  display:inline-flex !important;
+  visibility:visible !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+/* On the right, keep the existing Group/Discard/Declare logic; only
+   visible buttons occupy the stack. */
+@media (max-width:1100px) and (orientation:landscape){
+  html body .left-controls,
+  html body .action-buttons{
+    top:67% !important;
+    width:78px !important;
+    gap:4px !important;
+  }
+  html body .left-controls{left:2px !important;}
+  html body .action-buttons{right:2px !important;}
+  html body .left-controls button,
+  html body .action-buttons button{
+    width:78px !important;
+    min-width:78px !important;
+    height:30px !important;
+    min-height:30px !important;
+    padding:3px 4px !important;
+    font-size:8px !important;
+  }
+}
+@media (max-width:700px) and (orientation:portrait){
+  html body .left-controls,
+  html body .action-buttons{
+    top:auto !important;
+    bottom:148px !important;
+    transform:none !important;
+    width:74px !important;
+    gap:4px !important;
+  }
+  html body .left-controls{left:3px !important;}
+  html body .action-buttons{right:3px !important;}
+  html body .left-controls button,
+  html body .action-buttons button{
+    width:74px !important;
+    min-width:74px !important;
+    height:30px !important;
+    min-height:30px !important;
+    font-size:8px !important;
+  }
+}
+</style>
+
+<script id="jkrn-auto-sort-any-turn-final">
+(function(){
+  function sortAnyTurnFinal(){
+    try{
+      if(typeof isEliminated==='function' && isEliminated(0)) return;
+      if(typeof playSound==='function') playSound('group');
+
+      /* Use the final sorter directly. Do NOT check currentPlayer here. */
+      var core =
+        window.jkrnAutoSortLifeSetAscending ||
+        window.jkrnAutoSortLifeSet ||
+        window.autoSortPlayerCards;
+
+      if(typeof core === 'function'){
+        return core.call(window);
+      }
+
+      /* Last-resort visual suit/rank sort. */
+      if(typeof playerGroups!=='undefined' && Array.isArray(playerGroups)){
+        var cards=playerGroups.flat().filter(Boolean);
+        var SO={'♥':1,'♦':2,'♣':3,'♠':4};
+        var RO={'A':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'J':11,'Q':12,'K':13};
+        cards.sort(function(a,b){
+          var aj=!!a.isPrintedJoker,bj=!!b.isPrintedJoker;
+          if(aj!==bj) return aj?1:-1;
+          if(aj&&bj) return 0;
+          return (SO[a.suit]||99)-(SO[b.suit]||99) ||
+                 (RO[a.rank]||99)-(RO[b.rank]||99);
+        });
+        playerGroups=[cards];
+        selectedCards=[];
+        if(typeof updateUI==='function') updateUI();
+      }
+    }catch(e){
+      console.warn('JKRN Auto Sort error:',e);
+    }
+  }
+
+  window.jkrnAutoSortAnyTurn=sortAnyTurnFinal;
+  window.autoSortCards=sortAnyTurnFinal;
+
+  function installAutoSortButton(){
+    var b=document.getElementById('autoSortButton');
+    if(!b) return;
+    b.onclick=sortAnyTurnFinal;
+    b.type='button';
+    b.disabled=false;
+    b.classList.remove('jkrn-not-my-turn');
+    b.style.setProperty('pointer-events','auto','important');
+    b.style.setProperty('display','inline-flex','important');
+    b.style.setProperty('visibility','visible','important');
+  }
+
+  document.addEventListener('DOMContentLoaded',installAutoSortButton);
+  window.addEventListener('load',installAutoSortButton);
+  setTimeout(installAutoSortButton,100);
+  setTimeout(installAutoSortButton,500);
+  setInterval(installAutoSortButton,1000);
+})();
+</script>
 </body>
 
 
