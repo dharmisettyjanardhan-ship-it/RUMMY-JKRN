@@ -7822,6 +7822,138 @@ html body #autoSortButton{
   setInterval(installAutoSortButton,1000);
 })();
 </script>
+<!-- JKRN FINAL BOTTOM OPTIONS BIG SIZE -->
+<style id="jkrn-final-bottom-big-options">
+/* All five game options are now in one large bottom control row. */
+html body .left-controls,
+html body .action-buttons{
+  position:fixed !important;
+  top:auto !important;
+  bottom:8px !important;
+  transform:none !important;
+  z-index:30000 !important;
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:stretch !important;
+  gap:10px !important;
+  height:74px !important;
+  pointer-events:auto !important;
+}
+
+/* 2 buttons on the left half */
+html body .left-controls{
+  left:max(6px, calc(50% - min(48vw,625px))) !important;
+  right:auto !important;
+  width:min(38vw,500px) !important;
+}
+
+/* 3 buttons on the right half */
+html body .action-buttons{
+  left:calc(50% - 5px) !important;
+  right:auto !important;
+  width:min(48vw,625px) !important;
+}
+
+html body .left-controls button,
+html body .action-buttons button{
+  flex:1 1 0 !important;
+  width:auto !important;
+  min-width:0 !important;
+  height:74px !important;
+  min-height:74px !important;
+  margin:0 !important;
+  padding:10px 8px !important;
+  border-radius:14px !important;
+  font-size:clamp(14px,1.35vw,22px) !important;
+  font-weight:900 !important;
+  letter-spacing:.2px !important;
+  line-height:1.05 !important;
+  white-space:nowrap !important;
+  box-shadow:0 5px 14px rgba(0,0,0,.65), inset 0 1px rgba(255,255,255,.28) !important;
+  pointer-events:auto !important;
+}
+
+/* Show Group and Discard in the bottom option row. */
+html body #groupButton,
+html body #discardButton{
+  display:flex !important;
+  visibility:visible !important;
+  align-items:center !important;
+  justify-content:center !important;
+  opacity:1 !important;
+}
+
+html body .btn-drop{background:linear-gradient(180deg,#f04444,#9e1717)!important;}
+html body .btn-auto-sort{background:linear-gradient(180deg,#35a853,#176b2a)!important;}
+html body .btn-group{background:linear-gradient(180deg,#ffe05a,#c79a08)!important;color:#111!important;}
+html body .btn-discard{background:linear-gradient(180deg,#2999ff,#0755ad)!important;color:#fff!important;}
+html body .btn-declare{background:linear-gradient(180deg,#ffb12b,#dc6200)!important;color:#fff!important;}
+
+html body .left-controls button:hover,
+html body .action-buttons button:hover{
+  transform:translateY(-2px) scale(1.01) !important;
+  filter:brightness(1.08);
+}
+
+/* Keep the hand above the option bar. */
+html body #playerArea{
+  z-index:12000 !important;
+  bottom:86px !important;
+}
+
+@media(max-width:1100px){
+  html body .left-controls{
+    left:4px !important;
+    width:calc(40vw - 8px) !important;
+  }
+  html body .action-buttons{
+    left:40vw !important;
+    width:calc(60vw - 4px) !important;
+  }
+  html body .left-controls,
+  html body .action-buttons{
+    bottom:5px !important;
+    height:62px !important;
+    gap:5px !important;
+  }
+  html body .left-controls button,
+  html body .action-buttons button{
+    height:62px !important;
+    min-height:62px !important;
+    padding:7px 4px !important;
+    font-size:clamp(11px,2vw,17px) !important;
+    border-radius:10px !important;
+  }
+  html body #playerArea{bottom:72px !important;}
+}
+
+@media(max-width:700px){
+  html body .left-controls{
+    left:2px !important;
+    width:calc(40vw - 4px) !important;
+  }
+  html body .action-buttons{
+    left:40vw !important;
+    width:calc(60vw - 2px) !important;
+  }
+  html body .left-controls,
+  html body .action-buttons{
+    bottom:3px !important;
+    height:52px !important;
+    gap:3px !important;
+  }
+  html body .left-controls button,
+  html body .action-buttons button{
+    height:52px !important;
+    min-height:52px !important;
+    padding:5px 2px !important;
+    font-size:clamp(8px,2.7vw,13px) !important;
+    border-radius:8px !important;
+  }
+  html body #playerArea{bottom:58px !important;}
+}
+</style>
+
 </body>
 
 
@@ -10871,4 +11003,5 @@ html.mobile-device body{
   }
 }
 </style>
+
 
