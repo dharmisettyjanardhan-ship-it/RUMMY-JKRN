@@ -2217,11 +2217,69 @@ button[data-action="discard"], button[data-action="declare"],
   font-size:clamp(30px,3vw,47px) !important;
   font-weight:1000 !important;
 }
-/* Controls occupy their own bottom strip, never cover cards. */
+/* Controls stay visible beside the hand, never underneath the cards. */
 .left-controls,.action-buttons{
   position:fixed !important;
-  bottom:10px !important;
-  z-index:31000 !important;
+  bottom:12px !important;
+  z-index:50000 !important;
+  pointer-events:auto !important;
+}
+
+/* Keep a little side space for the action buttons. */
+#playerGroupsContainer{
+  width:calc(100vw - 280px) !important;
+  max-width:calc(100vw - 280px) !important;
+  margin-left:auto !important;
+  margin-right:auto !important;
+  gap:22px !important;
+}
+
+/* Cards overlap only inside the same group; different groups remain separate. */
+#playerGroupsContainer .card-group{
+  margin:0 8px !important;
+  padding:0 !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+#playerGroupsContainer .cards-in-group{
+  display:flex !important;
+  flex-wrap:nowrap !important;
+  align-items:flex-end !important;
+  justify-content:center !important;
+}
+#playerGroupsContainer .cards-in-group .card + .card{
+  margin-left:-42px !important;
+}
+#playerGroupsContainer .card{
+  position:relative !important;
+}
+#playerGroupsContainer .cards-in-group .card:hover{
+  transform:translateY(-10px) !important;
+  z-index:30050 !important;
+}
+
+@media (max-width:1200px){
+  #playerGroupsContainer{
+    width:calc(100vw - 240px) !important;
+    max-width:calc(100vw - 240px) !important;
+    gap:16px !important;
+  }
+  #playerGroupsContainer .cards-in-group .card + .card{
+    margin-left:-36px !important;
+  }
+}
+
+@media (max-width:900px){
+  #playerGroupsContainer{
+    width:calc(100vw - 210px) !important;
+    max-width:calc(100vw - 210px) !important;
+    gap:12px !important;
+  }
+  #playerGroupsContainer .card-group{margin:0 4px !important;}
+  #playerGroupsContainer .cards-in-group .card + .card{
+    margin-left:-30px !important;
+  }
 }
 .left-controls{left:14px !important;}
 .action-buttons{right:14px !important;}
@@ -3320,6 +3378,31 @@ body.jkrn-online-lobby-open #onlineLobby {
   visibility:visible !important;
 }
 </style>
+
+<style id="JKRN_FINAL_HAND_OPTIONS_LAYOUT">
+/* FINAL: options must remain visible in the empty side areas. */
+.left-controls,.action-buttons{
+  z-index:60000 !important;
+  bottom:14px !important;
+}
+.left-controls{left:10px !important;right:auto !important;}
+.action-buttons{right:10px !important;left:auto !important;}
+.left-controls button,.action-buttons button{
+  position:relative !important;
+  z-index:60001 !important;
+}
+@media (max-width:900px){
+  .left-controls{left:5px !important;}
+  .action-buttons{right:5px !important;}
+  .left-controls button,.action-buttons button{
+    min-width:82px !important;
+    min-height:38px !important;
+    padding:6px 8px !important;
+    font-size:11px !important;
+  }
+}
+</style>
+
 </head>
 <body onload="initAutoGame()">
 
