@@ -3418,7 +3418,32 @@ function createOnlineRoom(){ensureOnlineSocket();const name=(document.getElement
 function quickJoinOnline(){ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();if(!name)return onlineMsg('Enter PROFILE NAME first.');onlineSocket.emit('quickJoin',{name,maxPlayers:jkrnSelectedPlayers,poolLimit:jkrnSelectedPool,entryFee:jkrnEntryAmount});}
 function joinOnlineRoom(){ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();const room=(document.getElementById('onlineRoom').value||'').trim().toUpperCase();if(!room)return onlineMsg('Enter Room ID first.');onlineSocket.emit('joinRoom',{name,roomId:room});}
 function toggleOnlineReady(){startRoomNow();}
-function startRoomNow(){if(!onlineSocket||!onlineRoomId)return onlineMsg('Create a room or join a room first.');onlineSocket.emit('startRoom',{roomId:onlineRoomId});}
+function startRoomNow(){
+  /* JKRN START FIX: if this HTML is opened without the Node/Socket.IO server,
+     start the local game instead of silently stopping at START. */
+  if(location.protocol==='file:' || typeof io!=='function') {
+    try {
+      const n=[2,3,4,5,6].includes(Number(jkrnSelectedPlayers))?Number(jkrnSelectedPlayers):2;
+      numPlayers=n; poolLimit=Number(jkrnSelectedPool)||201;
+      const lobby=document.getElementById('onlineLobby');
+      const screen=document.getElementById('lobbyScreen');
+      if(lobby) lobby.classList.add('hidden');
+      if(screen) screen.classList.add('hidden');
+      window.__realRoomStarted=false; window.__localGameMode=true;
+      initializeGameLobby();
+      if(typeof runLeastCardToss==='function') runLeastCardToss();
+      else if(typeof startGamePlay==='function') startGamePlay();
+      return;
+    } catch(e) { console.error('JKRN START FIX:',e); onlineMsg('START ERROR: '+e.message); return; }
+  }
+  if(!onlineSocket){ ensureOnlineSocket(); }
+  if(!onlineRoomId)return onlineMsg('Create a room or join a room first.');
+  if(onlineSocket && onlineSocket.connected){
+    onlineSocket.emit('startRoom',{roomId:onlineRoomId});
+  } else {
+    onlineMsg('Connecting to server... Please press START again.');
+  }
+}
 function initOnline(){ensureOnlineSocket();}
 window.addEventListener('load',initOnline);
 </script>
@@ -6513,6 +6538,35 @@ html,body{background:#050806!important;overflow-x:hidden!important;}
   setInterval(loop,100);
 })();
 </script>
+
+
+<style id="jkrn-online-lobby-clean-overlay">
+/* ONLINE LOBBY: never allow game-seat/profile elements to show through or outside the lobby card. */
+#onlineLobby:not(.hidden) ~ #playerArea,
+#onlineLobby:not(.hidden) ~ .player-area,
+#onlineLobby:not(.hidden) ~ .left-controls,
+#onlineLobby:not(.hidden) ~ .action-buttons,
+#onlineLobby:not(.hidden) ~ .table,
+#onlineLobby:not(.hidden) ~ .top-bar {
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+/* The lobby itself is the only visible layer while choosing/creating a room. */
+#onlineLobby:not(.hidden){
+  z-index:999999 !important;
+}
+#onlineLobby:not(.hidden) .jkrn-create-card{
+  position:relative !important;
+  z-index:1000000 !important;
+  overflow:hidden !important;
+}
+.jkrn-players{
+  position:relative !important;
+  z-index:2 !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+}
+</style>
 
 </html>
 
