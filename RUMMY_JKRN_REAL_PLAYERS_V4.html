@@ -3302,6 +3302,24 @@ html body #playerArea.jkrn-body-hand{
 }
 </style>
 
+
+<style id="jkrn-lobby-clean-screen-fix">
+/* While CREATE/JOIN lobby is open, absolutely nothing from the game table/hand may show behind it. */
+body.jkrn-online-lobby-open .table,
+body.jkrn-online-lobby-open #playerArea,
+body.jkrn-online-lobby-open .left-controls,
+body.jkrn-online-lobby-open .action-buttons,
+body.jkrn-online-lobby-open #dealerTossStage {
+  display:none !important;
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+#onlineLobby { z-index: 100000 !important; }
+body.jkrn-online-lobby-open #onlineLobby {
+  display:flex !important;
+  visibility:visible !important;
+}
+</style>
 </head>
 <body onload="initAutoGame()">
 
@@ -3536,7 +3554,7 @@ if(typeof io!=='function'){
 }
 onlineSocket=io();
 onlineSocket.on('connect_error',e=>{onlineMsg('⚠️ Server connection failed. Please refresh.');});
-onlineSocket.on('connect',()=>{const s=loadOnlineSession();if(s&&s.roomId&&s.sessionToken){onlineRoomId=s.roomId;onlineSessionToken=s.sessionToken;onlineSocket.emit('reconnectPlayer',s);}else onlineMsg('Connected. Create or join a room.');});
+onlineSocket.on('connect',()=>{onlineMsg('Connected. Create or join a room.');});
 onlineSocket.on('roomCreated',d=>{window.__onlineMaxPlayers=d.maxPlayers||jkrnSelectedPlayers;onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();document.getElementById('onlineRoom').value=d.roomId;document.getElementById('onlineRoomCode').textContent='ROOM: '+d.roomId;onlineMsg('Room created. Share Room ID. Waiting for '+window.__onlineMaxPlayers+' players...');updateStartButton();});
 onlineSocket.on('roomJoined',d=>{window.__onlineMaxPlayers=d.maxPlayers||jkrnSelectedPlayers;onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();document.getElementById('onlineRoomCode').textContent='ROOM: '+d.roomId;onlineMsg('Joined room. Waiting for all players...');updateStartButton();});
 onlineSocket.on('reconnected',d=>{window.__onlineMaxPlayers=d.maxPlayers||window.__onlineMaxPlayers||2;onlineRoomId=d.roomId;onlinePlayerId=d.playerId;onlineSessionToken=d.sessionToken;saveOnlineSession();onlineMsg('♻️ Reconnected to your seat.');});
@@ -3546,8 +3564,16 @@ onlineSocket.on('quickMatchReady',d=>{onlineMsg('🎯 '+d.message);updateStartBu
 onlineSocket.on('readyAck',()=>{onlineMsg('Waiting for all players...');});
 onlineSocket.on('tossStarted',d=>{startOnlineTossUI(d);});
 onlineSocket.on('realGameStarted',d=>{startOnlineGameUI(d); if(d&&d.firstChoice)showFirstDrawChoice(d);});
-onlineSocket.on('roomError',m=>onlineMsg('❌ '+m));}
+onlineSocket.on('roomError',m=>{
+  try{ localStorage.removeItem('jkrnOnlineSession'); }catch(e){}
+  onlineRoomId=null; onlinePlayerId=null; onlineSessionToken=null;
+  window.__realRoomStarted=false;
+  document.body.classList.add('jkrn-online-lobby-open');
+  const ol=document.getElementById('onlineLobby'); if(ol)ol.classList.remove('hidden');
+  onlineMsg('❌ '+m+' Please enter the correct Room ID and JOIN ROOM.');
+});}
 function startOnlineTossUI(d){
+  document.body.classList.remove("jkrn-online-lobby-open");
   window.__realRoomStarted=false;
   const ol=document.getElementById('onlineLobby'),lb=document.getElementById('lobbyScreen');if(ol)ol.classList.add('hidden');if(lb)lb.classList.add('hidden');
   initializeGameLobby();
@@ -3589,7 +3615,15 @@ function showFirstDrawChoice(gameData){
 }
 function createOnlineRoom(){ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();if(!name)return onlineMsg('Enter PROFILE NAME first.');onlineSocket.emit('createRoom',{name,maxPlayers:jkrnSelectedPlayers,poolLimit:jkrnSelectedPool,entryFee:jkrnEntryAmount});}
 function quickJoinOnline(){ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();if(!name)return onlineMsg('Enter PROFILE NAME first.');onlineSocket.emit('quickJoin',{name,maxPlayers:jkrnSelectedPlayers,poolLimit:jkrnSelectedPool,entryFee:jkrnEntryAmount});}
-function joinOnlineRoom(){ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();const room=(document.getElementById('onlineRoom').value||'').trim().toUpperCase();if(!room)return onlineMsg('Enter Room ID first.');onlineSocket.emit('joinRoom',{name,roomId:room});}
+function joinOnlineRoom(){
+  document.body.classList.add('jkrn-online-lobby-open');
+  ensureOnlineSocket();
+  const name=(document.getElementById('onlineName').value||'Player').trim();
+  const room=(document.getElementById('onlineRoom').value||'').trim().toUpperCase();
+  if(!room)return onlineMsg('Enter Room ID first.');
+  if(!/^[A-Z0-9]{1,6}$/.test(room))return onlineMsg('Invalid Room ID. Enter the 6-character Room ID.');
+  onlineSocket.emit('joinRoom',{name,roomId:room});
+}
 function toggleOnlineReady(){startRoomNow();}
 function startRoomNow(){if(!onlineSocket||!onlineRoomId)return onlineMsg('Create a room or join a room first.');onlineSocket.emit('startRoom',{roomId:onlineRoomId});}
 function initOnline(){ensureOnlineSocket();}
@@ -3619,6 +3653,7 @@ function updateEntryAmount(v){ jkrnEntryAmount=Math.max(300,Math.min(10000,Numbe
 function setEntryAmount(v){updateEntryAmount(v);}
 function updateStartButton(){const b=document.getElementById('startRoomBtn'); const cap=Number(window.__onlineMaxPlayers||jkrnSelectedPlayers); const count=(window.__onlineRoomPlayers||[]).filter(p=>p.connected!==false).length; if(b){b.disabled=!onlineRoomId || count<cap || !!window.__realRoomStarted; b.textContent=count>=cap?'START':'WAITING '+count+'/'+cap;}}
 function initAutoGame() {
+    document.body.classList.add("jkrn-online-lobby-open");
     numPlayers = 6; poolLimit = 201; jkrnSelectedPool=201; jkrnSelectedPlayers=6; jkrnEntryAmount=300;
     document.getElementById("poolTypeDisplay").innerText = "201";
     document.getElementById("poolLimitLabel").innerText = "201";
@@ -3628,6 +3663,7 @@ function initAutoGame() {
 function openLobbyRules(){ alert("Pool Rummy:\n\n• Select 101 or 201 Pool.\n• Select 2–6 players.\n• Entry amount can be selected from ₹300 to ₹10,000.\n• When the selected number of players joins, the game starts automatically."); }
 function openLevelTable(level, entryFee){ if(!window.__realRoomStarted)return; document.getElementById("lobbyScreen").classList.add("hidden"); runLeastCardToss(); }
 function startOnlineGameUI(d){
+    document.body.classList.remove("jkrn-online-lobby-open");
     window.__realRoomStarted=true; window.__realRoomPlayers=(d&&d.players||[]).length; window.__onlineDealerIndex=d&&d.dealerIndex;
     numPlayers=window.__realRoomPlayers||jkrnSelectedPlayers; poolLimit=Number((d&&d.poolLimit)||jkrnSelectedPool);
     document.getElementById("poolTypeDisplay").innerText=poolLimit; document.getElementById("poolLimitLabel").innerText=poolLimit;
@@ -5053,13 +5089,10 @@ function openGlobalScoreboardModal() {
 (function () {
   function updateRotationUI() {
     const hint = document.getElementById('jkrnRotateHint');
-    if (!hint) return;
     const isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0 ||
                      window.matchMedia('(pointer: coarse)').matches;
     const portrait = window.matchMedia('(orientation: portrait)').matches;
-    hint.style.display = (isMobile && portrait) ? 'flex' : 'none';
-
-    // Recalculate the game after the browser finishes rotating.
+    if (hint) hint.style.display = (isMobile && portrait) ? 'flex' : 'none';
     if (typeof updateUI === 'function') {
       setTimeout(function(){ try { updateUI(); } catch(e) {} }, 80);
       setTimeout(function(){ try { updateUI(); } catch(e) {} }, 400);
@@ -5067,50 +5100,40 @@ function openGlobalScoreboardModal() {
   }
 
   window.jkrnRequestLandscape = async function () {
+    const isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0 ||
+                     window.matchMedia('(pointer: coarse)').matches;
+    if (!isMobile) return;
     try {
-      // Fullscreen is needed by many mobile browsers before orientation lock.
       if (!document.fullscreenElement) {
         const root = document.documentElement;
-        if (root.requestFullscreen) {
-          await root.requestFullscreen({navigationUI: 'hide'}).catch(function(){});
-        }
+        if (root.requestFullscreen) await root.requestFullscreen({navigationUI:'hide'}).catch(function(){});
       }
     } catch(e) {}
-
     try {
       if (screen.orientation && screen.orientation.lock) {
         await screen.orientation.lock('landscape').catch(function(){});
       }
     } catch(e) {}
-
-    setTimeout(updateRotationUI, 150);
+    setTimeout(updateRotationUI,150);
   };
 
-  // Mobile browsers allow orientation locking only after a user gesture.
-  document.addEventListener('click', function (ev) {
-    const t = ev.target;
-    if (!t) return;
-    const isButton = t.closest && t.closest('button');
-    if (isButton) {
-      const isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-      if (isMobile && window.matchMedia('(orientation: portrait)').matches) {
-        jkrnRequestLandscape();
-      }
+  /* IMPORTANT: rotation is requested ONLY by JOIN ROOM.
+     No automatic rotation on page load, touch, Create Room, or Start. */
+  const oldJoin = window.joinOnlineRoom;
+  window.joinOnlineRoom = function () {
+    const input = document.getElementById('onlineRoom');
+    const room = (input && input.value || '').trim();
+    if (!room) {
+      if (typeof onlineMsg === 'function') onlineMsg('Enter Room ID first.');
+      if (input) input.focus();
+      return;
     }
-  }, {passive:true});
+    try { window.jkrnRequestLandscape(); } catch(e) {}
+    if (typeof oldJoin === 'function') return oldJoin.apply(this, arguments);
+  };
 
   window.addEventListener('orientationchange', updateRotationUI, {passive:true});
   window.addEventListener('resize', updateRotationUI, {passive:true});
-  window.addEventListener('load', updateRotationUI);
-  window.addEventListener('DOMContentLoaded', updateRotationUI);
-
-  // Try once on a user gesture anywhere on the page.
-  document.addEventListener('touchend', function once() {
-    if (window.matchMedia('(orientation: portrait)').matches) {
-      jkrnRequestLandscape();
-    }
-    document.removeEventListener('touchend', once);
-  }, {passive:true});
 })();
 </script>
 
@@ -6687,6 +6710,19 @@ html,body{background:#050806!important;overflow-x:hidden!important;}
 })();
 </script>
 
+
+<script id="jkrn-lobby-open-guard">
+(function(){
+  function guard(){
+    const ol=document.getElementById('onlineLobby');
+    if(ol && !ol.classList.contains('hidden') && !window.__realRoomStarted){
+      document.body.classList.add('jkrn-online-lobby-open');
+    }
+  }
+  document.addEventListener('DOMContentLoaded',guard);
+  window.addEventListener('load',guard);
+})();
+</script>
 </html>
 
 <style id="jkrn-draw-click-fix">
