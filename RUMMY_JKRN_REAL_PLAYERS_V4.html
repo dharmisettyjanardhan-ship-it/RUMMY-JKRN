@@ -2907,15 +2907,41 @@ button[data-action="discard"], button[data-action="declare"],
     });
 
     const left=cards.filter((c,i)=>!used.has(i));
-    /* Remaining cards stay together as a clearly marked manual-work group. */
+    /* Remaining cards are grouped by the SAME SYMBOL/SUIT.
+       This keeps ♥ with ♥, ♦ with ♦, ♣ with ♣ and ♠ with ♠.
+       1st Life and 2nd Life groups are kept ahead of these symbol groups. */
     if(left.length){
-      const remainder=orderGroup(left);
-      remainder.__jkrnRemainder=true;
-      result.push(remainder);
+      const suitBuckets={'♥':[], '♦':[], '♣':[], '♠':[]};
+      const other=[];
+      left.forEach(c=>{
+        if(c && suitBuckets[c.suit]) suitBuckets[c.suit].push(c);
+        else other.push(c);
+      });
+      ['♥','♦','♣','♠'].forEach(suit=>{
+        if(!suitBuckets[suit].length) return;
+        const remainder=orderGroup(suitBuckets[suit]);
+        remainder.__jkrnRemainder=true;
+        result.push(remainder);
+      });
+      if(other.length){
+        const remainder=orderGroup(other);
+        remainder.__jkrnRemainder=true;
+        result.push(remainder);
+      }
     }
 
     const rank={pure:1,second:2,set:3,invalid:4};
-    result.sort((a,b)=>(rank[kind(a)]||4)-(rank[kind(b)]||4));
+    const suitRank=g=>{
+      const c=(g&&g[0])||{};
+      return SUIT[c.suit]||99;
+    };
+    result.sort((a,b)=>{
+      const ka=kind(a), kb=kind(b);
+      const ra=rank[ka]||4, rb=rank[kb]||4;
+      if(ra!==rb) return ra-rb;
+      if(ra===4) return suitRank(a)-suitRank(b);
+      return 0;
+    });
     return result.length?result:[orderGroup(cards)];
   }
 
@@ -7954,6 +7980,69 @@ html body #playerArea{
 }
 </style>
 
+
+<style id="JKRN_FINAL_BIG_CARDS_SYMBOL_GROUPS_20261007">
+/* FINAL: slightly bigger cards + clear group separation.
+   Same-symbol cards stay together; 1st Life/2nd Life get priority. */
+#playerGroupsContainer{
+  gap:32px !important;
+  column-gap:32px !important;
+  align-items:flex-end !important;
+}
+#playerGroupsContainer .card-group{
+  margin:0 !important;
+  padding:0 5px !important;
+  min-width:0 !important;
+}
+#playerGroupsContainer .cards-in-group{
+  gap:0 !important;
+}
+#playerGroupsContainer .cards-in-group .card{
+  width:74px !important;
+  min-width:74px !important;
+  height:108px !important;
+  font-size:18px !important;
+  padding:5px 5px 14px !important;
+}
+#playerGroupsContainer .cards-in-group .card + .card{
+  margin-left:-34px !important;
+}
+#playerGroupsContainer .card-top,
+#playerGroupsContainer .card-top span{
+  font-size:16px !important;
+  font-weight:900 !important;
+}
+#playerGroupsContainer .card-center{
+  font-size:30px !important;
+}
+/* Visual priority: 1st Life -> 2nd Life -> Set/Trill -> symbol groups */
+#playerGroupsContainer .card-group:has(.badge-pure),
+#playerGroupsContainer .card-group:has(.badge-second){
+  margin-right:10px !important;
+}
+
+@media (max-width:1100px){
+  #playerGroupsContainer{gap:24px !important;column-gap:24px !important;}
+  #playerGroupsContainer .cards-in-group .card{
+    width:68px !important; min-width:68px !important; height:100px !important;
+  }
+  #playerGroupsContainer .cards-in-group .card + .card{margin-left:-31px !important;}
+  #playerGroupsContainer .card-center{font-size:28px !important;}
+}
+
+@media (max-width:700px){
+  #playerGroupsContainer{gap:18px !important;column-gap:18px !important;}
+  #playerGroupsContainer .card-group{padding:0 3px !important;}
+  #playerGroupsContainer .cards-in-group .card{
+    width:60px !important; min-width:60px !important; height:90px !important;
+    font-size:15px !important; padding:4px 4px 11px !important;
+  }
+  #playerGroupsContainer .cards-in-group .card + .card{margin-left:-27px !important;}
+  #playerGroupsContainer .card-top,
+  #playerGroupsContainer .card-top span{font-size:13px !important;}
+  #playerGroupsContainer .card-center{font-size:25px !important;}
+}
+</style>
 </body>
 
 
