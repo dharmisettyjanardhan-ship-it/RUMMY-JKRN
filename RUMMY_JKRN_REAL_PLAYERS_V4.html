@@ -11186,3 +11186,98 @@ html.mobile-device body{
 </style>
 
 
+
+<!-- JKRN FINAL AUTO SORT GROUPS PATCH: 1st Life -> 2nd Life -> Sets -> Remaining -->
+<script id="jkrn-final-autosort-groups-patch">
+(function(){
+  const LO={A:1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,J:11,Q:12,K:13};
+  const HI={'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,J:11,Q:12,K:13,A:14};
+  const SUIT={'♥':1,'♦':2,'♣':3,'♠':4};
+  function wild(c){return !!c&&(c.isPrintedJoker===true||(typeof wildJoker!=='undefined'&&wildJoker&&c.rank===wildJoker.rank));}
+  function consecutive(vals){return vals.every((v,i)=>i===0||v===vals[i-1]+1);}
+  function pure(g){
+    if(!Array.isArray(g)||g.length<3||g.some(wild))return false;
+    const s=g[0]&&g[0].suit;if(!s||g.some(c=>!c||c.suit!==s))return false;
+    let a=g.map(c=>LO[c.rank]);if(a.some(v=>v==null)||new Set(a).size!==a.length)return false;
+    a.sort((x,y)=>x-y);if(consecutive(a))return true;
+    a=g.map(c=>HI[c.rank]).sort((x,y)=>x-y);return consecutive(a);
+  }
+  function impure(g){
+    if(!Array.isArray(g)||g.length<3||pure(g))return false;
+    const n=g.filter(c=>!wild(c)),j=g.length-n.length;if(!j||!n.length)return false;
+    const s=n[0].suit;if(!s||n.some(c=>c.suit!==s))return false;
+    function fits(map){
+      const a=n.map(c=>map[c.rank]).sort((x,y)=>x-y);if(new Set(a).size!==a.length)return false;
+      let gaps=0;for(let i=1;i<a.length;i++)gaps+=Math.max(0,a[i]-a[i-1]-1);
+      return gaps<=j;
+    }
+    return fits(LO)||fits(HI);
+  }
+  function setg(g){
+    if(!Array.isArray(g)||g.length<3||g.length>4)return false;
+    const n=g.filter(c=>!wild(c));if(!n.length)return false;
+    const r=n[0].rank;if(n.some(c=>c.rank!==r))return false;
+    const ss=new Set();for(const c of n){if(ss.has(c.suit))return false;ss.add(c.suit);}return true;
+  }
+  function kind(g){return pure(g)?'pure':impure(g)?'second':setg(g)?'set':'invalid';}
+  function points(c){if(!c||wild(c))return 0;const r=String(c.rank).toUpperCase();return ['A','K','Q','J'].includes(r)?10:(parseInt(r,10)||0);}
+  function order(g){
+    const k=kind(g),a=g.slice();
+    if(k==='pure'||k==='second')return a.sort((x,y)=>{if(wild(x)!==wild(y))return wild(x)?1:-1;return (LO[x.rank]||99)-(LO[y.rank]||99);});
+    if(k==='set')return a.sort((x,y)=>{if(wild(x)!==wild(y))return wild(x)?1:-1;return (SUIT[x.suit]||99)-(SUIT[y.suit]||99);});
+    return a.sort((x,y)=>{if(wild(x)!==wild(y))return wild(x)?-1:1;return ((SUIT[x.suit]||99)-(SUIT[y.suit]||99))||((LO[x.rank]||99)-(LO[y.rank]||99));});
+  }
+  function solve(cards){
+    const n=cards.length,full=(1<<n)-1,byCard=Array.from({length:n},()=>[]);
+    for(let m=1;m<=full;m++){
+      let cnt=0;for(let i=0;i<n;i++)if(m&(1<<i))cnt++;if(cnt<3||cnt>5)continue;
+      const g=[];for(let i=0;i<n;i++)if(m&(1<<i))g.push(cards[i]);const k=kind(g);if(k==='invalid')continue;
+      const c={m,g,k,cnt};for(let i=0;i<n;i++)if(m&(1<<i))byCard[i].push(c);
+    }
+    const memo=new Map();
+    function better(a,b){
+      if(!b)return a;
+      if(a.valid!==b.valid)return a.valid>b.valid?a:b;
+      if(a.dead!==b.dead)return a.dead<b.dead?a:b;
+      if(a.pure!==b.pure)return a.pure>b.pure?a:b;
+      if(a.seq!==b.seq)return a.seq>b.seq?a:b;
+      if(a.covered!==b.covered)return a.covered>b.covered?a:b;
+      return a.groups>b.groups?a:b;
+    }
+    function dp(mask){
+      if(!mask)return {dead:0,pure:0,seq:0,covered:0,groups:0,valid:0,chosen:[]};
+      if(memo.has(mask))return memo.get(mask);
+      const bit=mask&-mask,i=Math.log2(bit)|0,q=dp(mask^bit);
+      let best={dead:q.dead+points(cards[i]),pure:q.pure,seq:q.seq,covered:q.covered,groups:q.groups,valid:q.valid,chosen:q.chosen};
+      for(const c of byCard[i]){
+        if((c.m&mask)!==c.m)continue;
+        const z=dp(mask^c.m),x={dead:z.dead,pure:z.pure+(c.k==='pure'?1:0),seq:z.seq+((c.k==='pure'||c.k==='second')?1:0),covered:z.covered+c.cnt,groups:z.groups+1,valid:0,chosen:z.chosen.concat(c)};
+        if(x.pure>=1&&x.seq>=2)x.valid=1;
+        best=better(x,best);
+      }
+      memo.set(mask,best);return best;
+    }
+    const ans=dp(full),groups=ans.chosen.map(c=>order(c.g));
+    const used=new Set();ans.chosen.forEach(c=>{for(let i=0;i<n;i++)if(c.m&(1<<i))used.add(i);});
+    const left=cards.filter((c,i)=>!used.has(i));
+    groups.sort((a,b)=>({pure:1,second:2,set:3,invalid:4}[kind(a)]-({pure:1,second:2,set:3,invalid:4}[kind(b)]))||b.length-a.length);
+    if(left.length)groups.push(order(left));
+    return groups.length?groups:[order(cards)];
+  }
+  function finalGroupedAutoSort(){
+    if(typeof playerGroups==='undefined')return;
+    if(typeof isEliminated==='function'&&isEliminated(0))return;
+    const cards=playerGroups.flat().filter(Boolean);if(!cards.length)return;
+    playerGroups=solve(cards);selectedCards=[];
+    if(typeof updateUI==='function')updateUI();
+    try{if(typeof playSound==='function')playSound('group');}catch(e){}
+    const st=document.getElementById('status');if(st)st.innerText='AUTO SORT: 1st Life → 2nd Life → Sets → Remaining';
+  }
+  window.jkrnFinalGroupedAutoSort=finalGroupedAutoSort;
+  window.autoSortPlayerCards=finalGroupedAutoSort;
+  window.autoSortCards=finalGroupedAutoSort;
+  window.jkrnAutoSortAnyTurn=finalGroupedAutoSort;
+  function bind(){const b=document.getElementById('autoSortButton');if(b)b.onclick=function(e){e.preventDefault();e.stopPropagation();finalGroupedAutoSort();};}
+  document.addEventListener('DOMContentLoaded',bind);window.addEventListener('load',bind);setTimeout(bind,300);setTimeout(bind,1200);
+})();
+</script>
