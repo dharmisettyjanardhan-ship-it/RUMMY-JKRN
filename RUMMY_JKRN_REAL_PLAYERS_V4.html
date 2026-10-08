@@ -456,6 +456,27 @@ body.table-mode #dynamicGame{display:block}
   border-color:#6d8e68;
 }
 
+
+/* ===== TOSS SYSTEM ===== */
+#tossOverlay{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;background:#03140dcc;backdrop-filter:blur(6px)}
+#tossOverlay.show{display:flex}
+.toss-box{width:min(94vw,760px);max-height:94dvh;overflow:auto;background:linear-gradient(#0d3b24,#061e12);border:2px solid #d8b14a;border-radius:22px;padding:18px;box-shadow:0 20px 70px #000b;text-align:center}
+.toss-title{color:#ffd85a;font-size:clamp(20px,4vw,32px);font-weight:900;margin-bottom:4px}
+.toss-sub{color:#c7dfce;font-size:clamp(11px,2vw,15px);margin-bottom:12px}
+.toss-cards{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;justify-items:center;margin:12px 0}
+.toss-player{min-width:0}
+.toss-name{font-weight:900;font-size:clamp(9px,1.8vw,14px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px}
+.toss-card{width:clamp(48px,8vw,72px);height:clamp(68px,11vw,102px);border-radius:9px;border:2px solid #d6bd6a;background:linear-gradient(145deg,#183e75,#081d40);box-shadow:0 5px 15px #0008;display:flex;align-items:center;justify-content:center;color:#fff;font-size:clamp(12px,2.4vw,22px);font-weight:900;transform-style:preserve-3d;transition:transform .45s,background .25s}
+.toss-card.flip{transform:rotateY(180deg);background:#f8f3df;color:#111}
+.toss-card.winner{box-shadow:0 0 0 3px #ffd84d,0 0 30px #ffd84dcc}
+.toss-result{min-height:42px;color:#ffd85a;font-weight:900;font-size:clamp(15px,3vw,24px);margin:10px 0}
+.toss-countdown{color:#fff;font-size:clamp(22px,5vw,42px);font-weight:900;min-height:48px}
+.toss-status{color:#bde4ca;min-height:25px}
+.toss-actions button{margin:5px;padding:11px 18px;background:#c4972f;color:#151006;border:1px solid #f3d779;border-radius:12px;font-weight:900}
+.toss-actions button:disabled{opacity:.45}
+@media(max-width:600px){.toss-cards{grid-template-columns:repeat(3,1fr)}.toss-box{padding:12px}.toss-card{width:52px;height:76px}}
+@media(max-width:380px){.toss-cards{gap:6px}.toss-card{width:45px;height:66px;font-size:12px}}
+
 </style>
 </head>
 <body>
@@ -521,10 +542,51 @@ body.table-mode #dynamicGame{display:block}
   </div>
 </div>
 
+
+
+
+<div id="dynamicGame">
+  <div class="table-wrap">
+    <div class="rummy-table" id="rummyTable">
+      <div class="table-topbar">♠ 201 POOL RUMMY ♥</div>
+      <div class="table-info" id="tableInfo">2 PLAYERS</div>
+      <div class="turn-timer" id="turnTimer">WAITING FOR TOSS</div>
+      <div class="center-piles">
+        <div class="pile draw-pile" id="drawPile">DRAW<br><span id="drawCount">52</span></div>
+        <div class="pile open-pile" id="openPile">🂠</div>
+      </div>
+      <div class="joker" id="wildJoker">⭐ WILD JOKER: —</div>
+      <div id="seatLayer"></div>
+      <div class="hand" id="playerHand">
+        <div class="hand-label">YOU • YOUR HAND</div>
+      </div>
+      <div class="table-controls">
+        <button id="leaveTable">← LOBBY</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tossOverlay">
+  <div class="toss-box">
+    <div class="toss-title">🃏 TOSS — FIRST TURN</div>
+    <div class="toss-sub">All READY players get one face-down card from a shuffled 52-card deck.</div>
+    <div class="toss-cards" id="tossCards"></div>
+    <div class="toss-status" id="tossStatus">Waiting for all players to become READY…</div>
+    <div class="toss-result" id="tossResult"></div>
+    <div class="toss-countdown" id="tossCountdown"></div>
+    <div class="toss-actions">
+      <button id="revealBtn" disabled>FLIP / REVEAL</button>
+    </div>
+  </div>
+</div>
+
 <script>
+
+const $=id=>document.getElementById(id);
 let selected={type:null,players:null,amount:null};
-let currentGame=null;
-let joinedPlayers=[];
+let currentGame=null, joinedPlayers=[], ws=null, myId=null, roomId=null;
+let tossState=null;
 
 function setupGroup(id,key){
   document.querySelectorAll('#'+id+' button').forEach(b=>{
@@ -536,11 +598,10 @@ function setupGroup(id,key){
 }
 setupGroup('gameTypes','type'); setupGroup('players','players'); setupGroup('amounts','amount');
 
-function makeCode(){
-  return 'JKRN-'+Math.floor(100000+Math.random()*900000);
-}
+function makeCode(){return 'JKRN-'+Math.floor(100000+Math.random()*900000)}
 function renderLobby(){
-  const slots=document.getElementById('slots'); slots.innerHTML='';
+  const slots=$('slots'); if(!slots)return;
+  slots.innerHTML='';
   const max=Number(currentGame?.players||6);
   for(let i=0;i<max;i++){
     const name=joinedPlayers[i];
@@ -549,199 +610,186 @@ function renderLobby(){
     d.innerHTML=name?'👤 '+name+'<small>READY</small>':'⏳ Player '+(i+1)+'<small>WAITING</small>';
     slots.appendChild(d);
   }
-  document.getElementById('startBtn').classList.toggle('hidden',!currentGame || joinedPlayers.length<1);
+  $('startBtn').classList.toggle('hidden',!currentGame || joinedPlayers.length<max);
 }
 function showGame(){
-  document.getElementById('gameInfo').textContent =
-    `${currentGame.type} • ${currentGame.players} PLAYERS • ₹${Number(currentGame.amount).toLocaleString('en-IN')}`;
-  document.getElementById('codeBox').textContent=currentGame.code;
-  document.getElementById('codeBox').classList.remove('hidden');
+  $('gameInfo').textContent=`${currentGame.type} • ${currentGame.players} PLAYERS • ₹${Number(currentGame.amount).toLocaleString('en-IN')}`;
+  $('codeBox').textContent=currentGame.code;
+  $('codeBox').classList.remove('hidden');
   renderLobby();
 }
-document.getElementById('createBtn').onclick=()=>{
+
+$('createBtn').onclick=()=>{
   if(!selected.type||!selected.players||!selected.amount){
-    document.getElementById('status').textContent='⚠️ Game Type, Players, Entry Amount select చేయండి.';
-    return;
+    $('status').textContent='⚠️ Game Type, Players, Entry Amount select చేయండి.'; return;
   }
-  currentGame={...selected,code:makeCode()};
+  currentGame={...selected,players:Number(selected.players),amount:Number(selected.amount),code:makeCode()};
   joinedPlayers=['YOU'];
   showGame();
-  document.getElementById('status').textContent='✅ Game created. Code ను friends కి పంపండి.';
+  $('status').textContent='✅ Game created. Friends join చేసి READY అవ్వాలి.';
 };
-document.getElementById('joinBtn').onclick=()=>{
-  const code=document.getElementById('joinCode').value.trim().toUpperCase();
-  if(!code){document.getElementById('status').textContent='⚠️ Game Code enter చేయండి.';return;}
-  if(currentGame && code===currentGame.code){
-    if(joinedPlayers.length<Number(currentGame.players)){
-      joinedPlayers.push('PLAYER '+(joinedPlayers.length+1));
-      showGame();
-      document.getElementById('status').textContent='✅ Player joined successfully.';
-    }else document.getElementById('status').textContent='❌ Game is full.';
-  }else{
-    document.getElementById('status').textContent='ℹ️ Demo mode: code must belong to a game created in this browser. Online joining needs a server.';
-  }
+$('joinBtn').onclick=()=>{
+  const code=$('joinCode').value.trim().toUpperCase();
+  if(!code){$('status').textContent='⚠️ Game Code enter చేయండి.';return}
+  $('status').textContent='ℹ️ Online friends-only joining కోసం Render server/WebSocket connection అవసరం.';
 };
-document.getElementById('waBtn').onclick=()=>{
-  if(!currentGame){
-    document.getElementById('status').textContent='⚠️ First CREATE GAME చేయండి.';
-    return;
-  }
-  const text=`🎮 RUMMY JKRN%0A%0AGame: ${currentGame.type} POOL RUMMY%0APlayers: ${currentGame.players}%0AEntry: ₹${Number(currentGame.amount).toLocaleString('en-IN')}%0AGame Code: ${currentGame.code}%0A%0AJoin Game: Enter this code in RUMMY JKRN`;
+$('waBtn').onclick=()=>{
+  if(!currentGame){$('status').textContent='⚠️ First CREATE GAME చేయండి.';return}
+  const text=`🎮 RUMMY JKRN%0A%0AGame: ${currentGame.type} POOL RUMMY%0APlayers: ${currentGame.players}%0AEntry: ₹${Number(currentGame.amount).toLocaleString('en-IN')}%0AGame Code: ${currentGame.code}%0A%0AJoin Game: ${location.origin}/?room=${currentGame.code}`;
   window.open('https://wa.me/?text='+text,'_blank');
 };
-const suits=['♠','♥','♦','♣'];
-const ranks=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 
-function renderPlayerHand(){
-  const hand=document.getElementById('playerHand');
-  hand.querySelectorAll('.hand-card').forEach(x=>x.remove());
-  const demo=['A♠','3♠','4♠','7♥','8♥','J♦','Q♦','K♣','2♣','5♣','6♦','9♥','10♠'];
-  demo.forEach((c,i)=>{
-    const d=document.createElement('div');
-    d.className='hand-card '+(/[♥♦]/.test(c)?'red':'black');
-    d.innerHTML='<span>'+c.replace(/([♠♥♦♣])/,'$1')+'</span><span>'+c+'</span>';
-    hand.appendChild(d);
-  });
-}
+const suits=['♠','♥','♦','♣'], ranks=['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
 
 function seatPositions(count){
-  // Positions are percentages of the FULL SCREEN, not the table.
-  // This keeps every player seat OUTSIDE the circular/oval table.
-  if(count===2) return [
-    {x:50,y:7}, {x:50,y:93}
-  ];
-  if(count===3) return [
-    {x:50,y:6}, {x:8,y:82}, {x:92,y:82}
-  ];
-  if(count===4) return [
-    {x:50,y:6}, {x:94,y:50}, {x:50,y:94}, {x:6,y:50}
-  ];
-  if(count===5){
-    return [
-      {x:50,y:5},
-      {x:94,y:34},
-      {x:78,y:93},
-      {x:22,y:93},
-      {x:6,y:34}
-    ];
-  }
-  return [
-    {x:50,y:5},
-    {x:92,y:27},
-    {x:92,y:73},
-    {x:50,y:95},
-    {x:8,y:73},
-    {x:8,y:27}
-  ];
+  if(count===2)return[{x:50,y:7},{x:50,y:93}];
+  if(count===3)return[{x:50,y:6},{x:8,y:82},{x:92,y:82}];
+  if(count===4)return[{x:50,y:6},{x:94,y:50},{x:50,y:94},{x:6,y:50}];
+  if(count===5)return[{x:50,y:5},{x:94,y:34},{x:78,y:93},{x:22,y:93},{x:6,y:34}];
+  return[{x:50,y:5},{x:92,y:27},{x:92,y:73},{x:50,y:95},{x:8,y:73},{x:8,y:27}];
 }
-
-function renderSeats(count){
-  const layer=document.getElementById('seatLayer');
-  layer.innerHTML='';
-  const pos=seatPositions(count);
-  pos.forEach((p,i)=>{
+function renderSeats(count,names=joinedPlayers,winnerIndex=null){
+  const layer=$('seatLayer'); layer.innerHTML='';
+  seatPositions(count).forEach((p,i)=>{
     const d=document.createElement('div');
-    d.className='seat outside-seat '+(i===0?'active':'');
-    d.style.left=p.x+'%';
-    d.style.top=p.y+'%';
-    d.innerHTML='<div class="avatar">'+(i===0?'👤':'👤')+'</div>'+
-      '<div class="name">'+(i===0?'YOU':'Player '+(i+1))+'</div>'+
-      '<div class="state">'+(i===0?'YOUR TURN':'READY')+'</div>';
+    d.className='seat outside-seat '+(i===winnerIndex?'active':'');
+    d.style.left=p.x+'%'; d.style.top=p.y+'%';
+    const nm=names[i]||('Player '+(i+1));
+    d.innerHTML=`<div class="avatar">👤</div><div class="name">${nm}</div><div class="state">${i===winnerIndex?'🏆 FIRST TURN':'READY'}</div>`;
     layer.appendChild(d);
   });
-  document.getElementById('tableInfo').textContent=count+' PLAYERS';
+  $('tableInfo').textContent=count+' PLAYERS';
 }
-
+function renderPlayerHand(){
+  const hand=$('playerHand'); hand.querySelectorAll('.hand-card').forEach(x=>x.remove());
+  ['A♠','3♠','4♠','7♥','8♥','J♦','Q♦','K♣','2♣','5♣','6♦','9♥','10♠'].forEach(c=>{
+    const d=document.createElement('div'); d.className='hand-card '+(/[♥♦]/.test(c)?'red':'black');
+    d.innerHTML='<span>'+c+'</span><span>'+c+'</span>'; hand.appendChild(d);
+  });
+}
 function openDynamicTable(){
   const count=Number(currentGame?.players||2);
-  document.getElementById('dynamicGame').style.display='block';
   document.body.classList.add('table-mode');
-  document.getElementById('tableInfo').textContent=count+' PLAYERS';
+  $('tableInfo').textContent=count+' PLAYERS';
   renderSeats(count);
   renderPlayerHand();
-
-  try{
-    if(document.documentElement.requestFullscreen && !document.fullscreenElement){
-      document.documentElement.requestFullscreen();
-    }
-  }catch(e){}
-  try{
-    if(screen.orientation && screen.orientation.lock){
-      screen.orientation.lock('landscape');
-    }
-  }catch(e){}
-  setTimeout(()=>{window.dispatchEvent(new Event('resize'));},250);
+  $('turnTimer').textContent='WAITING FOR TOSS';
+  try{if(document.documentElement.requestFullscreen&&!document.fullscreenElement)document.documentElement.requestFullscreen()}catch(e){}
+  try{if(screen.orientation?.lock)screen.orientation.lock('landscape')}catch(e){}
+  setTimeout(()=>window.dispatchEvent(new Event('resize')),250);
+  startTossWhenReady();
+}
+function closeTable(){
+  document.body.classList.remove('table-mode');
+  $('tossOverlay').classList.remove('show');
+  try{if(screen.orientation?.unlock)screen.orientation.unlock()}catch(e){}
+  try{if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen()}catch(e){}
 }
 
-document.getElementById('startBtn').onclick=()=>{
-  if(!currentGame) return;
+$('startBtn').onclick=()=>{
+  if(!currentGame)return;
   openDynamicTable();
 };
+$('leaveTable').onclick=closeTable;
 
-document.getElementById('leaveTable').onclick=async()=>{
-  document.body.classList.remove('table-mode');
-  document.getElementById('dynamicGame').style.display='none';
+/* ===== TOSS UI ===== */
+function rankValue(r){return ranks.indexOf(r)+2} // A=14, K=13...2=2
+function cardLabel(c){return c.rank+c.suit}
+function renderTossCards(cards,faceUp=false){
+  const wrap=$('tossCards'); wrap.innerHTML='';
+  cards.forEach((c,i)=>{
+    const p=document.createElement('div'); p.className='toss-player';
+    const nm=document.createElement('div'); nm.className='toss-name'; nm.textContent=c.playerName;
+    const cd=document.createElement('div'); cd.className='toss-card '+(faceUp?'flip':'');
+    cd.dataset.index=i; cd.textContent=faceUp?cardLabel(c.card):'🂠';
+    if(faceUp&&c.winner)cd.classList.add('winner');
+    p.append(nm,cd); wrap.appendChild(p);
+  });
+}
+function startTossWhenReady(playersOverride=null){
+  const players = playersOverride || Array.from({length:Number(currentGame?.players||0)},(_,i)=>({id:'P'+(i+1),name:i===0?'YOU':'Player '+(i+1)}));
+  const count=players.length;
+  if(!count)return;
+  if(!playersOverride && joinedPlayers.length < Number(currentGame?.players||0)){
+    $('status').textContent='⚠️ All players must JOIN and be READY before Toss.';
+    return;
+  }
+  $('tossOverlay').classList.add('show');
+  $('tossStatus').textContent='Waiting for all players to become READY…';
+  $('tossResult').textContent='';
+  $('tossCountdown').textContent='';
+  $('revealBtn').disabled=true;
+
+  // In online production the server controls READY/TOSS.
+  // Demo fallback marks the selected seats READY, then requests the server endpoint.
+  setTimeout(()=>requestAuthoritativeToss(players),300);
+}
+async function requestAuthoritativeToss(players){
+  $('tossStatus').textContent='All players READY. Server is shuffling 52 cards…';
   try{
-    if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
-  }catch(e){}
-  try{
-    if(document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen();
-  }catch(e){}
+    const res=await fetch('/api/toss',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({roomId:currentGame.code,players})
+    });
+    if(!res.ok)throw new Error('server');
+    const data=await res.json();
+    if(!data.ok)throw new Error(data.error||'toss failed');
+    tossState=data;
+    renderTossCards(data.cards,false);
+    $('tossStatus').textContent='Cards dealt face-down. Tap FLIP / REVEAL.';
+    $('revealBtn').disabled=false;
+  }catch(e){
+    $('tossStatus').textContent='⚠️ Server toss unavailable. Start the Render Node server (/api/toss) first.';
+  }
+}
+$('revealBtn').onclick=async()=>{
+  $('revealBtn').disabled=true;
+  document.querySelectorAll('.toss-card').forEach((el,i)=>{
+    setTimeout(()=>{
+      el.classList.add('flip');
+      el.textContent=cardLabel(tossState.cards[i].card);
+    },i*180);
+  });
+  setTimeout(()=>finishToss(),600+Number(tossState.cards.length)*180);
 };
-
-document.getElementById('backLobby').onclick=async()=>{
-  document.body.classList.remove('game-mode');
+async function finishToss(){
+  $('tossStatus').textContent='Server validating highest rank and tie rules…';
   try{
-    if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
-  }catch(e){}
-  try{
-    if(document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen();
-  }catch(e){}
+    const res=await fetch('/api/toss/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({roomId:currentGame.code,tossId:tossState.tossId})});
+    if(!res.ok)throw new Error('resolve');
+    const data=await res.json();
+    if(!data.ok)throw new Error(data.error||'resolve failed');
+    if(data.reToss){
+      $('tossResult').textContent='🔁 SAME HIGHEST RANK — TIED PLAYERS RE-TOSS';
+      $('tossStatus').textContent='Only tied players will receive a new toss.';
+      setTimeout(()=>startTossWhenReady(data.tiedPlayers),900);
+      return;
+    }
+    $('tossResult').textContent=`🏆 FIRST TURN – ${data.winnerName}`;
+    renderTossCards(tossState.cards,true);
+    renderSeats(Number(currentGame.players),joinedPlayers,data.winnerIndex);
+    $('tossStatus').textContent='Toss complete. Cards returned to the main deck and reshuffled.';
+    $('turnTimer').textContent='FIRST TURN: '+data.winnerName;
+    let n=4; $('tossCountdown').textContent=n;
+    const timer=setInterval(()=>{
+      n--; $('tossCountdown').textContent=n;
+      if(n<=0){
+        clearInterval(timer);
+        $('tossOverlay').classList.remove('show');
+        $('turnTimer').textContent='START ROUND';
+        // Main 52-card deck is already independently shuffled server-side after toss.
+      }
+    },1000);
+  }catch(e){
+    $('tossStatus').textContent='⚠️ Server could not resolve toss.';
+  }
 };
-
 
 window.addEventListener('resize',()=>{
-  if(document.body.classList.contains('game-mode')){
-    document.documentElement.style.setProperty('--vw', window.innerWidth + 'px');
-    document.documentElement.style.setProperty('--vh', window.innerHeight + 'px');
-  }
+  if(document.body.classList.contains('table-mode'))setTimeout(()=>{},0);
 });
-window.addEventListener('orientationchange',()=>{
-  setTimeout(()=>{
-    document.documentElement.style.setProperty('--vw', window.innerWidth + 'px');
-    document.documentElement.style.setProperty('--vh', window.innerHeight + 'px');
-  },250);
-});
+window.addEventListener('orientationchange',()=>setTimeout(()=>window.dispatchEvent(new Event('resize')),250));
 
-renderLobby();
 </script>
-
-<div id="dynamicGame">
-  <div class="table-wrap">
-    <div class="rummy-table" id="rummyTable">
-      <div class="table-topbar">♠ 201 POOL RUMMY ♥</div>
-      <div class="table-info" id="tableInfo">2 PLAYERS</div>
-
-      <div class="turn-timer" id="turnTimer">YOUR TURN • 30</div>
-
-      <div class="center-piles">
-        <div class="pile draw-pile" id="drawPile">DRAW<br><span id="drawCount">52</span></div>
-        <div class="pile open-pile" id="openPile">🂠</div>
-      </div>
-      <div class="joker" id="wildJoker">⭐ WILD JOKER: ♥ 7</div>
-
-      <div id="seatLayer"></div>
-
-      <div class="hand" id="playerHand">
-        <div class="hand-label">YOU • YOUR HAND</div>
-      </div>
-
-      <div class="table-controls">
-        <button id="leaveTable">← LOBBY</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
