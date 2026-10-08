@@ -286,6 +286,148 @@ input{
   }
 }
 
+
+/* ================= DYNAMIC RUMMY TABLE ================= */
+body.table-mode{
+  margin:0!important;
+  padding:0!important;
+  width:100vw!important;
+  height:100dvh!important;
+  overflow:hidden!important;
+  background:#061d11!important;
+}
+body.table-mode .app{display:none!important}
+#dynamicGame{
+  display:none;
+  position:fixed;
+  inset:0;
+  width:100vw;
+  height:100dvh;
+  overflow:hidden;
+  background:radial-gradient(circle,#125f37 0%,#07301d 72%);
+}
+body.table-mode #dynamicGame{display:block}
+.table-wrap{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+}
+.rummy-table{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  width:clamp(280px,82vw,1080px);
+  height:clamp(220px,68vh,620px);
+  border-radius:50%;
+  border:clamp(5px,1vw,11px) solid #a87920;
+  background:radial-gradient(ellipse at center,#267d4d 0%,#0b4729 67%,#07301c 100%);
+  box-shadow:inset 0 0 50px #0009,0 8px 30px #0009;
+}
+.table-topbar{
+  position:absolute;left:50%;top:8px;transform:translateX(-50%);
+  color:#ffd75a;font-weight:900;font-size:clamp(13px,2.4vw,24px);
+  white-space:nowrap;z-index:4;
+}
+.table-info{
+  position:absolute;right:10px;top:8px;color:#d9ebdf;
+  font-size:clamp(9px,1.5vw,13px);z-index:4;text-align:right;
+}
+.center-piles{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  display:flex;align-items:center;gap:clamp(7px,1.5vw,18px);z-index:5;
+}
+.pile{
+  width:clamp(38px,6vw,66px);height:clamp(54px,8.5vw,92px);
+  border-radius:7px;border:2px solid #e5c86a;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:clamp(12px,2vw,20px);
+  box-shadow:0 5px 12px #0008;
+}
+.draw-pile{background:repeating-linear-gradient(45deg,#184d91,#184d91 5px,#0d3263 5px,#0d3263 10px)}
+.open-pile{background:#f7f2df;color:#111}
+.joker{
+  position:absolute;left:50%;top:calc(50% + clamp(48px,8vw,75px));
+  transform:translateX(-50%);z-index:6;
+  color:#ffd75a;font-weight:900;font-size:clamp(10px,1.7vw,16px);
+  background:#173b26;border:1px solid #d9b34d;border-radius:20px;
+  padding:5px 10px;white-space:nowrap;
+}
+.turn-timer{
+  position:absolute;left:50%;top:calc(50% - clamp(70px,10vw,95px));
+  transform:translateX(-50%);z-index:6;
+  color:#fff;background:#071f13cc;border:1px solid #80aa88;
+  border-radius:20px;padding:4px 10px;font-size:clamp(9px,1.5vw,14px);
+}
+.seat{
+  position:absolute;z-index:8;
+  transform:translate(-50%,-50%);
+  width:clamp(78px,11vw,130px);
+  min-height:clamp(48px,7vw,78px);
+  border:2px solid #54765d;border-radius:14px;
+  background:#092a1acc;backdrop-filter:blur(3px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:5px;color:#fff;text-align:center;
+}
+.seat.active{border-color:#ffe26a;box-shadow:0 0 0 2px #d9ad35,0 0 22px #ffd84d99}
+.seat.dropped{opacity:.35;filter:grayscale(.8)}
+.seat .avatar{font-size:clamp(17px,3vw,28px)}
+.seat .name{font-weight:900;font-size:clamp(9px,1.6vw,14px);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.seat .state{font-size:clamp(8px,1.3vw,11px);color:#b8d5bf}
+.hand{
+  position:absolute;left:50%;bottom:clamp(3px,1.5vh,14px);
+  transform:translateX(-50%);
+  width:min(96vw,900px);z-index:20;
+  display:flex;justify-content:center;align-items:flex-end;
+  height:clamp(65px,13vh,110px);
+}
+.hand-card{
+  width:clamp(36px,6vw,58px);height:clamp(53px,9vw,82px);
+  margin-left:clamp(-13px,-1.4vw,-5px);
+  border:1px solid #999;border-radius:6px;background:#f8f5e9;color:#111;
+  display:flex;flex-direction:column;justify-content:space-between;
+  padding:4px;font-weight:900;font-size:clamp(10px,1.7vw,16px);
+  box-shadow:0 3px 7px #0009;
+}
+.hand-card:first-child{margin-left:0}
+.hand-card.red{color:#c51f1f}
+.hand-card.black{color:#111}
+.hand-label{
+  position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);
+  color:#fff;font-weight:900;font-size:clamp(9px,1.5vw,13px);white-space:nowrap
+}
+.table-controls{
+  position:absolute;right:10px;bottom:10px;z-index:30;display:flex;gap:6px
+}
+.table-controls button{
+  padding:8px 10px;border-radius:10px;background:#b98a28;color:#111;
+  border:1px solid #f0d579;font-size:11px;font-weight:900
+}
+@media(max-width:750px){
+  .rummy-table{
+    width:92vw;
+    height:68dvh;
+  }
+  .seat{width:clamp(66px,20vw,105px);min-height:48px}
+  .hand{width:96vw;height:13dvh}
+  .hand-card{width:clamp(32px,9vw,48px);height:clamp(48px,14vw,70px)}
+}
+@media(max-width:430px) and (orientation:portrait){
+  .rummy-table{width:94vw;height:56dvh}
+  .seat{width:66px;min-height:46px}
+  .hand{height:15dvh}
+  .hand-card{width:35px;height:52px;margin-left:-10px}
+  .table-controls{bottom:5px;right:5px}
+}
+@media(max-height:450px) and (orientation:landscape){
+  .rummy-table{width:86vw;height:78dvh}
+  .seat{width:82px;min-height:48px}
+  .hand{height:18vh}
+  .hand-card{width:38px;height:56px;margin-left:-9px}
+}
+
 </style>
 </head>
 <body>
@@ -347,17 +489,7 @@ input{
       <div id="status" class="status"></div>
     </div>
   </div>
-  <div id="gameView">
-    <button class="back-btn" id="backLobby">← LOBBY</button>
-    <div class="game-table">
-      <div class="game-title">♠ RUMMY JKRN ♥</div>
-      <div class="game-center">
-        <div class="type" id="gameTypeDisplay">POOL RUMMY</div>
-        <div class="code" id="gameCodeDisplay">GAME CODE</div>
-        <div>Players: <span id="gamePlayersDisplay">6</span></div>
-        <div>Entry: ₹<span id="gameAmountDisplay">300</span></div>
-      </div>
-    </div>
+  
   </div>
 </div>
 
@@ -429,34 +561,101 @@ document.getElementById('waBtn').onclick=()=>{
   const text=`🎮 RUMMY JKRN%0A%0AGame: ${currentGame.type} POOL RUMMY%0APlayers: ${currentGame.players}%0AEntry: ₹${Number(currentGame.amount).toLocaleString('en-IN')}%0AGame Code: ${currentGame.code}%0A%0AJoin Game: Enter this code in RUMMY JKRN`;
   window.open('https://wa.me/?text='+text,'_blank');
 };
-document.getElementById('startBtn').onclick=async()=>{
-  if(!currentGame){return}
-  document.getElementById('gameTypeDisplay').textContent=currentGame.type+' POOL RUMMY';
-  document.getElementById('gameCodeDisplay').textContent=currentGame.code;
-  document.getElementById('gamePlayersDisplay').textContent=currentGame.players;
-  document.getElementById('gameAmountDisplay').textContent=Number(currentGame.amount).toLocaleString('en-IN');
+const suits=['♠','♥','♦','♣'];
+const ranks=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 
-  document.body.classList.add('game-mode');
-  document.documentElement.classList.add('game-html');
-  document.documentElement.style.setProperty('--vw', window.innerWidth + 'px');
-  document.documentElement.style.setProperty('--vh', window.innerHeight + 'px');
+function renderPlayerHand(){
+  const hand=document.getElementById('playerHand');
+  hand.querySelectorAll('.hand-card').forEach(x=>x.remove());
+  const demo=['A♠','3♠','4♠','7♥','8♥','J♦','Q♦','K♣','2♣','5♣','6♦','9♥','10♠'];
+  demo.forEach((c,i)=>{
+    const d=document.createElement('div');
+    d.className='hand-card '+(/[♥♦]/.test(c)?'red':'black');
+    d.innerHTML='<span>'+c.replace(/([♠♥♦♣])/,'$1')+'</span><span>'+c+'</span>';
+    hand.appendChild(d);
+  });
+}
 
-  // Fullscreen is requested from the START button user gesture.
+function seatPositions(count){
+  if(count===2) return [
+    {x:50,y:9}, {x:50,y:91}
+  ];
+  if(count===3) return [
+    {x:50,y:8}, {x:11,y:68}, {x:89,y:68}
+  ];
+  if(count===4) return [
+    {x:50,y:7}, {x:91,y:50}, {x:50,y:93}, {x:9,y:50}
+  ];
+  if(count===5){
+    const a=[];
+    for(let i=0;i<5;i++){
+      const ang=(-90+i*72)*Math.PI/180;
+      a.push({x:50+41*Math.cos(ang),y:50+39*Math.sin(ang)});
+    }
+    return a;
+  }
+  const a=[];
+  for(let i=0;i<6;i++){
+    const ang=(-90+i*60)*Math.PI/180;
+    a.push({x:50+42*Math.cos(ang),y:50+39*Math.sin(ang)});
+  }
+  return a;
+}
+
+function renderSeats(count){
+  const layer=document.getElementById('seatLayer');
+  layer.innerHTML='';
+  const pos=seatPositions(count);
+  pos.forEach((p,i)=>{
+    const d=document.createElement('div');
+    d.className='seat '+(i===0?'active':'');
+    d.style.left=p.x+'%';
+    d.style.top=p.y+'%';
+    d.innerHTML='<div class="avatar">'+(i===0?'👤':'👤')+'</div>'+
+      '<div class="name">'+(i===0?'YOU':'Player '+(i+1))+'</div>'+
+      '<div class="state">'+(i===0?'YOUR TURN':'READY')+'</div>';
+    layer.appendChild(d);
+  });
+  document.getElementById('tableInfo').textContent=count+' PLAYERS';
+}
+
+function openDynamicTable(){
+  const count=Number(currentGame?.players||2);
+  document.getElementById('dynamicGame').style.display='block';
+  document.body.classList.add('table-mode');
+  document.getElementById('tableInfo').textContent=count+' PLAYERS';
+  renderSeats(count);
+  renderPlayerHand();
+
   try{
     if(document.documentElement.requestFullscreen && !document.fullscreenElement){
-      await document.documentElement.requestFullscreen();
+      document.documentElement.requestFullscreen();
     }
   }catch(e){}
-
-  // Lock landscape where the browser/device supports it.
   try{
     if(screen.orientation && screen.orientation.lock){
-      await screen.orientation.lock('landscape');
+      screen.orientation.lock('landscape');
     }
   }catch(e){}
+  setTimeout(()=>{window.dispatchEvent(new Event('resize'));},250);
+}
 
-  window.scrollTo(0,0);
+document.getElementById('startBtn').onclick=()=>{
+  if(!currentGame) return;
+  openDynamicTable();
 };
+
+document.getElementById('leaveTable').onclick=async()=>{
+  document.body.classList.remove('table-mode');
+  document.getElementById('dynamicGame').style.display='none';
+  try{
+    if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
+  }catch(e){}
+  try{
+    if(document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen();
+  }catch(e){}
+};
+
 document.getElementById('backLobby').onclick=async()=>{
   document.body.classList.remove('game-mode');
   try{
@@ -483,5 +682,33 @@ window.addEventListener('orientationchange',()=>{
 
 renderLobby();
 </script>
+
+<div id="dynamicGame">
+  <div class="table-wrap">
+    <div class="rummy-table" id="rummyTable">
+      <div class="table-topbar">♠ 201 POOL RUMMY ♥</div>
+      <div class="table-info" id="tableInfo">2 PLAYERS</div>
+
+      <div class="turn-timer" id="turnTimer">YOUR TURN • 30</div>
+
+      <div class="center-piles">
+        <div class="pile draw-pile" id="drawPile">DRAW<br><span id="drawCount">52</span></div>
+        <div class="pile open-pile" id="openPile">🂠</div>
+      </div>
+      <div class="joker" id="wildJoker">⭐ WILD JOKER: ♥ 7</div>
+
+      <div id="seatLayer"></div>
+
+      <div class="hand" id="playerHand">
+        <div class="hand-label">YOU • YOUR HAND</div>
+      </div>
+
+      <div class="table-controls">
+        <button id="leaveTable">← LOBBY</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
