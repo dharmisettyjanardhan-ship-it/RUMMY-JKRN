@@ -407,8 +407,8 @@ body.table-mode #dynamicGame{display:block}
 }
 @media(max-width:750px){
   .rummy-table{
-    width:92vw;
-    height:68dvh;
+    width:80vw;
+    height:62dvh;
   }
   .seat{width:clamp(66px,20vw,105px);min-height:48px}
   .hand{width:96vw;height:13dvh}
@@ -426,6 +426,34 @@ body.table-mode #dynamicGame{display:block}
   .seat{width:82px;min-height:48px}
   .hand{height:18vh}
   .hand-card{width:38px;height:56px;margin-left:-9px}
+}
+
+
+/* PLAYERS OUTSIDE THE TABLE CIRCLE */
+#seatLayer{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:8;
+  pointer-events:none;
+}
+#seatLayer .seat{
+  pointer-events:auto;
+  z-index:9;
+}
+@media(max-width:750px){
+  #seatLayer .seat{
+    width:clamp(62px,18vw,100px);
+    min-height:46px;
+  }
+}
+
+
+/* Seat is deliberately outside the table boundary */
+.seat.outside-seat{
+  background:linear-gradient(#123a24,#071d12);
+  border-color:#6d8e68;
 }
 
 </style>
@@ -577,29 +605,34 @@ function renderPlayerHand(){
 }
 
 function seatPositions(count){
+  // Positions are percentages of the FULL SCREEN, not the table.
+  // This keeps every player seat OUTSIDE the circular/oval table.
   if(count===2) return [
-    {x:50,y:9}, {x:50,y:91}
+    {x:50,y:7}, {x:50,y:93}
   ];
   if(count===3) return [
-    {x:50,y:8}, {x:11,y:68}, {x:89,y:68}
+    {x:50,y:6}, {x:8,y:82}, {x:92,y:82}
   ];
   if(count===4) return [
-    {x:50,y:7}, {x:91,y:50}, {x:50,y:93}, {x:9,y:50}
+    {x:50,y:6}, {x:94,y:50}, {x:50,y:94}, {x:6,y:50}
   ];
   if(count===5){
-    const a=[];
-    for(let i=0;i<5;i++){
-      const ang=(-90+i*72)*Math.PI/180;
-      a.push({x:50+41*Math.cos(ang),y:50+39*Math.sin(ang)});
-    }
-    return a;
+    return [
+      {x:50,y:5},
+      {x:94,y:34},
+      {x:78,y:93},
+      {x:22,y:93},
+      {x:6,y:34}
+    ];
   }
-  const a=[];
-  for(let i=0;i<6;i++){
-    const ang=(-90+i*60)*Math.PI/180;
-    a.push({x:50+42*Math.cos(ang),y:50+39*Math.sin(ang)});
-  }
-  return a;
+  return [
+    {x:50,y:5},
+    {x:92,y:27},
+    {x:92,y:73},
+    {x:50,y:95},
+    {x:8,y:73},
+    {x:8,y:27}
+  ];
 }
 
 function renderSeats(count){
@@ -608,7 +641,7 @@ function renderSeats(count){
   const pos=seatPositions(count);
   pos.forEach((p,i)=>{
     const d=document.createElement('div');
-    d.className='seat '+(i===0?'active':'');
+    d.className='seat outside-seat '+(i===0?'active':'');
     d.style.left=p.x+'%';
     d.style.top=p.y+'%';
     d.innerHTML='<div class="avatar">'+(i===0?'👤':'👤')+'</div>'+
