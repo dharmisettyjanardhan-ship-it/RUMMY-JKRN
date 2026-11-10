@@ -2386,27 +2386,7 @@ function showFirstDrawChoice(gameData){
 }
 function createOnlineRoom(){ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();if(!name)return onlineMsg('Enter PROFILE NAME first.');onlineSocket.emit('createRoom',{name,maxPlayers:jkrnSelectedPlayers,poolLimit:jkrnSelectedPool,entryFee:jkrnEntryAmount});}
 function quickJoinOnline(){ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();if(!name)return onlineMsg('Enter PROFILE NAME first.');onlineSocket.emit('quickJoin',{name,maxPlayers:jkrnSelectedPlayers,poolLimit:jkrnSelectedPool,entryFee:jkrnEntryAmount});}
-function requestLandscapeOnJoin(){
-  // Request landscape only from the user's JOIN ROOM tap (Android mobile browsers).
-  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-    (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
-  if(!isMobile) return;
-  const lockLandscape = () => {
-    try {
-      if(screen.orientation && typeof screen.orientation.lock === 'function') {
-        screen.orientation.lock('landscape').catch(()=>{});
-      }
-    } catch(e) {}
-  };
-  try {
-    if(!document.fullscreenElement && document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().then(lockLandscape).catch(lockLandscape);
-    } else {
-      lockLandscape();
-    }
-  } catch(e) { lockLandscape(); }
-}
-function joinOnlineRoom(){const name=(document.getElementById('onlineName').value||'').trim();const room=(document.getElementById('onlineRoom').value||'').trim().toUpperCase();if(!name)return onlineMsg('Enter PROFILE NAME first.');if(!room)return onlineMsg('Enter Room ID first.');requestLandscapeOnJoin();ensureOnlineSocket();if(!onlineSocket)return;onlineSocket.emit('joinRoom',{name,roomId:room});}
+function joinOnlineRoom(){ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();const room=(document.getElementById('onlineRoom').value||'').trim().toUpperCase();if(!room)return onlineMsg('Enter Room ID first.');onlineSocket.emit('joinRoom',{name,roomId:room});}
 function toggleOnlineReady(){startRoomNow();}
 function startRoomNow(){if(!onlineSocket||!onlineRoomId)return onlineMsg('Create a room or join a room first.');onlineSocket.emit('startRoom',{roomId:onlineRoomId});}
 function initOnline(){ensureOnlineSocket();}
@@ -3903,12 +3883,31 @@ function openGlobalScoreboardModal() {
     setTimeout(updateRotationUI, 150);
   };
 
-  // Do not rotate on profile-name taps, keyboard input, or other page touches.
-  // Rotation is requested only by joinOnlineRoom() after the JOIN ROOM button is tapped.
+  // Mobile browsers allow orientation locking only after a user gesture.
+  document.addEventListener('click', function (ev) {
+    const t = ev.target;
+    if (!t) return;
+    const isButton = t.closest && t.closest('button');
+    if (isButton) {
+      const isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+      if (isMobile && window.matchMedia('(orientation: portrait)').matches) {
+        jkrnRequestLandscape();
+      }
+    }
+  }, {passive:true});
+
   window.addEventListener('orientationchange', updateRotationUI, {passive:true});
   window.addEventListener('resize', updateRotationUI, {passive:true});
   window.addEventListener('load', updateRotationUI);
   window.addEventListener('DOMContentLoaded', updateRotationUI);
+
+  // Try once on a user gesture anywhere on the page.
+  document.addEventListener('touchend', function once() {
+    if (window.matchMedia('(orientation: portrait)').matches) {
+      jkrnRequestLandscape();
+    }
+    document.removeEventListener('touchend', once);
+  }, {passive:true});
 })();
 </script>
 
@@ -4469,19 +4468,41 @@ button[onclick*="groupSelected"] {
     return g && g[x.cIdx] ? g[x.cIdx].id : null;
   }
   function rebuildLocalGroups(hand){
-    const old = (playerGroups||[]).flat();
-    const oldMap=new Map(old.filter(c=>c&&c.id).map(c=>[c.id,c]));
-    const fresh=hand.map(c=>Object.assign({},c));
-    const freshIds=new Set(fresh.map(c=>c.id));
-    const groups=[];
-    (playerGroups||[]).forEach(g=>{
-      const ng=g.map(c=>fresh.find(x=>x.id===c.id)).filter(Boolean);
-      if(ng.length) groups.push(ng);
-    });
-    fresh.forEach(c=>{if(!oldMap.has(c.id) && freshIds.has(c.id)) groups.push([c]);});
-    const used=new Set(groups.flat().map(c=>c.id));
-    fresh.forEach(c=>{if(!used.has(c.id))groups.push([c]);});
-    playerGroups=groups;
+    const previous=(playerGroups||[]).flat().filter(Boolean);
+    const previousIds=new Set(previous.map(c=>c.id).filter(Boolean));
+    const fresh=(hand||[]).map(c=>Object.assign({},c));
+    const freshIds=new Set(fresh.map(c=>c.id).filter(Boolean));
+    const hasNewCard=fresh.some(c=>c.id && !previousIds.has(c.id));
+    const firstOnlineHand=!window.__jkrnOnlineHandInitialized;
+
+    // First deal and every new draw: show the complete hand as one neat,
+    // suit/rank-sorted row. Do not leave a newly drawn card in a separate pile.
+    // After the player manually groups cards, preserve those groups across
+    // server updates until the next draw.
+    if(firstOnlineHand || hasNewCard){
+      const suitOrder={'♥':1,'♦':2,'♣':3,'♠':4};
+      const rankOrder={'A':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'J':11,'Q':12,'K':13};
+      const sorted=fresh.slice().sort((a,b)=>{
+        const aj=!!a.isPrintedJoker || a.rank==='PJ';
+        const bj=!!b.isPrintedJoker || b.rank==='PJ';
+        if(aj!==bj)return aj?1:-1;
+        if(aj&&bj)return 0;
+        return (suitOrder[a.suit]||99)-(suitOrder[b.suit]||99) ||
+          (rankOrder[a.rank]||99)-(rankOrder[b.rank]||99);
+      });
+      playerGroups=sorted.length?[sorted]:[];
+      window.__jkrnOnlineHandInitialized=true;
+    } else {
+      const freshById=new Map(fresh.map(c=>[c.id,c]));
+      const groups=[];
+      (playerGroups||[]).forEach(g=>{
+        const ng=(g||[]).map(c=>freshById.get(c.id)).filter(Boolean);
+        if(ng.length)groups.push(ng);
+      });
+      const used=new Set(groups.flat().map(c=>c.id));
+      fresh.forEach(c=>{if(!used.has(c.id))groups.push([c]);});
+      playerGroups=groups;
+    }
     allHands[0]=fresh;
   }
   function renderOnlineWildJoker(card){
@@ -4539,25 +4560,37 @@ button[onclick*="groupSelected"] {
 
   function onlineDeclare(){
     if(!window.__realRoomStarted || currentPlayer!==onlinePlayerIndex() || !playerHasDrawn)return;
-    let source=(playerGroups||[]).filter(g=>g&&g.length);
-    let discardGroupIndex=-1, discardId=null;
+    const source=(playerGroups||[]).filter(g=>g&&g.length).map(g=>g.slice());
+    let discardId=null;
+
+    // A selected card is the one to discard. Keep every other card in its
+    // original group; never remove the entire group just because one card
+    // inside it was selected.
     if(selectedCards && selectedCards.length===1){
       const x=selectedCards[0], g=playerGroups[x.gIdx];
-      if(g&&g[x.cIdx]){ discardId=g[x.cIdx].id; discardGroupIndex=x.gIdx; }
+      if(g&&g[x.cIdx])discardId=g[x.cIdx].id;
     }
-    // If there is one singleton group among 14 cards, treat that card as the
-    // discard automatically. This fixes DECLARE when the last card is shown
-    // separately but was not explicitly selected.
-    if(!discardId && (playerGroups||[]).flat().length===14){
-      const singles=playerGroups.map((g,i)=>({g,i})).filter(x=>x.g&&x.g.length===1);
-      if(singles.length===1){ discardGroupIndex=singles[0].i; discardId=singles[0].g[0].id; }
+
+    // Backward-compatible convenience: if the 14th card is still a singleton,
+    // it can be chosen as the discard automatically.
+    if(!discardId && source.flat().length===14){
+      const singles=source.filter(g=>g.length===1);
+      if(singles.length===1)discardId=singles[0][0].id;
     }
+
     if(!discardId){
       const st=document.getElementById('status');
-      if(st)st.innerText='⚠️ 14 cards ఉన్నాయి. DECLARE ముందు discard చేయాల్సిన 1 card ని select చేయండి. 14th card ని Life/Set లో ఉపయోగించవచ్చు.';
+      if(st)st.innerText='⚠️ 14 cards ఉన్నాయి. DECLARE ముందు discard చేయాల్సిన 1 card ని select చేయండి.';
       return;
     }
-    const groups=source.filter((g,i)=>i!==discardGroupIndex).map(g=>g.map(c=>c.id));
+
+    const groups=source.map(g=>g.filter(c=>c.id!==discardId).map(c=>c.id)).filter(ids=>ids.length);
+    const submittedCount=groups.reduce((n,g)=>n+g.length,0);
+    if(submittedCount!==13){
+      const st=document.getElementById('status');
+      if(st)st.innerText='⚠️ Discard తర్వాత 13 cards ఉండాలి. మీ groups మళ్లీ సరిచూడండి.';
+      return;
+    }
     onlineSocket.emit('declare',{groupIds:groups,discardId});
   }
   function onlineNextDeal(){ if(onlineSocket&&onlineRoomId)onlineSocket.emit('nextDeal'); }
