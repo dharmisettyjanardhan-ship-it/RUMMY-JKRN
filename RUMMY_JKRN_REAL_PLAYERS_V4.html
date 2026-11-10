@@ -2406,7 +2406,7 @@ function requestLandscapeOnJoin(){
     }
   } catch(e) { lockLandscape(); }
 }
-function joinOnlineRoom(){requestLandscapeOnJoin();ensureOnlineSocket();const name=(document.getElementById('onlineName').value||'Player').trim();const room=(document.getElementById('onlineRoom').value||'').trim().toUpperCase();if(!room)return onlineMsg('Enter Room ID first.');onlineSocket.emit('joinRoom',{name,roomId:room});}
+function joinOnlineRoom(){const name=(document.getElementById('onlineName').value||'').trim();const room=(document.getElementById('onlineRoom').value||'').trim().toUpperCase();if(!name)return onlineMsg('Enter PROFILE NAME first.');if(!room)return onlineMsg('Enter Room ID first.');requestLandscapeOnJoin();ensureOnlineSocket();if(!onlineSocket)return;onlineSocket.emit('joinRoom',{name,roomId:room});}
 function toggleOnlineReady(){startRoomNow();}
 function startRoomNow(){if(!onlineSocket||!onlineRoomId)return onlineMsg('Create a room or join a room first.');onlineSocket.emit('startRoom',{roomId:onlineRoomId});}
 function initOnline(){ensureOnlineSocket();}
@@ -3903,31 +3903,12 @@ function openGlobalScoreboardModal() {
     setTimeout(updateRotationUI, 150);
   };
 
-  // Mobile browsers allow orientation locking only after a user gesture.
-  document.addEventListener('click', function (ev) {
-    const t = ev.target;
-    if (!t) return;
-    const isButton = t.closest && t.closest('button');
-    if (isButton) {
-      const isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-      if (isMobile && window.matchMedia('(orientation: portrait)').matches) {
-        jkrnRequestLandscape();
-      }
-    }
-  }, {passive:true});
-
+  // Do not rotate on profile-name taps, keyboard input, or other page touches.
+  // Rotation is requested only by joinOnlineRoom() after the JOIN ROOM button is tapped.
   window.addEventListener('orientationchange', updateRotationUI, {passive:true});
   window.addEventListener('resize', updateRotationUI, {passive:true});
   window.addEventListener('load', updateRotationUI);
   window.addEventListener('DOMContentLoaded', updateRotationUI);
-
-  // Try once on a user gesture anywhere on the page.
-  document.addEventListener('touchend', function once() {
-    if (window.matchMedia('(orientation: portrait)').matches) {
-      jkrnRequestLandscape();
-    }
-    document.removeEventListener('touchend', once);
-  }, {passive:true});
 })();
 </script>
 
